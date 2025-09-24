@@ -1,5 +1,6 @@
 import os
-from flask import Flask, jsonify, render_template_string
+from flask import Flask, jsonify, render_template_string, request
+import random
 
 app = Flask(__name__)
 
@@ -111,13 +112,10 @@ def home():
 
 @app.route('/api/generate', methods=['POST'])
 def generate_content():
-    from flask import request
     data = request.json or {}
-    
     topic = data.get('topic', 'Unknown Topic')
     platform = data.get('platform', 'youtube')
     
-    # Mock AI response (จะเปลี่ยนเป็น AI จริงในอนาคต)
     response = {
         "success": True,
         "topic": topic,
@@ -132,12 +130,10 @@ def generate_content():
         "cost": 0.05,
         "generated_at": "2025-01-20T10:30:00Z"
     }
-    
     return jsonify(response)
 
 @app.route('/api/stats')
 def get_stats():
-    import random
     return jsonify({
         "total": random.randint(50, 200),
         "today": random.randint(3, 15),
@@ -150,6 +146,7 @@ def get_stats():
 def health():
     return jsonify({"status": "healthy", "service": "flask"})
 
+# ✅ ส่วนนี้จะใช้เฉพาะตอนรัน local เท่านั้น
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=port, debug=True)
