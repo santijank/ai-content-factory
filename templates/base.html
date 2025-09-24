@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Content Factory{% endblock %}</title>
+    
+    <!-- CSS Libraries -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #1e293b;
+            --light-color: #f8fafc;
+        }
+        
+        body {
+            background-color: var(--light-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        .sidebar {
+            background: linear-gradient(135deg, var(--dark-color) 0%, #334155 100%);
+            min-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar .nav-link {
+            color: #cbd5e1;
+            padding: 12px 20px;
+            margin: 4px 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .sidebar .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .trend-card {
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        
+        .trend-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+        }
+        
+        .opportunity-card {
+            background: white;
+            border-radius: 10px;
+            border-left: 4px solid var(--success-color);
+            transition: all 0.3s ease;
+        }
+        
+        .opportunity-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .status-pending { background-color: #fef3c7; color: #92400e; }
+        .status-analyzing { background-color: #dbeafe; color: #1e40af; }
+        .status-ready { background-color: #d1fae5; color: #065f46; }
+        .status-generating { background-color: #fce7f3; color: #be185d; }
+        .status-completed { background-color: #e0e7ff; color: #3730a3; }
+        
+        .priority-high { border-left-color: var(--danger-color) !important; }
+        .priority-medium { border-left-color: var(--warning-color) !important; }
+        .priority-low { border-left-color: var(--success-color) !important; }
+        
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-left: 4px solid var(--success-color);
+            z-index: 9999;
+            min-width: 300px;
+            transform: translateX(400px);
+            transition: all 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .btn-custom {
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-custom:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="p-4">
+            <h3 class="text-white mb-4">
+                <i class="fas fa-robot me-2"></i>
+                AI Content Factory
+            </h3>
+        </div>
+        
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a href="{{ url_for('dashboard') }}" class="nav-link {{ 'active' if request.endpoint == 'dashboard' }}">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('trends_page') }}" class="nav-link {{ 'active' if request.endpoint == 'trends_page' }}">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Trends
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('opportunities_page') }}" class="nav-link {{ 'active' if request.endpoint == 'opportunities_page' }}">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Opportunities
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('content_page') }}" class="nav-link {{ 'active' if request.endpoint == 'content_page' }}">
+                    <i class="fas fa-video me-2"></i>
+                    Content
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ url_for('analytics_page') }}" class="nav-link {{ 'active' if request.endpoint == 'analytics_page' }}">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Analytics
+                </a>
+            </li>
+        </ul>
+        
+        <div class="mt-auto p-4">
+            <div class="status-indicator">
+                <span class="text-white-50 small">System Status:</span>
+                <div class="d-flex align-items-center mt-1">
+                    <div class="status-dot bg-success rounded-circle me-2" style="width: 8px; height: 8px;"></div>
+                    <span class="text-white-50 small">Online</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Mobile Toggle Button -->
+    <button class="btn btn-primary d-md-none position-fixed" style="top: 10px; left: 10px; z-index: 1001;" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Bar -->
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="h3 mb-0">{% block page_title %}Dashboard{% endblock %}</h1>
+                <p class="text-muted mb-0">{% block page_subtitle %}ระบบสร้างเนื้อหาอัตโนมัติด้วย AI{% endblock %}</p>
+            </div>
+            <div class="col-auto">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary btn-custom" onclick="collectTrends()">
+                        <i class="fas fa-download me-1"></i>
+                        เก็บ Trends
+                    </button>
+                    <button class="btn btn-success btn-custom" onclick="analyzeTrends()">
+                        <i class="fas fa-brain me-1"></i>
+                        วิเคราะห์
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Notification Container -->
+    <div id="notifications-container"></div>
+    
+    <!-- Loading Modal -->
+    <div class="modal fade" id="loadingModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <div class="loading-spinner mx-auto mb-3"></div>
+                    <h5 id="loadingMessage">กำลังประมวลผล...</h5>
+                    <p class="text-muted mb-0" id="loadingDetail">กรุณารอสักครู่</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // WebSocket Connection
+        const socket = io();
+        
+        // Global variables
+        let loadingModal;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+            initializeWebSocket();
+            initializeStats();
+        });
+        
+        // WebSocket Event Handlers
+        function initializeWebSocket() {
+            socket.on('connect', function() {
+                console.log('Connected to server');
+                showNotification('เชื่อมต่อระบบสำเร็จ', 'success');
+            });
+            
+            socket.on('disconnect', function() {
+                console.log('Disconnected from server');
+                showNotification('การเชื่อมต่อขาดหาย', 'warning');
+            });
+            
+            socket.on('trends_collected', function(data) {
+                hideLoading();
+                showNotification(`เก็บ Trends สำเร็จ: ${data.count} รายการ`, 'success');
+                updateTrendsDisplay(data.trends);
+                refreshStats();
+            });
+            
+            socket.on('analysis_completed', function(data) {
+                hideLoading();
+                showNotification(`วิเคราะห์เสร็จสิ้น: ${data.opportunities_count} โอกาส`, 'success');
+                updateOpportunitiesDisplay(data.best_opportunities);
+                refreshStats();
+            });
+            
+            socket.on('content_created', function(data) {
+                hideLoading();
+                showNotification(`สร้างเนื้อหาสำเร็จ: ${data.title}`, 'success');
+                refreshStats();
+            });
+            
+            socket.on('content_uploaded', function(data) {
+                hideLoading();
+                showNotification(`อัปโหลดสำเร็จไป ${data.platforms.join(', ')}`, 'success');
+                refreshStats();
+            });
+            
+            socket.on('content_creation_error', function(data) {
+                hideLoading();
+                showNotification(`เกิดข้อผิดพลาด: ${data.error}`, 'error');
+            });
+            
+            socket.on('upload_error', function(data) {
+                hideLoading();
+                showNotification(`ข้อผิดพลาดในการอัปโหลด: ${data.error}`, 'error');
+            });
+            
+            socket.on('stats_update', function(data) {
+                updateStatsDisplay(data);
+            });
+        }
+        
+        // API Functions
+        async function collectTrends() {
+            showLoading('เก็บ Trends', 'กำลังรวบรวมข้อมูลเทรนด์ล่าสุด...');
+            
+            try {
+                const response = await fetch('/api/collect-trends', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to collect trends');
+                }
+                
+                console.log('Trend collection started:', data.message);
+            } catch (error) {
+                hideLoading();
+                showNotification(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
+            }
+        }
+        
+        async function analyzeTrends(trendIds = []) {
+            showLoading('วิเคราะห์ Trends', 'กำลังวิเคราะห์ความน่าสนใจของเทรนด์...');
+            
+            try {
+                const response = await fetch('/api/analyze-trends', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        trend_ids: trendIds
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to analyze trends');
+                }
+                
+                console.log('Analysis started:', data.message);
+            } catch (error) {
+                hideLoading();
+                showNotification(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
+            }
+        }
+        
+        async function createContent(opportunityId, qualityTier = 'budget', platforms = ['youtube']) {
+            showLoading('สร้างเนื้อหา', 'กำลังสร้างเนื้อหาด้วย AI...');
+            
+            try {
+                const response = await fetch('/api/create-content', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        opportunity_id: opportunityId,
+                        quality_tier: qualityTier,
+                        platforms: platforms
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to create content');
+                }
+                
+                console.log('Content creation started:', data.message);
+            } catch (error) {
+                hideLoading();
+                showNotification(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
+            }
+        }
+        
+        async function uploadContent(contentId, platforms) {
+            showLoading('อัปโหลดเนื้อหา', 'กำลังอัปโหลดไปยังแพลตฟอร์มต่างๆ...');
+            
+            try {
+                const response = await fetch('/api/upload-content', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        content_id: contentId,
+                        platforms: platforms
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to upload content');
+                }
+                
+                console.log('Upload started:', data.message);
+            } catch (error) {
+                hideLoading();
+                showNotification(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
+            }
+        }
+        
+        // UI Helper Functions
+        function showLoading(title, detail) {
+            document.getElementById('loadingMessage').textContent = title;
+            document.getElementById('loadingDetail').textContent = detail;
+            loadingModal.show();
+        }
+        
+        function hideLoading() {
+            loadingModal.hide();
+        }
+        
+        function showNotification(message, type = 'info', duration = 5000) {
+            const container = document.getElementById('notifications-container');
+            const notification = document.createElement('div');
+            
+            const colors = {
+                success: '#10b981',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#2563eb'
+            };
+            
+            const icons = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-circle',
+                warning: 'fas fa-exclamation-triangle',
+                info: 'fas fa-info-circle'
+            };
+            
+            notification.className = 'notification';
+            notification.style.borderLeftColor = colors[type];
+            notification.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="${icons[type]} me-2" style="color: ${colors[type]}"></i>
+                    <span class="flex-grow-1">${message}</span>
+                    <button class="btn-close btn-close-sm ms-2" onclick="this.parentElement.parentElement.remove()"></button>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Show with animation
+            setTimeout(() => notification.classList.add('show'), 100);
+            
+            // Auto remove
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, duration);
+        }
+        
+        function refreshStats() {
+            socket.emit('request_stats');
+        }
+        
+        function initializeStats() {
+            // Request initial stats
+            refreshStats();
+            
+            // Update stats every 30 seconds
+            setInterval(refreshStats, 30000);
+        }
+        
+        function updateStatsDisplay(stats) {
+            // Update stats counters if elements exist
+            const elements = {
+                'trends-count': stats.trends_count,
+                'opportunities-count': stats.opportunities_count,
+                'content-count': stats.content_count
+            };
+            
+            Object.entries(elements).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    animateNumber(element, parseInt(element.textContent) || 0, value);
+                }
+            });
+        }
+        
+        function animateNumber(element, start, end, duration = 1000) {
+            const startTime = performance.now();
+            
+            function updateNumber(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const current = Math.floor(start + (end - start) * progress);
+                
+                element.textContent = current.toLocaleString();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(updateNumber);
+                }
+            }
+            
+            requestAnimationFrame(updateNumber);
+        }
+        
+        function updateTrendsDisplay(trends) {
+            // This function will be implemented in specific pages
+            console.log('New trends:', trends);
+        }
+        
+        function updateOpportunitiesDisplay(opportunities) {
+            // This function will be implemented in specific pages
+            console.log('New opportunities:', opportunities);
+        }
+        
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('show');
+        }
+        
+        // Format functions for display
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toLocaleString();
+        }
+        
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('th-TH', {
+                style: 'currency',
+                currency: 'THB'
+            }).format(amount);
+        }
+        
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        function getStatusBadgeClass(status) {
+            const statusClasses = {
+                'pending': 'status-pending',
+                'analyzing': 'status-analyzing',
+                'ready': 'status-ready',
+                'generating': 'status-generating',
+                'completed': 'status-completed'
+            };
+            return statusClasses[status] || 'status-pending';
+        }
+        
+        function getPriorityClass(priority) {
+            if (priority >= 8) return 'priority-high';
+            if (priority >= 5) return 'priority-medium';
+            return 'priority-low';
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Content Factory - Monitoring Dashboard</title>
+    
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css" rel="stylesheet">
+    
+    <style>
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+        }
+        
+        .metric-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .metric-change {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+        
+        .metric-change.positive {
+            color: #28a745;
+        }
+        
+        .metric-change.negative {
+            color: #dc3545;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 1rem 0;
+        }
+        
+        .alert-item {
+            border-left: 4px solid;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .alert-critical {
+            border-left-color: #dc3545;
+        }
+        
+        .alert-warning {
+            border-left-color: #ffc107;
+        }
+        
+        .alert-info {
+            border-left-color: #17a2b8;
+        }
+        
+        .service-status {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-healthy {
+            background-color: #28a745;
+        }
+        
+        .status-degraded {
+            background-color: #ffc107;
+        }
+        
+        .status-down {
+            background-color: #dc3545;
+        }
+        
+        .real-time-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            z-index: 1000;
+        }
+        
+        .real-time-indicator.disconnected {
+            background: #dc3545;
+        }
+        
+        .sidebar {
+            background: #f8f9fa;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        
+        .nav-link {
+            color: #495057;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+        
+        .nav-link:hover,
+        .nav-link.active {
+            background: #007bff;
+            color: white;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <!-- Real-time connection indicator -->
+    <div id="connectionStatus" class="real-time-indicator">
+        <i class="fas fa-circle"></i> Live
+    </div>
+
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1><i class="fas fa-chart-line"></i> Monitoring Dashboard</h1>
+                    <p class="mb-0">AI Content Factory System Monitoring</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-light" onclick="refreshDashboard()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <button type="button" class="btn btn-outline-light" onclick="exportMetrics()">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-2 sidebar">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" onclick="showSection('overview')">
+                            <i class="fas fa-tachometer-alt"></i> Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('system')">
+                            <i class="fas fa-server"></i> System Metrics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('content')">
+                            <i class="fas fa-file-alt"></i> Content Pipeline
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('alerts')">
+                            <i class="fas fa-exclamation-triangle"></i> Alerts
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('trends')">
+                            <i class="fas fa-chart-area"></i> Trends
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-10">
+                <!-- Overview Section -->
+                <div id="overview-section" class="section">
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h3>System Overview</h3>
+                        </div>
+                    </div>
+                    
+                    <!-- Key Metrics Row -->
+                    <div class="row" id="keyMetrics">
+                        <div class="col-lg-3 col-md-6">
+                            <div class="metric-card">
+                                <div class="metric-value text-primary" id="trendsCollected">0</div>
+                                <div class="metric-label">Trends Collected</div>
+                                <div class="metric-change" id="trendsChange"></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="metric-card">
+                                <div class="metric-value text-success" id="contentCreated">0</div>
+                                <div class="metric-label">Content Created</div>
+                                <div class="metric-change" id="contentChange"></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="metric-card">
+                                <div class="metric-value text-info" id="uploadsCompleted">0</div>
+                                <div class="metric-label">Uploads Completed</div>
+                                <div class="metric-change" id="uploadsChange"></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="metric-card">
+                                <div class="metric-value text-warning" id="totalCost">฿0</div>
+                                <div class="metric-label">Today's Cost</div>
+                                <div class="metric-change" id="costChange"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Service Health -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="metric-card">
+                                <h5><i class="fas fa-heartbeat"></i> Service Health</h5>
+                                <div id="serviceHealth">
+                                    <div class="loading">Loading service status...</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="metric-card">
+                                <h5><i class="fas fa-bell"></i> Recent Alerts</h5>
+                                <div id="recentAlerts">
+                                    <div class="loading">Loading alerts...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Metrics Section -->
+                <div id="system-section" class="section" style="display: none;">
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h3>System Metrics</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="metric-card">
+                                <canvas id="cpuChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="metric-card">
+                                <canvas id="memoryChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="metric-card">
+                                <canvas id="diskChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="metric-card">
+                                <h5>Response Times</h5>
+                                <div class="chart-container">
+                                    <canvas id="responseTimeChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Pipeline Section -->
+                <div id="content-section" class="section" style="display: none;">
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h3>Content Pipeline</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="metric-card">
+                                <h5>Pipeline Flow</h5>
+                                <div class="chart-container">
+                                    <canvas id="pipelineChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="metric-card">
+                                <h5>ROI by Platform</h5>
+                                <div class="chart-container">
+                                    <canvas id="roiChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alerts Section -->
+                <div id="alerts-section" class="section" style="display: none;">
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h3>Alerts Management</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="metric-card">
+                                <h6>Alert Filters</h6>
+                                <select class="form-select" id="alertFilter" onchange="filterAlerts()">
+                                    <option value="all">All Alerts</option>
+                                    <option value="critical">Critical</option>
+                                    <option value="warning">Warning</option>
+                                    <option value="info">Info</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="metric-card">
+                                <h6>Alert Statistics</h6>
+                                <div id="alertStats">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="metric-card">
+                                <h5>Active Alerts</h5>
+                                <div id="alertsList">
+                                    <div class="loading">Loading alerts...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trends Section -->
+                <div id="trends-section" class="section" style="display: none;">
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h3>Trend Analysis</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="metric-card">
+                                <h5>Top Trends</h5>
+                                <div id="topTrends">Loading...</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="metric-card">
+                                <h5>Best Opportunities</h5>
+                                <div id="bestOpportunities">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    
+    <script>
+        // Global variables
+        let socket;
+        let charts = {};
+        let currentSection = 'overview';
+        let refreshInterval;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeWebSocket();
+            loadDashboard();
+            startAutoRefresh();
+        });
+
+        // WebSocket connection
+        function initializeWebSocket() {
+            try {
+                socket = io();
+                
+                socket.on('connect', function() {
+                    updateConnectionStatus(true);
+                    socket.emit('subscribe_metrics');
+                });
+                
+                socket.on('disconnect', function() {
+                    updateConnectionStatus(false);
+                });
+                
+                socket.on('system_update', function(data) {
+                    updateSystemOverview(data);
+                });
+                
+                socket.on('alerts_update', function(data) {
+                    updateRecentAlerts(data);
+                });
+                
+            } catch (error) {
+                console.warn('WebSocket not available, using polling only');
+                updateConnectionStatus(false);
+            }
+        }
+
+        // Update connection status indicator
+        function updateConnectionStatus(connected) {
+            const indicator = document.getElementById('connectionStatus');
+            if (connected) {
+                indicator.className = 'real-time-indicator';
+                indicator.innerHTML = '<i class="fas fa-circle"></i> Live';
+            } else {
+                indicator.className = 'real-time-indicator disconnected';
+                indicator.innerHTML = '<i class="fas fa-circle"></i> Offline';
+            }
+        }
+
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                await Promise.all([
+                    loadMetrics(),
+                    loadSystemOverview(),
+                    loadAlerts()
+                ]);
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                await Promise.all([
+                    loadMetrics(),
+                    loadSystemOverview(),
+                    loadAlerts()
+                ]);
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showError('Failed to load dashboard data');
+            }
+        }
+
+        // Load metrics data
+        async function loadMetrics() {
+            try {
+                const response = await fetch('/api/metrics');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                updateKeyMetrics(data.summary);
+                
+            } catch (error) {
+                console.error('Error loading metrics:', error);
+            }
+        }
+
+        // Load system overview
+        async function loadSystemOverview() {
+            try {
+                const response = await fetch('/api/system/overview');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                updateSystemOverview(data);
+                
+            } catch (error) {
+                console.error('Error loading system overview:', error);
+            }
+        }
+
+        // Load alerts
+        async function loadAlerts() {
+            try {
+                const response = await fetch('/api/alerts');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                updateRecentAlerts(data.slice(0, 5)); // Show only recent 5
+                
+            } catch (error) {
+                console.error('Error loading alerts:', error);
+            }
+        }
+
+        // Update key metrics display
+        function updateKeyMetrics(summary) {
+            if (summary.trends_collected) {
+                document.getElementById('trendsCollected').textContent = summary.trends_collected.latest_value || 0;
+                updateMetricChange('trendsChange', summary.trends_collected.change_percent);
+            }
+            
+            if (summary.content_created) {
+                document.getElementById('contentCreated').textContent = summary.content_created.latest_value || 0;
+                updateMetricChange('contentChange', summary.content_created.change_percent);
+            }
+            
+            if (summary.uploads_completed) {
+                document.getElementById('uploadsCompleted').textContent = summary.uploads_completed.latest_value || 0;
+                updateMetricChange('uploadsChange', summary.uploads_completed.change_percent);
+            }
+            
+            if (summary.total_cost) {
+                document.getElementById('totalCost').textContent = `฿${summary.total_cost.latest_value || 0}`;
+                updateMetricChange('costChange', summary.total_cost.change_percent);
+            }
+        }
+
+        // Update metric change indicator
+        function updateMetricChange(elementId, changePercent) {
+            const element = document.getElementById(elementId);
+            if (changePercent !== null && changePercent !== undefined) {
+                const isPositive = changePercent > 0;
+                element.className = `metric-change ${isPositive ? 'positive' : 'negative'}`;
+                element.innerHTML = `<i class="fas fa-${isPositive ? 'arrow-up' : 'arrow-down'}"></i> ${Math.abs(changePercent).toFixed(1)}%`;
+            } else {
+                element.innerHTML = '<i class="fas fa-minus"></i> No data';
+            }
+        }
+
+        // Update system overview
+        function updateSystemOverview(data) {
+            const serviceHealthDiv = document.getElementById('serviceHealth');
+            
+            if (data.services) {
+                let html = '';
+                for (const [serviceName, info] of Object.entries(data.services)) {
+                    const statusClass = info.status === 'healthy' ? 'status-healthy' : 
+                                      info.status === 'degraded' ? 'status-degraded' : 'status-down';
+                    
+                    html += `
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>
+                                <span class="service-status ${statusClass}"></span>
+                                ${serviceName.replace('_', ' ').toUpperCase()}
+                            </span>
+                            <small class="text-muted">
+                                ${info.response_time ? `${info.response_time.toFixed(0)}ms` : 'N/A'}
+                            </small>
+                        </div>
+                    `;
+                }
+                serviceHealthDiv.innerHTML = html;
+            }
+
+            // Update system metrics if in system section
+            if (currentSection === 'system') {
+                updateSystemCharts(data);
+            }
+        }
+
+        // Update recent alerts
+        function updateRecentAlerts(alerts) {
+            const alertsDiv = document.getElementById('recentAlerts');
+            
+            if (alerts.length === 0) {
+                alertsDiv.innerHTML = '<div class="text-muted">No recent alerts</div>';
+                return;
+            }
+            
+            let html = '';
+            alerts.forEach(alert => {
+                const alertClass = `alert-${alert.severity}`;
+                const timeAgo = getTimeAgo(new Date(alert.last_triggered || alert.first_triggered));
+                
+                html += `
+                    <div class="alert-item ${alertClass}">
+                        <div class="d-flex justify-content-between">
+                            <strong>${alert.severity.toUpperCase()}</strong>
+                            <small>${timeAgo}</small>
+                        </div>
+                        <div class="mt-1">${alert.message}</div>
+                    </div>
+                `;
+            });
+            
+            alertsDiv.innerHTML = html;
+        }
+
+        // Section navigation
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+            
+            // Show selected section
+            document.getElementById(`${section}-section`).style.display = 'block';
+            
+            // Update navigation
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            currentSection = section;
+            
+            // Load section-specific data
+            loadSectionData(section);
+        }
+
+        // Load section-specific data
+        async function loadSectionData(section) {
+            switch (section) {
+                case 'system':
+                    await loadSystemMetrics();
+                    break;
+                case 'content':
+                    await loadContentMetrics();
+                    break;
+                case 'alerts':
+                    await loadAlertManagement();
+                    break;
+                case 'trends':
+                    await loadTrendAnalysis();
+                    break;
+            }
+        }
+
+        // Load system metrics charts
+        async function loadSystemMetrics() {
+            try {
+                const response = await fetch('/api/metrics/summary?minutes=60');
+                const data = await response.json();
+                
+                updateSystemCharts(data);
+                
+            } catch (error) {
+                console.error('Error loading system metrics:', error);
+            }
+        }
+
+        // Update system charts
+        function updateSystemCharts(data) {
+            // CPU Chart
+            updateGaugeChart('cpuChart', 'CPU Usage', 
+                data['system.cpu.usage']?.latest_value || 0, '%', '#007bff');
+            
+            // Memory Chart
+            updateGaugeChart('memoryChart', 'Memory Usage',
+                data['system.memory.usage']?.latest_value || 0, '%', '#28a745');
+            
+            // Disk Chart
+            updateGaugeChart('diskChart', 'Disk Usage',
+                data['system.disk.usage']?.latest_value || 0, '%', '#ffc107');
+            
+            // Response Time Chart
+            updateResponseTimeChart(data);
+        }
+
+        // Create/update gauge chart
+        function updateGaugeChart(canvasId, label, value, unit, color) {
+            const ctx = document.getElementById(canvasId);
+            
+            if (charts[canvasId]) {
+                charts[canvasId].destroy();
+            }
+            
+            charts[canvasId] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [value, 100 - value],
+                        backgroundColor: [color, '#e9ecef'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: false
+                        }
+                    }
+                },
+                plugins: [{
+                    beforeDraw: function(chart) {
+                        const ctx = chart.ctx;
+                        ctx.save();
+                        ctx.font = 'bold 16px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillStyle = color;
+                        
+                        const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
+                        const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+                        
+                        ctx.fillText(`${value.toFixed(1)}${unit}`, centerX, centerY - 10);
+                        ctx.font = '12px Arial';
+                        ctx.fillStyle = '#666';
+                        ctx.fillText(label, centerX, centerY + 15);
+                        ctx.restore();
+                    }
+                }]
+            });
+        }
+
+        // Update response time chart
+        function updateResponseTimeChart(data) {
+            const ctx = document.getElementById('responseTimeChart');
+            
+            if (charts.responseTimeChart) {
+                charts.responseTimeChart.destroy();
+            }
+            
+            const services = ['content_engine', 'platform_manager', 'trend_monitor'];
+            const responseData = services.map(service => {
+                const key = `service.${service}.response_time`;
+                return data[key]?.latest_value || 0;
+            });
+            
+            charts.responseTimeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Content Engine', 'Platform Manager', 'Trend Monitor'],
+                    datasets: [{
+                        label: 'Response Time (ms)',
+                        data: responseData,
+                        backgroundColor: ['#007bff', '#28a745', '#ffc107'],
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Response Time (ms)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Load content metrics
+        async function loadContentMetrics() {
+            try {
+                const response = await fetch('/api/performance/roi');
+                const roiData = await response.json();
+                
+                updateROIChart(roiData);
+                
+                // Load pipeline data
+                const pipelineResponse = await fetch('/api/metrics');
+                const pipelineData = await pipelineResponse.json();
+                
+                updatePipelineChart(pipelineData);
+                
+            } catch (error) {
+                console.error('Error loading content metrics:', error);
+            }
+        }
+
+        // Update ROI chart
+        function updateROIChart(data) {
+            const ctx = document.getElementById('roiChart');
+            
+            if (charts.roiChart) {
+                charts.roiChart.destroy();
+            }
+            
+            const platforms = Object.keys(data);
+            const roiValues = Object.values(data);
+            
+            charts.roiChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: platforms.map(p => p.charAt(0).toUpperCase() + p.slice(1)),
+                    datasets: [{
+                        label: 'ROI (%)',
+                        data: roiValues,
+                        backgroundColor: roiValues.map(val => val > 0 ? '#28a745' : '#dc3545'),
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'ROI (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update pipeline chart
+        function updatePipelineChart(data) {
+            const ctx = document.getElementById('pipelineChart');
+            
+            if (charts.pipelineChart) {
+                charts.pipelineChart.destroy();
+            }
+            
+            const summary = data.summary || {};
+            const stages = ['Trends', 'Opportunities', 'Content', 'Uploads'];
+            const values = [
+                summary.trends_collected?.latest_value || 0,
+                summary.opportunities_generated?.latest_value || 0,
+                summary.content_created?.latest_value || 0,
+                summary.uploads_completed?.latest_value || 0
+            ];
+            
+            charts.pipelineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: stages,
+                    datasets: [{
+                        label: 'Pipeline Flow',
+                        data: values,
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Load alert management
+        async function loadAlertManagement() {
+            try {
+                const [alertsResponse, statsResponse] = await Promise.all([
+                    fetch('/api/alerts'),
+                    fetch('/api/alerts/statistics')
+                ]);
+                
+                const alerts = await alertsResponse.json();
+                const stats = await statsResponse.json();
+                
+                updateAlertsList(alerts);
+                updateAlertStats(stats);
+                
+            } catch (error) {
+                console.error('Error loading alert management:', error);
+            }
+        }
+
+        // Update alerts list
+        function updateAlertsList(alerts) {
+            const alertsList = document.getElementById('alertsList');
+            
+            if (alerts.length === 0) {
+                alertsList.innerHTML = '<div class="text-center text-muted">No active alerts</div>';
+                return;
+            }
+            
+            let html = '';
+            alerts.forEach(alert => {
+                const timeAgo = getTimeAgo(new Date(alert.first_triggered));
+                const statusBadge = alert.status === 'acknowledged' ? 
+                    '<span class="badge bg-warning">Acknowledged</span>' : 
+                    '<span class="badge bg-danger">Active</span>';
+                
+                html += `
+                    <div class="alert-item alert-${alert.severity} mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">${alert.severity.toUpperCase()} - ${alert.rule_name}</h6>
+                                <p class="mb-1">${alert.message}</p>
+                                <small class="text-muted">
+                                    Metric: ${alert.metric_name} | 
+                                    Value: ${alert.current_value} | 
+                                    Threshold: ${alert.threshold} |
+                                    ${timeAgo}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                ${statusBadge}
+                                ${alert.status === 'active' ? 
+                                    `<button class="btn btn-sm btn-outline-primary mt-1" onclick="acknowledgeAlert('${alert.id}')">
+                                        Acknowledge
+                                    </button>` : ''
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            alertsList.innerHTML = html;
+        }
+
+        // Update alert statistics
+        function updateAlertStats(stats) {
+            const statsDiv = document.getElementById('alertStats');
+            
+            const html = `
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-primary">${stats.total_alerts || 0}</h4>
+                            <small>Total Alerts (24h)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-danger">${stats.active_alerts || 0}</h4>
+                            <small>Active Alerts</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-success">${(stats.resolution_rate || 0).toFixed(1)}%</h4>
+                            <small>Resolution Rate</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-info">${(stats.average_resolution_time_seconds / 60 || 0).toFixed(1)}m</h4>
+                            <small>Avg Resolution</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            statsDiv.innerHTML = html;
+        }
+
+        // Load trend analysis
+        async function loadTrendAnalysis() {
+            try {
+                const response = await fetch('/api/trends/analysis');
+                const data = await response.json();
+                
+                updateTopTrends(data.top_trends || []);
+                updateBestOpportunities(data.best_opportunities || []);
+                
+            } catch (error) {
+                console.error('Error loading trend analysis:', error);
+            }
+        }
+
+        // Update top trends
+        function updateTopTrends(trends) {
+            const trendsDiv = document.getElementById('topTrends');
+            
+            if (trends.length === 0) {
+                trendsDiv.innerHTML = '<div class="text-muted">No trend data available</div>';
+                return;
+            }
+            
+            let html = '<div class="list-group">';
+            trends.slice(0, 10).forEach((trend, index) => {
+                html += `
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span><strong>#${index + 1}</strong> ${trend.topic}</span>
+                            <span class="badge bg-primary">${trend.popularity_score}</span>
+                        </div>
+                        <small class="text-muted">Category: ${trend.category || 'Unknown'}</small>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            trendsDiv.innerHTML = html;
+        }
+
+        // Update best opportunities
+        function updateBestOpportunities(opportunities) {
+            const oppsDiv = document.getElementById('bestOpportunities');
+            
+            if (opportunities.length === 0) {
+                oppsDiv.innerHTML = '<div class="text-muted">No opportunities available</div>';
+                return;
+            }
+            
+            let html = '<div class="list-group">';
+            opportunities.forEach((opp, index) => {
+                html += `
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span><strong>#${index + 1}</strong> ${opp.suggested_angle}</span>
+                            <span class="badge bg-success">${opp.priority_score}</span>
+                        </div>
+                        <small class="text-muted">
+                            Est. Views: ${opp.estimated_views} | 
+                            ROI: ${opp.estimated_roi}%
+                        </small>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            oppsDiv.innerHTML = html;
+        }
+
+        // Utility functions
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            return `${diffDays}d ago`;
+        }
+
+        function showError(message) {
+            // You could implement a toast notification here
+            console.error(message);
+        }
+
+        // Dashboard actions
+        function refreshDashboard() {
+            loadDashboard();
+        }
+
+        function exportMetrics() {
+            window.open('/api/metrics/export?format=json&hours=24', '_blank');
+        }
+
+        function filterAlerts() {
+            const filter = document.getElementById('alertFilter').value;
+            loadAlertManagement();
+        }
+
+        async function acknowledgeAlert(alertId) {
+            try {
+                const response = await fetch(`/api/alerts/${alertId}/acknowledge`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        acknowledged_by: 'web_user'
+                    })
+                });
+                
+                if (response.ok) {
+                    loadAlertManagement();
+                } else {
+                    showError('Failed to acknowledge alert');
+                }
+                
+            } catch (error) {
+                showError('Error acknowledging alert');
+            }
+        }
+
+        // Auto-refresh
+        function startAutoRefresh() {
+            refreshInterval = setInterval(() => {
+                if (currentSection === 'overview') {
+                    loadDashboard();
+                } else {
+                    loadSectionData(currentSection);
+                }
+            }, 30000); // Refresh every 30 seconds
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+            if (socket) {
+                socket.disconnect();
+            }
+        });
+    </script>
+</body>
+</html>

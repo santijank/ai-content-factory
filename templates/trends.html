@@ -1,0 +1,727 @@
+{% extends "base.html" %}
+
+{% block title %}Trends - AI Content Factory{% endblock %}
+
+{% block page_title %}Trends Management{% endblock %}
+{% block page_subtitle %}จัดการและวิเคราะห์ Trends ล่าสุด{% endblock %}
+
+{% block extra_css %}
+<style>
+    .trend-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid #e2e8f0;
+    }
+    
+    .trend-card.high-score {
+        border-left-color: #10b981;
+    }
+    
+    .trend-card.medium-score {
+        border-left-color: #f59e0b;
+    }
+    
+    .trend-card.low-score {
+        border-left-color: #ef4444;
+    }
+    
+    .trend-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .filter-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .source-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.75em;
+        font-weight: 600;
+    }
+    
+    .source-youtube { background-color: #ff0000; color: white; }
+    .source-google { background-color: #4285f4; color: white; }
+    .source-twitter { background-color: #1da1f2; color: white; }
+    .source-reddit { background-color: #ff4500; color: white; }
+    
+    .popularity-meter {
+        width: 100%;
+        height: 8px;
+        background-color: #e2e8f0;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .popularity-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.5s ease;
+    }
+    
+    .growth-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 6px;
+        border-radius: 12px;
+        font-size: 0.75em;
+        font-weight: 600;
+    }
+    
+    .growth-positive {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+    
+    .growth-negative {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .growth-neutral {
+        background-color: #f3f4f6;
+        color: #374151;
+    }
+    
+    .trending-animation {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+    
+    .bulk-actions {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid #e2e8f0;
+        display: none;
+    }
+    
+    .bulk-actions.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+    
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Filters Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="filter-card">
+            <form method="GET" id="filterForm">
+                <div class="row align-items-end">
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Source</label>
+                        <select name="source" class="form-select form-select-sm">
+                            <option value="all" {{ 'selected' if current_filters.source == 'all' else '' }}>All Sources</option>
+                            {% for source in sources %}
+                            <option value="{{ source }}" {{ 'selected' if current_filters.source == source else '' }}>
+                                {{ source.title() }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Category</label>
+                        <select name="category" class="form-select form-select-sm">
+                            <option value="all" {{ 'selected' if current_filters.category == 'all' else '' }}>All Categories</option>
+                            {% for category in categories %}
+                            <option value="{{ category }}" {{ 'selected' if current_filters.category == category else '' }}>
+                                {{ category }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Time Period</label>
+                        <select name="days" class="form-select form-select-sm">
+                            <option value="1" {{ 'selected' if current_filters.days == 1 else '' }}>Today</option>
+                            <option value="3" {{ 'selected' if current_filters.days == 3 else '' }}>Last 3 Days</option>
+                            <option value="7" {{ 'selected' if current_filters.days == 7 else '' }}>Last Week</option>
+                            <option value="30" {{ 'selected' if current_filters.days == 30 else '' }}>Last Month</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Search</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" name="search" class="form-control" 
+                                   placeholder="Search trends..." value="{{ request.args.get('search', '') }}">
+                            <button class="btn btn-outline-secondary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-filter me-1"></i>
+                                Filter
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearFilters()">
+                                <i class="fas fa-times me-1"></i>
+                                Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Actions -->
+<div class="bulk-actions" id="bulkActions">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <span id="selectedCount">0</span> trends selected
+        </div>
+        <div class="btn-group btn-group-sm">
+            <button class="btn btn-success" onclick="analyzeBulkTrends()">
+                <i class="fas fa-brain me-1"></i>
+                Analyze Selected
+            </button>
+            <button class="btn btn-outline-danger" onclick="clearSelection()">
+                <i class="fas fa-times me-1"></i>
+                Clear Selection
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Trends Grid -->
+<div class="row">
+    {% for trend in trends %}
+    <div class="col-lg-6 col-xl-4 mb-3">
+        <div class="card trend-card {{ get_score_class(trend.popularity_score) }}" data-trend-id="{{ trend.id }}">
+            <div class="card-body">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="form-check">
+                        <input class="form-check-input trend-checkbox" type="checkbox" 
+                               value="{{ trend.id }}" onchange="updateBulkActions()">
+                    </div>
+                    <div class="d-flex gap-1">
+                        <span class="source-badge source-{{ trend.source }}">
+                            <i class="fas fa-{{ get_source_icon(trend.source) }} me-1"></i>
+                            {{ trend.source.upper() }}
+                        </span>
+                        {% if trend.growth_rate > 5 %}
+                        <span class="badge bg-danger trending-animation">HOT</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Topic -->
+                <h6 class="card-title mb-2">{{ trend.topic }}</h6>
+                
+                <!-- Category -->
+                {% if trend.category %}
+                <p class="text-muted small mb-2">
+                    <i class="fas fa-tag me-1"></i>
+                    {{ trend.category }}
+                </p>
+                {% endif %}
+                
+                <!-- Popularity Score -->
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small text-muted">Popularity</span>
+                        <span class="badge bg-primary">{{ "{:.1f}".format(trend.popularity_score) }}/10</span>
+                    </div>
+                    <div class="popularity-meter">
+                        <div class="popularity-fill bg-primary" 
+                             style="width: {{ (trend.popularity_score / 10 * 100)|round }}%"></div>
+                    </div>
+                </div>
+                
+                <!-- Growth Rate -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="small text-muted">Growth Rate</span>
+                    <span class="growth-indicator {{ get_growth_class(trend.growth_rate) }}">
+                        <i class="fas fa-{{ get_growth_icon(trend.growth_rate) }} me-1"></i>
+                        {{ "{:+.1f}".format(trend.growth_rate) }}%
+                    </span>
+                </div>
+                
+                <!-- Keywords -->
+                {% if trend.keywords %}
+                <div class="mb-3">
+                    <span class="small text-muted">Keywords:</span>
+                    <div class="mt-1">
+                        {% for keyword in trend.keywords[:3] %}
+                        <span class="badge bg-light text-dark me-1">{{ keyword }}</span>
+                        {% endfor %}
+                        {% if trend.keywords|length > 3 %}
+                        <span class="small text-muted">+{{ trend.keywords|length - 3 }} more</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Timestamp -->
+                <div class="text-muted small mb-3">
+                    <i class="fas fa-clock me-1"></i>
+                    {{ format_timeago(trend.collected_at) }}
+                </div>
+                
+                <!-- Actions -->
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success btn-sm flex-fill" 
+                            onclick="analyzeSingleTrend('{{ trend.id }}')">
+                        <i class="fas fa-brain me-1"></i>
+                        Analyze
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm" 
+                            onclick="viewTrendDetail('{{ trend.id }}')">
+                        <i class="fas fa-eye me-1"></i>
+                        Detail
+                    </button>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                                data-bs-toggle="dropdown">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="shareTrend('{{ trend.id }}')">
+                                <i class="fas fa-share me-2"></i>Share
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="bookmarkTrend('{{ trend.id }}')">
+                                <i class="fas fa-bookmark me-2"></i>Bookmark
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteTrend('{{ trend.id }}')">
+                                <i class="fas fa-trash me-2"></i>Delete
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    {% if not trends %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No Trends Found</h5>
+            <p class="text-muted">ไม่พบ trends ที่ตรงกับเงื่อนไขที่กำหนด</p>
+            <button class="btn btn-primary" onclick="collectTrends()">
+                <i class="fas fa-download me-1"></i>
+                Collect New Trends
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Load More Button -->
+{% if trends|length >= 50 %}
+<div class="row">
+    <div class="col-12 text-center">
+        <button class="btn btn-outline-primary" onclick="loadMoreTrends()">
+            <i class="fas fa-plus me-1"></i>
+            Load More Trends
+        </button>
+    </div>
+</div>
+{% endif %}
+
+<!-- Trend Detail Modal -->
+<div class="modal fade" id="trendDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Trend Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="trendDetailContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" id="analyzeFromModal">
+                    <i class="fas fa-brain me-1"></i>
+                    Analyze This Trend
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analysis Progress Modal -->
+<div class="modal fade" id="analysisProgressModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Analyzing Trends</h5>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h6 id="analysisStatus">กำลังวิเคราะห์ trends...</h6>
+                    <p class="text-muted mb-0" id="analysisDetail">กรุณารอสักครู่</p>
+                </div>
+                <div class="progress mt-3">
+                    <div class="progress-bar" id="analysisProgress" role="progressbar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let trendDetailModal;
+    let analysisProgressModal;
+    let selectedTrends = new Set();
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        trendDetailModal = new bootstrap.Modal(document.getElementById('trendDetailModal'));
+        analysisProgressModal = new bootstrap.Modal(document.getElementById('analysisProgressModal'));
+        
+        // Auto-refresh trends every 5 minutes
+        setInterval(autoRefreshTrends, 5 * 60 * 1000);
+    });
+    
+    function clearFilters() {
+        const form = document.getElementById('filterForm');
+        form.querySelectorAll('select').forEach(select => {
+            select.selectedIndex = 0;
+        });
+        form.querySelector('input[name="search"]').value = '';
+        form.submit();
+    }
+    
+    function updateBulkActions() {
+        const checkboxes = document.querySelectorAll('.trend-checkbox:checked');
+        const bulkActions = document.getElementById('bulkActions');
+        const selectedCount = document.getElementById('selectedCount');
+        
+        selectedTrends.clear();
+        checkboxes.forEach(cb => selectedTrends.add(cb.value));
+        
+        selectedCount.textContent = selectedTrends.size;
+        
+        if (selectedTrends.size > 0) {
+            bulkActions.classList.add('show');
+        } else {
+            bulkActions.classList.remove('show');
+        }
+    }
+    
+    function clearSelection() {
+        document.querySelectorAll('.trend-checkbox').forEach(cb => {
+            cb.checked = false;
+        });
+        updateBulkActions();
+    }
+    
+    function analyzeSingleTrend(trendId) {
+        showAnalysisProgress();
+        updateAnalysisStatus('กำลังวิเคราะห์ trend นี้...', 'กำลังส่งข้อมูลไป AI', 25);
+        
+        analyzeTrends([trendId]);
+    }
+    
+    function analyzeBulkTrends() {
+        if (selectedTrends.size === 0) {
+            showNotification('กรุณาเลือก trends ที่ต้องการวิเคราะห์', 'warning');
+            return;
+        }
+        
+        showAnalysisProgress();
+        updateAnalysisStatus(
+            `กำลังวิเคราะห์ ${selectedTrends.size} trends...`,
+            'กำลังประมวลผลข้อมูล',
+            10
+        );
+        
+        analyzeTrends(Array.from(selectedTrends));
+    }
+    
+    function showAnalysisProgress() {
+        analysisProgressModal.show();
+        updateAnalysisStatus('เริ่มการวิเคราะห์...', 'กำลังเตรียมข้อมูล', 0);
+    }
+    
+    function hideAnalysisProgress() {
+        analysisProgressModal.hide();
+    }
+    
+    function updateAnalysisStatus(status, detail, progress) {
+        document.getElementById('analysisStatus').textContent = status;
+        document.getElementById('analysisDetail').textContent = detail;
+        document.getElementById('analysisProgress').style.width = `${progress}%`;
+    }
+    
+    function viewTrendDetail(trendId) {
+        // Load trend details via AJAX
+        fetch(`/api/trends/${trendId}`)
+            .then(response => response.json())
+            .then(data => {
+                displayTrendDetail(data);
+                trendDetailModal.show();
+            })
+            .catch(error => {
+                showNotification('ไม่สามารถโหลดรายละเอียดได้', 'error');
+            });
+    }
+    
+    function displayTrendDetail(trend) {
+        const content = document.getElementById('trendDetailContent');
+        content.innerHTML = `
+            <div class="row">
+                <div class="col-md-8">
+                    <h4>${trend.topic}</h4>
+                    <p class="text-muted">${trend.category || 'ไม่มีหมวดหมู่'}</p>
+                    
+                    <div class="mb-3">
+                        <h6>Keywords</h6>
+                        <div>
+                            ${trend.keywords ? trend.keywords.map(k => `<span class="badge bg-light text-dark me-1">${k}</span>`).join('') : 'ไม่มี keywords'}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>Raw Data</h6>
+                        <pre class="bg-light p-2 rounded" style="max-height: 200px; overflow-y: auto;">
+${JSON.stringify(trend.raw_data || {}, null, 2)}
+                        </pre>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">Metrics</h6>
+                            
+                            <div class="mb-2">
+                                <small class="text-muted">Popularity Score</small>
+                                <div class="d-flex justify-content-between">
+                                    <span>${trend.popularity_score.toFixed(1)}/10</span>
+                                    <div class="popularity-meter" style="width: 60px;">
+                                        <div class="popularity-fill bg-primary" style="width: ${trend.popularity_score * 10}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <small class="text-muted">Growth Rate</small>
+                                <div class="text-end">
+                                    <span class="growth-indicator ${getGrowthClass(trend.growth_rate)}">
+                                        ${trend.growth_rate > 0 ? '+' : ''}${trend.growth_rate.toFixed(1)}%
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <small class="text-muted">Source</small>
+                                <div class="text-end">
+                                    <span class="source-badge source-${trend.source}">
+                                        ${trend.source.toUpperCase()}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <small class="text-muted">Collected</small>
+                                <div class="text-end">
+                                    <small>${formatDate(trend.collected_at)}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Set up analyze button
+        document.getElementById('analyzeFromModal').onclick = () => {
+            trendDetailModal.hide();
+            analyzeSingleTrend(trend.id);
+        };
+    }
+    
+    function shareTrend(trendId) {
+        const url = `${window.location.origin}/trends?id=${trendId}`;
+        navigator.clipboard.writeText(url).then(() => {
+            showNotification('Trend URL copied to clipboard', 'success');
+        });
+    }
+    
+    function bookmarkTrend(trendId) {
+        // Implement bookmark functionality
+        showNotification('Trend bookmarked', 'success');
+    }
+    
+    function deleteTrend(trendId) {
+        if (confirm('คุณแน่ใจว่าต้องการลบ trend นี้?')) {
+            fetch(`/api/trends/${trendId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('ลบ trend สำเร็จ', 'success');
+                    location.reload();
+                } else {
+                    showNotification('ไม่สามารถลบได้', 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('เกิดข้อผิดพลาด', 'error');
+            });
+        }
+    }
+    
+    function loadMoreTrends() {
+        // Implement pagination
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('offset', document.querySelectorAll('.trend-card').length);
+        window.location.search = urlParams.toString();
+    }
+    
+    function autoRefreshTrends() {
+        // Auto-refresh trends in background
+        fetch('/api/trends/count')
+            .then(response => response.json())
+            .then(data => {
+                const currentCount = document.querySelectorAll('.trend-card').length;
+                if (data.count > currentCount) {
+                    showNotification(`มี trends ใหม่ ${data.count - currentCount} รายการ`, 'info');
+                }
+            })
+            .catch(error => {
+                console.log('Auto-refresh failed:', error);
+            });
+    }
+    
+    // Override functions from base template for trends-specific behavior
+    function updateTrendsDisplay(trends) {
+        // Add new trends to the grid
+        const trendsGrid = document.querySelector('.row').children[0].parentElement;
+        
+        trends.forEach(trend => {
+            const trendElement = createTrendCard(trend);
+            trendsGrid.insertBefore(trendElement, trendsGrid.children[3]); // After bulk actions
+        });
+        
+        showNotification(`เพิ่ม ${trends.length} trends ใหม่`, 'success');
+    }
+    
+    function createTrendCard(trend) {
+        const div = document.createElement('div');
+        div.className = 'col-lg-6 col-xl-4 mb-3';
+        div.innerHTML = `
+            <div class="card trend-card ${getScoreClass(trend.score)} animate__animated animate__fadeInUp" data-trend-id="${trend.id || 'new'}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input trend-checkbox" type="checkbox" 
+                                   value="${trend.id || 'new'}" onchange="updateBulkActions()">
+                        </div>
+                        <div class="d-flex gap-1">
+                            <span class="source-badge source-auto">
+                                <i class="fas fa-robot me-1"></i>
+                                AUTO
+                            </span>
+                            <span class="badge bg-success trending-animation">NEW</span>
+                        </div>
+                    </div>
+                    
+                    <h6 class="card-title mb-2">${trend.topic}</h6>
+                    
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small text-muted">Popularity</span>
+                            <span class="badge bg-primary">${trend.score.toFixed(1)}/10</span>
+                        </div>
+                        <div class="popularity-meter">
+                            <div class="popularity-fill bg-primary" style="width: ${trend.score * 10}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-muted small mb-3">
+                        <i class="fas fa-clock me-1"></i>
+                        Just now
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success btn-sm flex-fill" 
+                                onclick="analyzeSingleTrend('${trend.id || 'new'}')">
+                            <i class="fas fa-brain me-1"></i>
+                            Analyze
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" 
+                                onclick="viewTrendDetail('${trend.id || 'new'}')">
+                            <i class="fas fa-eye me-1"></i>
+                            Detail
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        return div;
+    }
+    
+    // Helper functions
+    function getScoreClass(score) {
+        if (score >= 7) return 'high-score';
+        if (score >= 4) return 'medium-score';
+        return 'low-score';
+    }
+    
+    function getGrowthClass(rate) {
+        if (rate > 0) return 'growth-positive';
+        if (rate < 0) return 'growth-negative';
+        return 'growth-neutral';
+    }
+    
+    // WebSocket event handlers for real-time updates
+    socket.on('trends_collected', function(data) {
+        hideAnalysisProgress();
+        updateAnalysisStatus('เสร็จสิ้น!', `เก็บ ${data.count} trends ใหม่`, 100);
+        
+        setTimeout(() => {
+            hideAnalysisProgress();
+            updateTrendsDisplay(data.trends);
+        }, 1500);
+    });
+    
+    socket.on('analysis_completed', function(data) {
+        hideAnalysisProgress();
+        updateAnalysisStatus('วิเคราะห์เสร็จสิ้น!', `สร้าง ${data.opportunities_count} โอกาสใหม่`, 100);
+        
+        setTimeout(() => {
+            hideAnalysisProgress();
+            showNotification(
+                `วิเคราะห์เสร็จสิ้น: พบโอกาส ${data.opportunities_count} รายการ`, 
+                'success'
+            );
+            clearSelection();
+        }, 1500);
+    });
+</script>
+{% endblock %}

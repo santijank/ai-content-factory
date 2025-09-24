@@ -1,0 +1,413 @@
+# Enhanced Trend Sources Configuration
+# Configure all trend data sources with detailed settings
+
+# Global Collection Settings
+collection:
+  # Collection intervals
+  intervals:
+    real_time: 300        # 5 minutes for real-time sources
+    hourly: 3600         # 1 hour for standard sources
+    daily: 86400         # 24 hours for slow-changing sources
+    
+  # Data retention
+  retention:
+    raw_data_days: 7
+    processed_data_days: 30
+    archived_data_days: 365
+    
+  # Quality control
+  quality_control:
+    min_popularity_score: 5.0
+    duplicate_threshold: 0.8
+    spam_detection: true
+    fact_checking: true
+
+# Trend Sources Configuration
+sources:
+  # YouTube Trends
+  youtube:
+    enabled: true
+    priority: "high"
+    
+    # API Configuration
+    api:
+      version: "v3"
+      endpoint: "https://www.googleapis.com/youtube/v3"
+      api_key: ${YOUTUBE_API_KEY}
+      quota_limit: 10000  # Points per day
+      
+    # Collection settings
+    collection:
+      max_trends: 50
+      regions: ['US', 'TH', 'GB', 'JP', 'DE', 'FR', 'CA', 'AU']
+      categories: ['all']  # or specific category IDs
+      interval_minutes: 60
+      
+    # Data processing
+    processing:
+      calculate_growth_rate: true
+      extract_keywords: true
+      categorize_content: true
+      sentiment_analysis: false
+      
+    # Filters
+    filters:
+      min_view_count: 1000
+      max_age_hours: 168  # 1 week
+      exclude_shorts: false
+      exclude_live: false
+      language_filter: ["en", "th"]
+      
+  # Google Trends
+  google:
+    enabled: true
+    priority: "high"
+    
+    # API Configuration (using pytrends for unofficial API)
+    api:
+      endpoint: "https://trends.google.com"
+      user_agent: "Mozilla/5.0 (compatible; TrendBot/1.0)"
+      timeout_seconds: 30
+      
+    # Collection settings
+    collection:
+      max_trends: 25
+      regions: ['US', 'TH', 'GB']
+      timeframes: ['now 1-d', 'now 7-d', 'today 5-y']
+      interval_minutes: 30
+      
+    # Categories
+    categories:
+      - 0    # All categories
+      - 16   # News
+      - 20   # Business
+      - 3    # Entertainment
+      - 17   # Sports
+      - 7    # Technology
+      
+    # Processing
+    processing:
+      related_queries: true
+      rising_queries: true
+      geo_distribution: true
+      
+    # Rate limiting
+    rate_limiting:
+      requests_per_minute: 2
+      delay_between_requests: 30
+      
+  # Twitter/X Trends
+  twitter:
+    enabled: false  # Requires API access
+    priority: "medium"
+    
+    # API Configuration
+    api:
+      version: "1.1"
+      endpoint: "https://api.twitter.com/1.1"
+      bearer_token: ${TWITTER_BEARER_TOKEN}
+      api_key: ${TWITTER_API_KEY}
+      api_secret: ${TWITTER_API_SECRET}
+      
+    # Collection settings
+    collection:
+      max_trends: 30
+      locations: [1, 23424977, 23424848]  # Worldwide, USA, Thailand
+      interval_minutes: 15
+      
+    # Processing
+    processing:
+      sentiment_analysis: true
+      hashtag_extraction: true
+      mention_tracking: true
+      retweet_analysis: true
+      
+    # Filters
+    filters:
+      min_tweet_volume: 100
+      exclude_promoted: true
+      language_filter: ["en", "th"]
+      
+  # Reddit Trends
+  reddit:
+    enabled: true
+    priority: "medium"
+    
+    # API Configuration
+    api:
+      endpoint: "https://www.reddit.com"
+      user_agent: "TrendMonitor/1.0 (by /u/trendmonitor)"
+      rate_limit_per_minute: 60
+      
+    # Collection settings
+    collection:
+      max_trends: 25
+      subreddits: 
+        - "all"
+        - "popular"
+        - "technology"
+        - "gaming" 
+        - "movies"
+        - "music"
+        - "news"
+        - "worldnews"
+        - "funny"
+        - "askreddit"
+      interval_minutes: 30
+      
+    # Sorting methods
+    sorting:
+      methods: ["hot", "top", "rising", "new"]
+      time_filters: ["hour", "day", "week"]
+      
+    # Processing
+    processing:
+      comment_analysis: true
+      upvote_ratio: true
+      cross_post_tracking: true
+      
+  # TikTok Trends (Limited API access)
+  tiktok:
+    enabled: false  # Requires special API access
+    priority: "high"
+    
+    # Alternative methods
+    alternative_methods:
+      web_scraping: false  # Against ToS
+      third_party_apis: true
+      manual_research: true
+      
+    # Research sources
+    research_sources:
+      - "https://ads.tiktok.com/business/creativecenter"
+      - "https://www.tiktok.com/discover"
+      
+  # Instagram Trends (Limited API access)
+  instagram:
+    enabled: false  # Limited API access
+    priority: "medium"
+    
+    # Alternative data sources
+    alternative_sources:
+      hashtag_research: true
+      influencer_tracking: false
+      stories_analysis: false
+      
+  # News Sources for Trending Topics
+  news_sources:
+    enabled: true
+    priority: "medium"
+    
+    # RSS Feeds
+    rss_feeds:
+      - url: "https://feeds.reuters.com/reuters/topNews"
+        name: "Reuters Top News"
+        category: "news"
+        
+      - url: "https://feeds.bbci.co.uk/news/rss.xml"
+        name: "BBC News"
+        category: "news"
+        
+      - url: "https://techcrunch.com/feed/"
+        name: "TechCrunch"
+        category: "technology"
+        
+      - url: "https://www.theverge.com/rss/index.xml"
+        name: "The Verge"
+        category: "technology"
+        
+    # Processing
+    processing:
+      keyword_extraction: true
+      sentiment_analysis: true
+      entity_recognition: true
+      
+  # Additional Trend Sources
+  additional_sources:
+    # Pinterest Trends
+    pinterest:
+      enabled: false
+      method: "pinterest_trends_api"
+      
+    # Snapchat Trends
+    snapchat:
+      enabled: false
+      method: "snapchat_insights"
+      
+    # LinkedIn Trends
+    linkedin:
+      enabled: false
+      method: "linkedin_news_api"
+      
+    # Spotify Trends
+    spotify:
+      enabled: false
+      api_endpoint: "https://api.spotify.com/v1"
+      categories: ["viral", "top"]
+
+# Data Processing Pipeline
+processing_pipeline:
+  # Text processing
+  text_processing:
+    language_detection: true
+    sentiment_analysis: true
+    keyword_extraction: true
+    entity_recognition: true
+    topic_modeling: true
+    
+  # Trend analysis
+  trend_analysis:
+    growth_calculation: true
+    momentum_scoring: true
+    viral_potential: true
+    longevity_prediction: true
+    cross_platform_correlation: true
+    
+  # Content categorization
+  categorization:
+    automatic_categorization: true
+    confidence_threshold: 0.75
+    manual_override: true
+    
+    # Category mapping
+    categories:
+      technology: ["tech", "ai", "software", "gadget", "innovation"]
+      entertainment: ["movie", "tv", "celebrity", "music", "game"]
+      sports: ["football", "basketball", "soccer", "olympics", "sport"]
+      news: ["breaking", "politics", "election", "policy", "government"]
+      lifestyle: ["fashion", "food", "travel", "health", "fitness"]
+      business: ["startup", "finance", "market", "economy", "investment"]
+      education: ["learning", "school", "university", "course", "tutorial"]
+      gaming: ["game", "esports", "streaming", "console", "mobile"]
+
+# Quality Assurance
+quality_assurance:
+  # Data validation
+  validation:
+    required_fields: ["topic", "source", "popularity_score"]
+    data_types: {"popularity_score": "float", "collected_at": "datetime"}
+    value_ranges: {"popularity_score": [0, 100]}
+    
+  # Duplicate detection
+  duplicate_detection:
+    similarity_threshold: 0.85
+    comparison_fields: ["topic", "keywords"]
+    time_window_hours: 24
+    
+  # Spam filtering
+  spam_filtering:
+    keyword_blacklist: ["spam", "fake", "scam", "bot"]
+    pattern_detection: true
+    source_reputation: true
+    
+  # Fact checking
+  fact_checking:
+    enabled: true
+    sources: ["factcheck.org", "snopes.com", "politifact.com"]
+    confidence_threshold: 0.7
+
+# Real-time Processing
+real_time:
+  # Stream processing
+  streaming:
+    enabled: false  # Requires additional infrastructure
+    buffer_size: 1000
+    processing_interval: 60
+    
+  # Alert system
+  alerts:
+    viral_threshold: 90
+    growth_rate_threshold: 500
+    notification_channels: ["email", "slack", "webhook"]
+    
+  # Hot trend detection
+  hot_trends:
+    detection_interval: 300  # 5 minutes
+    momentum_threshold: 10
+    cross_source_confirmation: true
+
+# Data Export and API
+data_export:
+  # Export formats
+  formats: ["json", "csv", "xml"]
+  
+  # API endpoints
+  api_endpoints:
+    trends: "/api/trends"
+    categories: "/api/categories"
+    sources: "/api/sources"
+    
+  # Webhooks
+  webhooks:
+    new_trend: ${WEBHOOK_NEW_TREND}
+    viral_trend: ${WEBHOOK_VIRAL_TREND}
+    
+# Analytics and Reporting
+analytics:
+  # Performance metrics
+  metrics:
+    collection_success_rate: true
+    data_quality_score: true
+    prediction_accuracy: true
+    
+  # Reporting
+  reporting:
+    daily_summary: true
+    weekly_analysis: true
+    monthly_trends: true
+    
+  # Dashboards
+  dashboards:
+    real_time_monitor: true
+    source_performance: true
+    trend_analytics: true
+
+# Integration Settings
+integrations:
+  # Database
+  database:
+    primary: "postgresql"
+    backup: "mongodb"
+    caching: "redis"
+    
+  # Message queues
+  message_queues:
+    trend_processing: "rabbitmq"
+    notifications: "kafka"
+    
+  # External APIs
+  external_apis:
+    translation: "google_translate"
+    sentiment: "aws_comprehend"
+    entities: "spacy_nlp"
+
+# Environment-specific Settings
+environments:
+  development:
+    collection:
+      intervals:
+        hourly: 600  # 10 minutes for faster testing
+    sources:
+      youtube:
+        max_trends: 10
+      google:
+        max_trends: 5
+        
+  staging:
+    collection:
+      intervals:
+        hourly: 1800  # 30 minutes
+    quality_assurance:
+      validation:
+        strict_mode: true
+        
+  production:
+    collection:
+      intervals:
+        real_time: 300
+        hourly: 3600
+    analytics:
+      reporting:
+        daily_summary: true
+        weekly_analysis: true
+        monthly_trends: true

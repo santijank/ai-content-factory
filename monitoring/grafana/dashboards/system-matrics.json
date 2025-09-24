@@ -1,0 +1,513 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "AI Content Factory - System Metrics",
+    "tags": ["ai-content-factory", "system", "monitoring"],
+    "style": "dark",
+    "timezone": "browser",
+    "editable": true,
+    "gnetId": null,
+    "graphTooltip": 0,
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": [
+        "5s",
+        "10s",
+        "30s",
+        "1m",
+        "5m",
+        "15m",
+        "30m",
+        "1h",
+        "2h",
+        "1d"
+      ],
+      "time_options": [
+        "5m",
+        "15m",
+        "1h",
+        "6h",
+        "12h",
+        "24h",
+        "2d",
+        "7d",
+        "30d"
+      ]
+    },
+    "refresh": "30s",
+    "version": 1,
+    "panels": [
+      {
+        "id": 1,
+        "title": "System Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "system_cpu_usage",
+            "refId": "A",
+            "legendFormat": "CPU Usage"
+          },
+          {
+            "expr": "system_memory_usage",
+            "refId": "B", 
+            "legendFormat": "Memory Usage"
+          },
+          {
+            "expr": "system_disk_usage",
+            "refId": "C",
+            "legendFormat": "Disk Usage"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 70
+                },
+                {
+                  "color": "red",
+                  "value": 85
+                }
+              ]
+            },
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Service Health",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "service_content_engine_health",
+            "refId": "A",
+            "legendFormat": "Content Engine"
+          },
+          {
+            "expr": "service_platform_manager_health",
+            "refId": "B",
+            "legendFormat": "Platform Manager"
+          },
+          {
+            "expr": "service_trend_monitor_health",
+            "refId": "C",
+            "legendFormat": "Trend Monitor"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "value",
+          "graphMode": "none"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "type": "value",
+                "value": "0",
+                "text": "DOWN"
+              },
+              {
+                "type": "value", 
+                "value": "1",
+                "text": "UP"
+              }
+            ],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "green",
+                  "value": 1
+                }
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "CPU Usage Over Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "system_cpu_usage",
+            "refId": "A",
+            "legendFormat": "CPU Usage %"
+          }
+        ],
+        "gridPos": {
+          "h": 9,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        },
+        "yAxes": [
+          {
+            "min": 0,
+            "max": 100,
+            "unit": "percent"
+          },
+          {
+            "show": false
+          }
+        ],
+        "xAxis": {
+          "show": true
+        },
+        "thresholds": [
+          {
+            "value": 80,
+            "colorMode": "critical",
+            "op": "gt",
+            "fill": true,
+            "line": true
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [80],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "model": {
+                  "expr": "system_cpu_usage",
+                  "refId": "A"
+                },
+                "params": ["A", "5m", "now"]
+              },
+              "reducer": {
+                "params": [],
+                "type": "avg"
+              },
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "for": "2m",
+          "frequency": "30s",
+          "handler": 1,
+          "name": "High CPU Usage",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 4,
+        "title": "Memory Usage Over Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "system_memory_usage",
+            "refId": "A",
+            "legendFormat": "Memory Usage %"
+          },
+          {
+            "expr": "system_memory_available",
+            "refId": "B",
+            "legendFormat": "Available GB"
+          }
+        ],
+        "gridPos": {
+          "h": 9,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        },
+        "yAxes": [
+          {
+            "min": 0,
+            "max": 100,
+            "unit": "percent"
+          },
+          {
+            "min": 0,
+            "unit": "decbytes"
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 85,
+            "colorMode": "critical",
+            "op": "gt",
+            "fill": true,
+            "line": true
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Service Response Times",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "service_content_engine_response_time",
+            "refId": "A",
+            "legendFormat": "Content Engine"
+          },
+          {
+            "expr": "service_platform_manager_response_time",
+            "refId": "B",
+            "legendFormat": "Platform Manager"
+          },
+          {
+            "expr": "service_trend_monitor_response_time",
+            "refId": "C",
+            "legendFormat": "Trend Monitor"
+          }
+        ],
+        "gridPos": {
+          "h": 9,
+          "w": 12,
+          "x": 0,
+          "y": 17
+        },
+        "yAxes": [
+          {
+            "min": 0,
+            "unit": "ms"
+          },
+          {
+            "show": false
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 1000,
+            "colorMode": "critical",
+            "op": "gt",
+            "fill": false,
+            "line": true
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Error Rates",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "app_content_engine_error_rate",
+            "refId": "A",
+            "legendFormat": "Content Engine"
+          },
+          {
+            "expr": "app_platform_manager_error_rate",
+            "refId": "B",
+            "legendFormat": "Platform Manager"
+          },
+          {
+            "expr": "app_trend_monitor_error_rate",
+            "refId": "C",
+            "legendFormat": "Trend Monitor"
+          }
+        ],
+        "gridPos": {
+          "h": 9,
+          "w": 12,
+          "x": 12,
+          "y": 17
+        },
+        "yAxes": [
+          {
+            "min": 0,
+            "max": 100,
+            "unit": "percent"
+          },
+          {
+            "show": false
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 5,
+            "colorMode": "critical",
+            "op": "gt",
+            "fill": true,
+            "line": true
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Network I/O",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(system_network_bytes_sent[5m])",
+            "refId": "A",
+            "legendFormat": "Bytes Sent/sec"
+          },
+          {
+            "expr": "rate(system_network_bytes_recv[5m])",
+            "refId": "B",
+            "legendFormat": "Bytes Received/sec"
+          }
+        ],
+        "gridPos": {
+          "h": 9,
+          "w": 12,
+          "x": 0,
+          "y": 26
+        },
+        "yAxes": [
+          {
+            "min": 0,
+            "unit": "binBps"
+          },
+          {
+            "show": false
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Process Count",
+        "type": "singlestat",
+        "targets": [
+          {
+            "expr": "system_processes_count",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 9,
+          "w": 12,
+          "x": 12,
+          "y": 26
+        },
+        "valueMaps": [],
+        "mappingTypes": [],
+        "thresholds": "200,400",
+        "colors": ["green", "yellow", "red"],
+        "format": "short",
+        "prefix": "",
+        "postfix": " processes",
+        "nullText": null,
+        "valueFontSize": "80%",
+        "prefixFontSize": "50%",
+        "postfixFontSize": "50%",
+        "colorBackground": false,
+        "colorValue": true,
+        "colorPrefix": false,
+        "colorPostfix": false,
+        "sparkline": {
+          "show": true,
+          "full": false,
+          "lineColor": "rgb(31, 120, 193)",
+          "fillColor": "rgba(31, 118, 189, 0.18)"
+        },
+        "gauge": {
+          "show": false,
+          "minValue": 0,
+          "maxValue": 100,
+          "thresholdMarkers": true,
+          "thresholdLabels": false
+        }
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "interval",
+          "type": "interval",
+          "query": "1m,5m,10m,30m,1h,6h,12h,1d,7d",
+          "current": {
+            "text": "5m",
+            "value": "5m"
+          },
+          "options": [
+            {
+              "text": "1m",
+              "value": "1m"
+            },
+            {
+              "text": "5m", 
+              "value": "5m"
+            },
+            {
+              "text": "10m",
+              "value": "10m"
+            },
+            {
+              "text": "30m",
+              "value": "30m"
+            },
+            {
+              "text": "1h",
+              "value": "1h"
+            }
+          ]
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": "-- Grafana --",
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "type": "dashboard"
+        }
+      ]
+    },
+    "schemaVersion": 27,
+    "version": 1,
+    "links": []
+  }
+}

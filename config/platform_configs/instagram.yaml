@@ -1,0 +1,502 @@
+# Instagram Platform Configuration
+# Specific settings and optimizations for Instagram uploads
+
+# API Configuration
+api:
+  version: "v18.0"
+  base_url: "https://graph.facebook.com/v18.0"
+  
+  # Authentication (Business Account Required)
+  app_id: ${INSTAGRAM_APP_ID}
+  app_secret: ${INSTAGRAM_APP_SECRET}
+  access_token: ${INSTAGRAM_ACCESS_TOKEN}
+  business_account_id: ${INSTAGRAM_BUSINESS_ACCOUNT_ID}
+  
+  # Rate limiting
+  requests_per_hour: 200
+  calls_per_application: 4800  # per hour
+
+# Content Types and Specifications
+content_types:
+  # Feed Posts
+  feed_post:
+    image:
+      max_file_size_mb: 30
+      supported_formats: [".jpg", ".jpeg", ".png"]
+      recommended_resolution: "1080x1080"
+      aspect_ratios:
+        square: "1:1"
+        landscape: "1.91:1"
+        portrait: "4:5"
+        
+    video:
+      max_file_size_mb: 100
+      max_duration_seconds: 60
+      supported_formats: [".mp4", ".mov"]
+      recommended_resolution: "1080x1080"
+      aspect_ratios:
+        square: "1:1"
+        landscape: "1.91:1"
+        portrait: "4:5"
+        
+    carousel:
+      max_items: 10
+      min_items: 2
+      mixed_media: true  # Images and videos
+      
+  # Stories
+  story:
+    image:
+      max_file_size_mb: 30
+      supported_formats: [".jpg", ".jpeg", ".png"]
+      resolution: "1080x1920"
+      aspect_ratio: "9:16"
+      
+    video:
+      max_file_size_mb: 100
+      max_duration_seconds: 60
+      supported_formats: [".mp4", ".mov"]
+      resolution: "1080x1920"
+      aspect_ratio: "9:16"
+      
+  # Reels
+  reels:
+    max_file_size_mb: 100
+    max_duration_seconds: 90
+    supported_formats: [".mp4", ".mov"]
+    resolution: "1080x1920"
+    aspect_ratio: "9:16"
+    
+  # IGTV (Deprecated but still supported)
+  igtv:
+    enabled: false
+    max_file_size_mb: 650
+    max_duration_seconds: 3600
+    min_duration_seconds: 60
+
+# Content Optimization
+content:
+  # Caption optimization
+  caption:
+    max_length: 2200
+    optimal_length: 125  # First line before "more"
+    hashtag_limit: 30
+    mention_limit: 20
+    line_break_strategy: "double"
+    
+  # Hashtag strategy
+  hashtags:
+    max_count: 30
+    optimal_count: 11  # Research suggests 9-11 hashtags
+    
+    # Hashtag mix strategy
+    strategy:
+      popular: 3        # 1M+ posts
+      moderately_popular: 4  # 100K-1M posts
+      niche: 4         # 10K-100K posts
+      branded: 2       # Your brand hashtags
+      
+    # Placement options
+    placement:
+      in_caption: true
+      first_comment: true
+      separate_comment: false
+      
+  # Story optimization
+  story_features:
+    stickers: true
+    polls: true
+    questions: true
+    countdown: true
+    location: true
+    music: true
+    effects: true
+
+# Algorithm Optimization
+algorithm:
+  # Ranking factors
+  ranking_factors:
+    relationship: 0.25      # How close you are to the person
+    interest: 0.25         # How much you care about the content
+    timeliness: 0.20       # How recent the post is
+    usage: 0.15           # How often you use Instagram
+    following: 0.15       # How many people you follow
+    
+  # Engagement optimization
+  engagement:
+    golden_hour: 60        # First 60 minutes crucial
+    consistency_score: 0.8
+    response_time: 900     # 15 minutes to respond to comments
+    
+    # Engagement tactics
+    tactics:
+      ask_questions: true
+      use_call_to_actions: true
+      respond_to_comments: true
+      like_comments: true
+      follow_relevant_accounts: false
+
+# Posting Strategy
+posting_strategy:
+  # Optimal posting times (based on audience insights)
+  optimal_times:
+    monday: ["11:00", "14:00", "17:00"]
+    tuesday: ["11:00", "14:00", "17:00"]
+    wednesday: ["11:00", "14:00", "17:00"]
+    thursday: ["11:00", "14:00", "17:00"]
+    friday: ["10:00", "13:00", "16:00"]
+    saturday: ["10:00", "13:00", "16:00"]
+    sunday: ["10:00", "13:00", "16:00"]
+    
+  # Content mix
+  content_mix:
+    feed_posts: 0.60
+    stories: 0.25
+    reels: 0.15
+    
+  # Posting frequency
+  frequency:
+    feed_posts: "1 per day"
+    stories: "3-5 per day"
+    reels: "3-4 per week"
+
+# Reels Optimization
+reels:
+  # Algorithm factors
+  algorithm_factors:
+    completion_rate: 0.30
+    shares: 0.25
+    comments: 0.20
+    likes: 0.15
+    saves: 0.10
+    
+  # Content strategy
+  content_strategy:
+    hook_duration: 3      # First 3 seconds
+    trending_audio: true
+    trending_effects: true
+    captions_on_screen: true
+    vertical_format: true
+    
+  # Trending elements
+  trending:
+    music_update_frequency: "daily"
+    effects_update_frequency: "daily"
+    hashtags_update_frequency: "weekly"
+
+# Stories Strategy
+stories:
+  # Story types performance
+  story_types:
+    behind_scenes: 0.15
+    tutorials: 0.12
+    polls: 0.18
+    questions: 0.16
+    user_generated_content: 0.14
+    product_features: 0.10
+    
+  # Interactive elements
+  interactive_elements:
+    polls: true
+    questions: true
+    quizzes: true
+    countdowns: true
+    sliders: true
+    
+  # Story highlights
+  highlights:
+    enabled: true
+    max_highlights: 100
+    cover_images: true
+    organization_strategy: "by_topic"
+
+# Analytics and Insights
+analytics:
+  # Account insights
+  account_metrics:
+    - "reach"
+    - "impressions" 
+    - "profile_visits"
+    - "website_clicks"
+    - "follower_growth"
+    - "email_contacts"
+    - "phone_contacts"
+    - "text_message_clicks"
+    - "get_directions_clicks"
+    
+  # Content insights
+  content_metrics:
+    - "reach"
+    - "impressions"
+    - "likes"
+    - "comments"
+    - "shares"
+    - "saves"
+    - "profile_visits_from_post"
+    - "follows_from_post"
+    
+  # Audience insights
+  audience_metrics:
+    - "age_groups"
+    - "gender"
+    - "locations"
+    - "most_active_times"
+    - "follower_growth"
+
+# Shopping Features
+shopping:
+  # Product tagging
+  product_tagging:
+    enabled: false  # Requires Instagram Shopping setup
+    max_tags_per_post: 20
+    max_tags_per_story: 1
+    
+  # Shopping tags
+  shopping_tags:
+    feed_posts: true
+    stories: true
+    reels: false  # Not supported yet
+    
+# Monetization
+monetization:
+  # Creator fund
+  creator_bonus: false  # By invitation only
+  
+  # Brand partnerships
+  partnerships:
+    branded_content_tools: true
+    disclosure_required: true
+    
+  # Shopping
+  affiliate_links: false  # Limited availability
+
+# Content Safety and Moderation
+content_safety:
+  # Automatic filters
+  filters:
+    inappropriate_content: true
+    spam_detection: true
+    hate_speech: true
+    bullying: true
+    violence: true
+    
+  # Community guidelines
+  guidelines:
+    authentic_content: true
+    respectful_behavior: true
+    follow_law: true
+    respect_intellectual_property: true
+
+# Performance Benchmarks
+benchmarks:
+  # Engagement rates by follower count
+  engagement_rates:
+    "0-1K": 0.084
+    "1K-10K": 0.070
+    "10K-100K": 0.047
+    "100K-1M": 0.027
+    "1M+": 0.018
+    
+  # Content type performance
+  content_performance:
+    images: 0.036
+    videos: 0.049
+    carousel: 0.054
+    reels: 0.075
+    
+  # Story completion rates
+  story_completion:
+    excellent: 0.80
+    good: 0.60
+    average: 0.40
+    poor: 0.20
+
+# Compliance and Guidelines
+compliance:
+  # Community standards
+  community_standards:
+    violence_incitement: false
+    dangerous_organizations: false
+    bullying_harassment: false
+    adult_nudity: false
+    sexual_solicitation: false
+    
+  # Copyright policies
+  copyright:
+    music_library_preferred: true
+    original_content: true
+    fair_use: true
+    
+  # Business policies
+  business_policies:
+    terms_of_service: true
+    privacy_policy: true
+    community_guidelines: true
+
+# A/B Testing
+ab_testing:
+  enabled: true
+  
+  # Test elements
+  test_elements:
+    captions: true
+    hashtags: true
+    posting_times: true
+    content_types: true
+    
+  # Test configuration
+  config:
+    test_duration_hours: 48
+    min_impressions: 1000
+    confidence_level: 0.95
+
+# Error Handling
+error_handling:
+  # Common errors
+  retry_errors:
+    - "rate_limit_exceeded"
+    - "temporarily_blocked"
+    - "media_upload_failed"
+    - "server_error"
+    
+  # Permanent errors
+  permanent_errors:
+    - "invalid_access_token"
+    - "permissions_error"
+    - "media_type_not_supported"
+    - "caption_too_long"
+    - "too_many_hashtags"
+    
+  # Retry configuration
+  retry_config:
+    max_attempts: 3
+    backoff_factor: 2
+    base_delay: 30
+
+# Third-party Integrations
+integrations:
+  # Analytics tools
+  analytics:
+    hootsuite: false
+    sprout_social: false
+    later: false
+    
+  # Content creation
+  creation_tools:
+    canva: false
+    unfold: false
+    storyluxe: false
+    
+  # Scheduling tools
+  scheduling:
+    meta_business_suite: true
+    creator_studio: true
+
+# Advanced Features
+advanced_features:
+  # Instagram Shopping
+  shopping_features:
+    product_catalog: false
+    shop_tab: false
+    shopping_ads: false
+    
+  # Creator tools
+  creator_tools:
+    branded_content: true
+    creator_studio: true
+    insights_api: true
+    
+  # Business features
+  business_features:
+    business_profile: true
+    contact_buttons: true
+    insights: true
+    ads_manager: false
+    
+  # Live features
+  live_features:
+    live_video: true
+    live_shopping: false
+    live_rooms: false
+
+# Content Templates
+content_templates:
+  # Post templates by industry
+  industries:
+    fitness:
+      caption_style: "motivational"
+      hashtag_sets: ["fitness", "workout", "health"]
+      optimal_times: ["06:00", "18:00", "20:00"]
+      
+    food:
+      caption_style: "descriptive"
+      hashtag_sets: ["food", "cooking", "recipe"]
+      optimal_times: ["12:00", "17:00", "19:00"]
+      
+    fashion:
+      caption_style: "trendy"
+      hashtag_sets: ["fashion", "style", "outfit"]
+      optimal_times: ["10:00", "14:00", "19:00"]
+      
+    travel:
+      caption_style: "storytelling"
+      hashtag_sets: ["travel", "wanderlust", "adventure"]
+      optimal_times: ["08:00", "13:00", "20:00"]
+
+# Automation Rules
+automation:
+  # Auto-posting
+  auto_posting:
+    enabled: true
+    optimal_time_selection: true
+    content_type_rotation: true
+    
+  # Auto-engagement
+  auto_engagement:
+    auto_like: false  # Against ToS
+    auto_comment: false  # Against ToS
+    auto_follow: false  # Against ToS
+    
+  # Content curation
+  content_curation:
+    user_generated_content: true
+    repost_with_permission: true
+    story_reposts: true
+
+# Growth Strategy
+growth_strategy:
+  # Organic growth tactics
+  organic_tactics:
+    consistent_posting: true
+    engage_with_followers: true
+    use_relevant_hashtags: true
+    collaborate_with_creators: true
+    cross_promote_on_other_platforms: true
+    
+  # Content strategy
+  content_strategy:
+    educational_content: 0.30
+    entertaining_content: 0.40
+    promotional_content: 0.20
+    user_generated_content: 0.10
+    
+  # Engagement strategy
+  engagement_strategy:
+    respond_to_comments: true
+    like_follower_posts: true
+    comment_on_industry_posts: true
+    share_relevant_stories: true
+
+# Crisis Management
+crisis_management:
+  # Negative feedback handling
+  negative_feedback:
+    respond_publicly: true
+    move_to_private: true
+    escalation_process: true
+    
+  # Content removal
+  content_removal:
+    immediate_removal: true
+    backup_strategy: true
+    legal_consultation: true

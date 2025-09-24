@@ -1,0 +1,900 @@
+{
+  "name": "Content Generation Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "generate-content",
+        "options": {
+          "noResponseBody": false
+        }
+      },
+      "id": "content-generation-trigger",
+      "name": "Content Generation Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "content-generation-webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "validate-request",
+              "leftValue": "={{ $json.body.opportunity_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            },
+            {
+              "id": "validate-quality-tier",
+              "leftValue": "={{ ['budget', 'balanced', 'premium'].includes($json.body.quality_tier) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "validate-request",
+      "name": "Validate Request",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT co.*, t.topic, t.source, t.keywords, t.popularity_score FROM content_opportunities co JOIN trends t ON co.trend_id = t.id WHERE co.id = $1",
+        "additionalFields": {},
+        "options": {
+          "queryReplacement": "={{ $json.body.opportunity_id }}"
+        }
+      },
+      "id": "fetch-opportunity",
+      "name": "Fetch Content Opportunity",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        680,
+        220
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-main-db",
+          "name": "Main Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$env.CONTENT_ENGINE_URL}}/generate-content-plan",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.CONTENT_ENGINE_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "opportunity_data",
+              "value": "={{ $('Fetch Content Opportunity').item.json }}"
+            },
+            {
+              "name": "quality_tier",
+              "value": "={{ $('Content Generation Trigger').item.json.body.quality_tier }}"
+            },
+            {
+              "name": "content_type",
+              "value": "={{ $('Content Generation Trigger').item.json.body.content_type || 'video' }}"
+            },
+            {
+              "name": "target_platforms",
+              "value": "={{ $('Content Generation Trigger').item.json.body.target_platforms || ['youtube', 'tiktok'] }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "generate-content-plan",
+      "name": "Generate Content Plan",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.CONTENT_ENGINE_URL}}/generate-script",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.CONTENT_ENGINE_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content_plan",
+              "value": "={{ $('Generate Content Plan').item.json.content_plan }}"
+            },
+            {
+              "name": "quality_tier",
+              "value": "={{ $('Content Generation Trigger').item.json.body.quality_tier }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "generate-script",
+      "name": "Generate Script",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.CONTENT_ENGINE_URL}}/generate-visuals",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.CONTENT_ENGINE_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content_plan",
+              "value": "={{ $('Generate Content Plan').item.json.content_plan }}"
+            },
+            {
+              "name": "script_content",
+              "value": "={{ $('Generate Script').item.json.script }}"
+            },
+            {
+              "name": "quality_tier",
+              "value": "={{ $('Content Generation Trigger').item.json.body.quality_tier }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "generate-visuals",
+      "name": "Generate Visuals",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.CONTENT_ENGINE_URL}}/generate-audio",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.CONTENT_ENGINE_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "script_content",
+              "value": "={{ $('Generate Script').item.json.script }}"
+            },
+            {
+              "name": "voice_settings",
+              "value": "={{ $('Generate Content Plan').item.json.content_plan.audio_plan }}"
+            },
+            {
+              "name": "quality_tier",
+              "value": "={{ $('Content Generation Trigger').item.json.body.quality_tier }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 180000
+        }
+      },
+      "id": "generate-audio",
+      "name": "Generate Audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "combine-assets",
+      "name": "Combine Generated Assets",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1340,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.CONTENT_ENGINE_URL}}/assemble-video",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.CONTENT_ENGINE_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "script_data",
+              "value": "={{ $('Generate Script').item.json }}"
+            },
+            {
+              "name": "visual_assets",
+              "value": "={{ $('Generate Visuals').item.json.assets }}"
+            },
+            {
+              "name": "audio_assets",
+              "value": "={{ $('Generate Audio').item.json.assets }}"
+            },
+            {
+              "name": "content_plan",
+              "value": "={{ $('Generate Content Plan').item.json.content_plan }}"
+            },
+            {
+              "name": "target_platforms",
+              "value": "={{ $('Content Generation Trigger').item.json.body.target_platforms }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "id": "assemble-video",
+      "name": "Assemble Final Video",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1560,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "calculate-total-cost",
+              "name": "total_cost",
+              "value": "={{ ($('Generate Script').item.json.cost || 0) + ($('Generate Visuals').item.json.cost || 0) + ($('Generate Audio').item.json.cost || 0) + ($('Assemble Final Video').item.json.cost || 0) }}",
+              "type": "number"
+            },
+            {
+              "id": "production-time",
+              "name": "production_time_minutes",
+              "value": "={{ Math.round((new Date() - new Date($('Content Generation Trigger').first().json.headers.timestamp)) / 60000) }}",
+              "type": "number"
+            },
+            {
+              "id": "asset-urls",
+              "name": "asset_urls",
+              "value": "={{ {\n  script: $('Generate Script').item.json.script_url,\n  visuals: $('Generate Visuals').item.json.assets,\n  audio: $('Generate Audio').item.json.assets,\n  final_video: $('Assemble Final Video').item.json.video_url,\n  thumbnail: $('Assemble Final Video').item.json.thumbnail_url\n} }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "calculate-metrics",
+      "name": "Calculate Production Metrics",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        1780,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO content_items (opportunity_id, title, description, content_type, content_plan, script_content, assets, production_status, production_quality_tier, total_production_cost, ai_services_used, created_at, production_completed_at) VALUES ($1, $2, $3, $4, $5, $6, $7, 'completed', $8, $9, $10, NOW(), NOW()) RETURNING id",
+        "additionalFields": {},
+        "options": {
+          "queryReplacement": "={{ [\n  $('Content Generation Trigger').item.json.body.opportunity_id,\n  $('Generate Content Plan').item.json.content_plan.title,\n  $('Generate Content Plan').item.json.content_plan.description,\n  $('Content Generation Trigger').item.json.body.content_type || 'video',\n  JSON.stringify($('Generate Content Plan').item.json.content_plan),\n  $('Generate Script').item.json.script,\n  JSON.stringify($json.asset_urls),\n  $('Content Generation Trigger').item.json.body.quality_tier,\n  $json.total_cost,\n  JSON.stringify({\n    script_ai: $('Generate Script').item.json.service_used,\n    image_ai: $('Generate Visuals').item.json.service_used,\n    audio_ai: $('Generate Audio').item.json.service_used\n  })\n] }}"
+        }
+      },
+      "id": "save-content-item",
+      "name": "Save Content Item to Database",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        2000,
+        240
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-main-db",
+          "name": "Main Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE content_opportunities SET status = 'completed', completed_at = NOW() WHERE id = $1",
+        "additionalFields": {},
+        "options": {
+          "queryReplacement": "={{ $('Content Generation Trigger').item.json.body.opportunity_id }}"
+        }
+      },
+      "id": "update-opportunity-status",
+      "name": "Update Opportunity Status",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        2000,
+        340
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-main-db",
+          "name": "Main Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "=🎬 **Content Generated Successfully!**\n\n✨ **Title**: {{ $('Generate Content Plan').item.json.content_plan.title }}\n🎯 **Quality Tier**: {{ $('Content Generation Trigger').item.json.body.quality_tier }}\n💰 **Total Cost**: ${{ $('Calculate Production Metrics').item.json.total_cost.toFixed(2) }}\n⏱️ **Production Time**: {{ $('Calculate Production Metrics').item.json.production_time_minutes }} minutes\n\n**Assets Generated:**\n📝 Script: Generated\n🖼️ Visuals: {{ $('Generate Visuals').item.json.assets.length }} images\n🎵 Audio: Generated\n🎥 Final Video: {{ $('Assemble Final Video').item.json.video_url }}\n\n**Next Step**: Ready for platform upload!",
+        "chatId": "={{$env.SLACK_CHANNEL_ID}}",
+        "additionalFields": {
+          "append_attribution": false
+        }
+      },
+      "id": "success-notification",
+      "name": "Success Notification",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [
+        2220,
+        190
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "slack-bot-token",
+          "name": "Slack Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{$env.WEBHOOK_URL}}/content-generation-complete",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Webhook-Secret",
+              "value": "={{$env.WEBHOOK_SECRET}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event",
+              "value": "content_generation_complete"
+            },
+            {
+              "name": "content_id",
+              "value": "={{ $('Save Content Item to Database').item.json[0].id }}"
+            },
+            {
+              "name": "opportunity_id",
+              "value": "={{ $('Content Generation Trigger').item.json.body.opportunity_id }}"
+            },
+            {
+              "name": "quality_tier",
+              "value": "={{ $('Content Generation Trigger').item.json.body.quality_tier }}"
+            },
+            {
+              "name": "production_cost",
+              "value": "={{ $('Calculate Production Metrics').item.json.total_cost }}"
+            },
+            {
+              "name": "assets",
+              "value": "={{ $('Calculate Production Metrics').item.json.asset_urls }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ new Date().toISOString() }}"
+            }
+          ]
+        }
+      },
+      "id": "webhook-notification",
+      "name": "Webhook Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2220,
+        290
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  success: true,\n  content_id: $('Save Content Item to Database').item.json[0].id,\n  message: 'Content generated successfully',\n  assets: $('Calculate Production Metrics').item.json.asset_urls,\n  cost: $('Calculate Production Metrics').item.json.total_cost,\n  production_time_minutes: $('Calculate Production Metrics').item.json.production_time_minutes,\n  ready_for_upload: true\n} }}",
+        "options": {}
+      },
+      "id": "success-response",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2440,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "content": "=❌ **Content Generation Failed**\n\n🚨 **Error**: {{ $json.error || 'Request validation failed' }}\n📝 **Opportunity ID**: {{ $('Content Generation Trigger').item.json.body.opportunity_id || 'N/A' }}\n⏰ **Time**: {{ new Date().toISOString() }}\n\n**Request Data:**\n```json\n{{ JSON.stringify($('Content Generation Trigger').item.json.body, null, 2) }}\n```",
+        "chatId": "={{$env.SLACK_ALERTS_CHANNEL_ID}}",
+        "additionalFields": {
+          "append_attribution": false
+        }
+      },
+      "id": "failure-notification",
+      "name": "Failure Notification",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [
+        680,
+        420
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "slack-bot-token",
+          "name": "Slack Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  success: false,\n  error: 'Invalid request parameters',\n  required: {\n    opportunity_id: 'string (required)',\n    quality_tier: 'budget|balanced|premium (required)',\n    content_type: 'video|image|text (optional, default: video)',\n    target_platforms: 'array (optional, default: [\"youtube\", \"tiktok\"])'\n  },\n  received: $json.body\n} }}",
+        "options": {}
+      },
+      "id": "error-response",
+      "name": "Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        680,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-auto-upload",
+              "leftValue": "={{ $('Content Generation Trigger').item.json.body.auto_upload }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-auto-upload",
+      "name": "Check Auto Upload",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.N8N_WEBHOOK_URL}}/platform-upload",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content_id",
+              "value": "={{ $('Save Content Item to Database').item.json[0].id }}"
+            },
+            {
+              "name": "platforms",
+              "value": "={{ $('Content Generation Trigger').item.json.body.target_platforms }}"
+            },
+            {
+              "name": "scheduled_time",
+              "value": "={{ $('Content Generation Trigger').item.json.body.scheduled_time || null }}"
+            }
+          ]
+        }
+      },
+      "id": "trigger-upload",
+      "name": "Trigger Platform Upload",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2220,
+        90
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "request-validation",
+              "name": "validation_errors",
+              "value": "={{ [\n  !$json.body.opportunity_id ? 'Missing opportunity_id' : null,\n  !['budget', 'balanced', 'premium'].includes($json.body.quality_tier) ? 'Invalid quality_tier (must be budget, balanced, or premium)' : null\n].filter(error => error !== null) }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "validate-input",
+      "name": "Validate Input Parameters",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        240,
+        200
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Content Generation Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate Input Parameters",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Validate Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Request": {
+      "main": [
+        [
+          {
+            "node": "Fetch Content Opportunity",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failure Notification",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Content Opportunity": {
+      "main": [
+        [
+          {
+            "node": "Generate Content Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Content Plan": {
+      "main": [
+        [
+          {
+            "node": "Generate Script",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate Visuals",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Script": {
+      "main": [
+        [
+          {
+            "node": "Combine Generated Assets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Visuals": {
+      "main": [
+        [
+          {
+            "node": "Combine Generated Assets",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Generate Audio": {
+      "main": [
+        [
+          {
+            "node": "Combine Generated Assets",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Combine Generated Assets": {
+      "main": [
+        [
+          {
+            "node": "Assemble Final Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble Final Video": {
+      "main": [
+        [
+          {
+            "node": "Calculate Production Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Production Metrics": {
+      "main": [
+        [
+          {
+            "node": "Save Content Item to Database",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Opportunity Status",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Auto Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Content Item to Database": {
+      "main": [
+        [
+          {
+            "node": "Success Notification",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Webhook Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Opportunity Status": {
+      "main": [
+        [
+          {
+            "node": "Webhook Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success Notification": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Notification": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Auto Upload": {
+      "main": [
+        [
+          {
+            "node": "Trigger Platform Upload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Trigger Platform Upload": {
+      "main": [
+        [
+          {
+            "node": "Success Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "error-handling-workflow"
+  },
+  "versionId": "1",
+  "id": "content-generation-workflow",
+  "meta": {
+    "instanceId": "ai-content-factory"
+  },
+  "tags": [
+    {
+      "id": "content-generation",
+      "name": "Content Generation"
+    },
+    {
+      "id": "ai-services",
+      "name": "AI Services"
+    },
+    {
+      "id": "automation",
+      "name": "Automation"
+    }
+  ]
+}

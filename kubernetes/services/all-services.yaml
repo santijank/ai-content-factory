@@ -1,0 +1,215 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: trend-monitor-service
+  namespace: ai-content-factory
+  labels:
+    app: trend-monitor
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8001
+    targetPort: 8001
+    protocol: TCP
+    name: http
+  - port: 9090
+    targetPort: 9090
+    protocol: TCP
+    name: metrics
+  selector:
+    app: trend-monitor
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: content-engine-service
+  namespace: ai-content-factory
+  labels:
+    app: content-engine
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8002
+    targetPort: 8002
+    protocol: TCP
+    name: http
+  - port: 9090
+    targetPort: 9090
+    protocol: TCP
+    name: metrics
+  selector:
+    app: content-engine
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: platform-manager-service
+  namespace: ai-content-factory
+  labels:
+    app: platform-manager
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8003
+    targetPort: 8003
+    protocol: TCP
+    name: http
+  - port: 9090
+    targetPort: 9090
+    protocol: TCP
+    name: metrics
+  selector:
+    app: platform-manager
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-dashboard-service
+  namespace: ai-content-factory
+  labels:
+    app: web-dashboard
+    component: frontend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: web-dashboard
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: ai-content-factory
+  labels:
+    app: postgres
+    component: database
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+    name: postgres
+  selector:
+    app: postgres
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: ai-content-factory
+  labels:
+    app: redis
+    component: cache
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: redis
+  selector:
+    app: redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway-service
+  namespace: ai-content-factory
+  labels:
+    app: api-gateway
+    component: gateway
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  - port: 9090
+    targetPort: 9090
+    protocol: TCP
+    name: metrics
+  selector:
+    app: api-gateway
+---
+# Headless service for StatefulSet (if needed for clustering)
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-headless
+  namespace: ai-content-factory
+  labels:
+    app: postgres
+    component: database
+spec:
+  clusterIP: None
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+    name: postgres
+  selector:
+    app: postgres
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: monitoring-service
+  namespace: ai-content-factory
+  labels:
+    app: monitoring
+    component: monitoring
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8004
+    targetPort: 8004
+    protocol: TCP
+    name: http
+  - port: 9090
+    targetPort: 9090
+    protocol: TCP
+    name: metrics
+  selector:
+    app: monitoring
+---
+# External service for load balancer (if using cloud provider)
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-content-factory-lb
+  namespace: ai-content-factory
+  labels:
+    app: ai-content-factory
+    component: loadbalancer
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    # For GCP
+    # cloud.google.com/load-balancer-type: "External"
+    # For Azure
+    # service.beta.kubernetes.io/azure-load-balancer-internal: "false"
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  - port: 443
+    targetPort: 3000
+    protocol: TCP
+    name: https
+  selector:
+    app: web-dashboard
+  # Optional: specify loadBalancerSourceRanges for security
+  # loadBalancerSourceRanges:
+  # - 0.0.0.0/0

@@ -1,0 +1,203 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-content-factory-config
+  namespace: ai-content-factory
+  labels:
+    app: ai-content-factory
+    component: config
+data:
+  # Application Configuration
+  APP_ENV: "production"
+  LOG_LEVEL: "INFO"
+  TIMEZONE: "Asia/Bangkok"
+  
+  # Database Configuration
+  DB_HOST: "postgres-service"
+  DB_PORT: "5432"
+  DB_NAME: "content_factory"
+  DB_MAX_CONNECTIONS: "20"
+  DB_CONNECTION_TIMEOUT: "30"
+  
+  # Redis Configuration
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  
+  # Service URLs
+  TREND_MONITOR_URL: "http://trend-monitor-service:8001"
+  CONTENT_ENGINE_URL: "http://content-engine-service:8002"
+  PLATFORM_MANAGER_URL: "http://platform-manager-service:8003"
+  WEB_DASHBOARD_URL: "http://web-dashboard-service:3000"
+  MONITORING_URL: "http://monitoring-service:8004"
+  
+  # AI Service Configuration
+  DEFAULT_QUALITY_TIER: "balanced"
+  MAX_CONTENT_GENERATION_TIME: "300"
+  MAX_UPLOAD_RETRIES: "3"
+  
+  # Platform Configuration
+  SUPPORTED_PLATFORMS: "youtube,tiktok,instagram,facebook"
+  DEFAULT_CONTENT_DURATION: "60"
+  MAX_FILE_SIZE: "100MB"
+  
+  # Monitoring Configuration
+  METRICS_ENABLED: "true"
+  HEALTH_CHECK_INTERVAL: "30"
+  PROMETHEUS_PORT: "9090"
+  
+  # Feature Flags
+  ENABLE_AUTO_UPLOAD: "true"
+  ENABLE_TREND_NOTIFICATIONS: "true"
+  ENABLE_PERFORMANCE_TRACKING: "true"
+  ENABLE_AI_OPTIMIZATION: "true"
+  
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: ai-content-factory
+  labels:
+    app: postgres
+    component: database
+data:
+  POSTGRES_DB: "content_factory"
+  POSTGRES_USER: "admin"
+  PGDATA: "/var/lib/postgresql/data/pgdata"
+  
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: ai-content-factory
+  labels:
+    app: redis
+    component: cache
+data:
+  redis.conf: |
+    # Redis Configuration for AI Content Factory
+    maxmemory 256mb
+    maxmemory-policy allkeys-lru
+    save 900 1
+    save 300 10
+    save 60 10000
+    appendonly yes
+    appendfsync everysec
+    tcp-keepalive 300
+    timeout 0
+    
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: ai-content-factory
+  labels:
+    app: nginx
+    component: ingress
+data:
+  nginx.conf: |
+    user nginx;
+    worker_processes auto;
+    error_log /var/log/nginx/error.log warn;
+    pid /var/run/nginx.pid;
+    
+    events {
+        worker_connections 1024;
+        use epoll;
+        multi_accept on;
+    }
+    
+    http {
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+        
+        log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                        '$status $body_bytes_sent "$http_referer" '
+                        '"$http_user_agent" "$http_x_forwarded_for"';
+                        
+        access_log /var/log/nginx/access.log main;
+        
+        sendfile on;
+        tcp_nopush on;
+        tcp_nodelay on;
+        keepalive_timeout 65;
+        types_hash_max_size 2048;
+        
+        # Gzip Settings
+        gzip on;
+        gzip_vary on;
+        gzip_min_length 1024;
+        gzip_comp_level 6;
+        gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+        
+        # Rate Limiting
+        limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
+        limit_req_zone $binary_remote_addr zone=upload:10m rate=2r/s;
+        
+        # Upstream definitions will be added by ingress controller
+        
+        # Security Headers
+        add_header X-Frame-Options DENY;
+        add_header X-Content-Type-Options nosniff;
+        add_header X-XSS-Protection "1; mode=block";
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    }
+    
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-logging-config
+  namespace: ai-content-factory
+  labels:
+    app: ai-content-factory
+    component: logging
+data:
+  logging.yaml: |
+    version: 1
+    disable_existing_loggers: false
+    
+    formatters:
+      standard:
+        format: '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+      json:
+        format: '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": "%(message)s", "module": "%(module)s", "function": "%(funcName)s", "line": %(lineno)d}'
+    
+    handlers:
+      console:
+        class: logging.StreamHandler
+        level: INFO
+        formatter: json
+        stream: ext://sys.stdout
+      
+      file:
+        class: logging.handlers.RotatingFileHandler
+        level: DEBUG
+        formatter: standard
+        filename: /app/logs/app.log
+        maxBytes: 10485760  # 10MB
+        backupCount: 5
+    
+    loggers:
+      '':
+        level: INFO
+        handlers: [console, file]
+        propagate: false
+      
+      ai_content_factory:
+        level: DEBUG
+        handlers: [console, file]
+        propagate: false
+      
+      uvicorn:
+        level: INFO
+        handlers: [console]
+        propagate: false
+      
+      sqlalchemy:
+        level: WARNING
+        handlers: [console]
+        propagate: false

@@ -1,0 +1,310 @@
+# Platform Manager Configuration
+# Configure upload settings for all platforms
+
+# Global upload settings
+upload_settings:
+  max_concurrent_uploads: 3
+  retry_attempts: 3
+  retry_delay_seconds: 30
+  default_privacy: "public"
+  enable_scheduling: true
+  enable_analytics: true
+
+# Platform-specific configurations
+platforms:
+  # YouTube Configuration
+  youtube:
+    enabled: true
+    api_key: ${YOUTUBE_API_KEY}
+    client_id: ${YOUTUBE_CLIENT_ID}
+    client_secret: ${YOUTUBE_CLIENT_SECRET}
+    access_token: ${YOUTUBE_ACCESS_TOKEN}
+    refresh_token: ${YOUTUBE_REFRESH_TOKEN}
+    
+    # YouTube-specific settings
+    default_category: "22"  # People & Blogs
+    default_privacy: "public"  # public, unlisted, private
+    max_title_length: 100
+    max_description_length: 5000
+    max_tags: 500
+    
+    # Content optimization
+    enable_auto_chapters: false
+    enable_auto_captions: true
+    default_language: "en"
+    
+    # Upload limits
+    max_file_size_gb: 256
+    supported_formats: [".mp4", ".mov", ".avi", ".wmv", ".flv", ".webm"]
+    
+  # TikTok Configuration  
+  tiktok:
+    enabled: true
+    client_key: ${TIKTOK_CLIENT_KEY}
+    client_secret: ${TIKTOK_CLIENT_SECRET}
+    access_token: ${TIKTOK_ACCESS_TOKEN}
+    
+    # TikTok-specific settings
+    max_caption_length: 150
+    max_hashtags: 10
+    default_privacy: "public"
+    enable_duet: true
+    enable_comment: true
+    
+    # Content optimization
+    auto_add_trending_hashtags: true
+    trending_hashtag_count: 3
+    
+    # Upload limits
+    max_file_size_mb: 500
+    max_duration_seconds: 600  # 10 minutes
+    supported_formats: [".mp4", ".mov"]
+    min_resolution: "720p"
+    
+  # Instagram Configuration
+  instagram:
+    enabled: true
+    app_id: ${INSTAGRAM_APP_ID}
+    app_secret: ${INSTAGRAM_APP_SECRET}
+    access_token: ${INSTAGRAM_ACCESS_TOKEN}
+    business_account_id: ${INSTAGRAM_BUSINESS_ACCOUNT_ID}
+    
+    # Instagram-specific settings
+    max_caption_length: 2200
+    max_hashtags: 30
+    
+    # Content types
+    enable_feed_posts: true
+    enable_stories: true
+    enable_reels: true
+    enable_igtv: false  # Deprecated
+    
+    # Content optimization
+    auto_crop_images: true
+    target_aspect_ratios:
+      square: "1:1"
+      portrait: "4:5"
+      landscape: "1.91:1"
+      story: "9:16"
+      reel: "9:16"
+    
+    # Upload limits
+    max_image_size_mb: 30
+    max_video_size_mb: 100
+    max_carousel_items: 10
+    supported_image_formats: [".jpg", ".jpeg", ".png"]
+    supported_video_formats: [".mp4", ".mov"]
+    
+  # Facebook Configuration
+  facebook:
+    enabled: true
+    app_id: ${FACEBOOK_APP_ID}
+    app_secret: ${FACEBOOK_APP_SECRET}
+    access_token: ${FACEBOOK_ACCESS_TOKEN}
+    page_id: ${FACEBOOK_PAGE_ID}
+    page_access_token: ${FACEBOOK_PAGE_ACCESS_TOKEN}
+    
+    # Facebook-specific settings
+    max_post_length: 63206
+    default_privacy: "public"
+    
+    # Content types
+    enable_text_posts: true
+    enable_image_posts: true
+    enable_video_posts: true
+    enable_link_posts: true
+    enable_events: true
+    enable_live_video: true
+    
+    # Content optimization
+    auto_link_preview: true
+    enable_crossposting: false
+    
+    # Upload limits
+    max_image_size_mb: 100
+    max_video_size_gb: 10
+    supported_image_formats: [".jpg", ".jpeg", ".png", ".gif"]
+    supported_video_formats: [".mp4", ".mov", ".avi"]
+    
+    # Advanced features
+    enable_insights: true
+    enable_scheduling: true
+    enable_targeting: false
+
+# Content optimization rules
+content_optimization:
+  # Automatic hashtag generation
+  auto_hashtags:
+    enabled: true
+    max_per_platform:
+      youtube: 0  # YouTube uses tags instead
+      tiktok: 5
+      instagram: 15
+      facebook: 5
+    
+    # Hashtag sources
+    trending_hashtags: true
+    content_based_hashtags: true
+    brand_hashtags: ["#AIContent", "#AutomatedContent"]
+    
+  # Title optimization
+  title_optimization:
+    enabled: true
+    max_lengths:
+      youtube: 100
+      tiktok: 150
+      instagram: 125  # First line of caption
+      facebook: 255
+    
+    # SEO optimization
+    include_keywords: true
+    capitalize_first_letter: true
+    remove_special_chars: false
+    
+  # Description optimization
+  description_optimization:
+    enabled: true
+    max_lengths:
+      youtube: 5000
+      tiktok: 0  # No separate description
+      instagram: 2200
+      facebook: 63206
+    
+    # Content enhancement
+    add_call_to_action: true
+    add_social_links: false
+    add_timestamps: false  # For YouTube chapters
+
+# Upload scheduling
+scheduling:
+  enabled: true
+  
+  # Optimal posting times (in 24-hour format)
+  optimal_times:
+    youtube:
+      weekdays: ["14:00", "20:00"]
+      weekends: ["10:00", "16:00"]
+    tiktok:
+      weekdays: ["06:00", "10:00", "19:00"]
+      weekends: ["09:00", "12:00", "20:00"]
+    instagram:
+      weekdays: ["11:00", "14:00", "17:00"]
+      weekends: ["10:00", "13:00", "16:00"]
+    facebook:
+      weekdays: ["09:00", "15:00", "21:00"]
+      weekends: ["12:00", "15:00"]
+  
+  # Scheduling rules
+  min_interval_minutes: 30  # Minimum time between posts
+  max_scheduled_posts: 50   # Maximum scheduled posts per platform
+  auto_reschedule_failed: true
+
+# Analytics and monitoring
+analytics:
+  enabled: true
+  
+  # Metrics collection
+  collect_engagement_metrics: true
+  collect_audience_metrics: true
+  collect_revenue_metrics: true
+  
+  # Monitoring intervals
+  real_time_monitoring: false
+  hourly_updates: true
+  daily_reports: true
+  
+  # Performance tracking
+  track_hashtag_performance: true
+  track_posting_time_effectiveness: true
+  track_content_type_performance: true
+
+# Error handling and recovery
+error_handling:
+  # Retry configuration
+  max_retries: 3
+  retry_delays: [30, 60, 120]  # seconds
+  exponential_backoff: true
+  
+  # Error classification
+  permanent_errors:
+    - "authentication failed"
+    - "invalid credentials"
+    - "file not found"
+    - "unsupported format"
+    - "quota exceeded"
+    - "file too large"
+  
+  temporary_errors:
+    - "network timeout"
+    - "server error"
+    - "rate limit exceeded"
+    - "temporary unavailable"
+  
+  # Notification settings
+  notify_on_failure: true
+  notify_on_success: false
+  notification_methods: ["email", "webhook"]
+
+# Security settings
+security:
+  # API key rotation
+  rotate_api_keys: false
+  rotation_interval_days: 90
+  
+  # Access control
+  require_authentication: true
+  allowed_ips: []  # Empty means all IPs allowed
+  
+  # Data protection
+  encrypt_tokens: true
+  secure_storage: true
+  audit_uploads: true
+
+# Development and testing
+development:
+  # Test mode
+  test_mode: false
+  test_upload_prefix: "[TEST]"
+  
+  # Debugging
+  debug_mode: false
+  log_api_requests: false
+  save_upload_payloads: false
+  
+  # Mock settings
+  mock_uploads: false
+  simulate_errors: false
+
+# Environment-specific overrides
+environments:
+  development:
+    upload_settings:
+      max_concurrent_uploads: 1
+    platforms:
+      youtube:
+        default_privacy: "unlisted"
+      instagram:
+        enable_stories: false
+      facebook:
+        enable_live_video: false
+    development:
+      test_mode: true
+      debug_mode: true
+      
+  staging:
+    upload_settings:
+      max_concurrent_uploads: 2
+    analytics:
+      real_time_monitoring: false
+    development:
+      test_mode: true
+      
+  production:
+    upload_settings:
+      max_concurrent_uploads: 5
+    analytics:
+      real_time_monitoring: true
+      daily_reports: true
+    security:
+      require_authentication: true
+      audit_uploads: true

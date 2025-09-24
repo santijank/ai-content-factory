@@ -1,0 +1,182 @@
+# Database Configuration
+# Configure database connection and settings
+
+database:
+  # Connection settings
+  host: ${DB_HOST:-localhost}
+  port: ${DB_PORT:-5432}
+  database: ${DB_NAME:-content_factory}
+  user: ${DB_USER:-postgres}
+  password: ${DB_PASSWORD:-postgres}
+  admin_database: postgres  # Database to connect to for admin operations
+  
+  # Connection pool settings
+  pool:
+    min_connections: 2
+    max_connections: 20
+    pool_timeout: 30
+    pool_recycle: 3600
+    
+  # SSL settings
+  ssl:
+    enabled: false
+    cert_file: null
+    key_file: null
+    ca_file: null
+    
+# Migration settings
+migrations:
+  # Migration behavior
+  auto_migrate_on_startup: true
+  create_database_if_missing: true
+  backup_before_migration: true
+  
+  # Migration tracking
+  track_migration_timing: true
+  validate_migration_checksums: true
+  
+  # Rollback settings (future feature)
+  allow_rollbacks: false
+  keep_rollback_scripts: true
+  
+# Data retention policies
+retention:
+  # Automatic cleanup settings
+  enable_auto_cleanup: true
+  cleanup_schedule: "0 2 * * *"  # Daily at 2 AM
+  
+  # Retention periods (in days)
+  trends_retention_days: 30
+  opportunities_retention_days: 90
+  content_retention_days: 180
+  uploads_retention_days: 180
+  performance_metrics_retention_days: 365
+  
+  # Archive settings
+  archive_old_data: true
+  archive_location: "/backups/archive"
+  compress_archives: true
+  
+# Performance settings
+performance:
+  # Query optimization
+  enable_query_logging: false
+  slow_query_threshold_ms: 1000
+  log_slow_queries: true
+  
+  # Index maintenance
+  auto_analyze: true
+  auto_vacuum: true
+  maintenance_work_mem: "256MB"
+  
+  # Caching
+  shared_buffers: "256MB"
+  effective_cache_size: "1GB"
+  
+# Monitoring settings
+monitoring:
+  # Health checks
+  enable_health_checks: true
+  health_check_interval_seconds: 30
+  
+  # Metrics collection
+  collect_db_metrics: true
+  metrics_retention_days: 7
+  
+  # Alerting
+  enable_alerts: false
+  alert_on_connection_errors: true
+  alert_on_slow_queries: true
+  alert_on_disk_space: true
+  disk_space_threshold_percent: 85
+  
+# Backup settings
+backup:
+  # Automatic backups
+  enable_auto_backup: true
+  backup_schedule: "0 1 * * *"  # Daily at 1 AM
+  backup_location: "/backups/daily"
+  
+  # Backup retention
+  keep_daily_backups: 7
+  keep_weekly_backups: 4
+  keep_monthly_backups: 3
+  
+  # Backup options
+  compress_backups: true
+  backup_format: "custom"  # custom, plain, directory, tar
+  parallel_jobs: 2
+  
+# Security settings
+security:
+  # Connection security
+  require_ssl: false
+  min_tls_version: "1.2"
+  
+  # Access control
+  enable_row_level_security: false
+  enable_audit_logging: false
+  
+  # Password requirements
+  require_strong_passwords: true
+  password_min_length: 8
+  password_rotation_days: 90
+  
+# Development settings
+development:
+  # Debug options
+  debug_mode: false
+  log_all_queries: false
+  enable_sql_echo: false
+  
+  # Testing
+  use_test_database: false
+  test_database_suffix: "_test"
+  recreate_test_db: true
+  
+  # Sample data
+  load_sample_data: false
+  sample_data_path: "sample_data/"
+  
+# Environment-specific overrides
+environments:
+  development:
+    database:
+      database: "content_factory_dev"
+    performance:
+      enable_query_logging: true
+      log_slow_queries: true
+    development:
+      debug_mode: true
+      log_all_queries: false
+      
+  testing:
+    database:
+      database: "content_factory_test"
+    development:
+      use_test_database: true
+      recreate_test_db: true
+      
+  staging:
+    database:
+      database: "content_factory_staging"
+    backup:
+      keep_daily_backups: 3
+      keep_weekly_backups: 2
+      
+  production:
+    database:
+      database: "content_factory_prod"
+      pool:
+        min_connections: 5
+        max_connections: 50
+    security:
+      require_ssl: true
+      enable_audit_logging: true
+    backup:
+      enable_auto_backup: true
+      keep_daily_backups: 30
+      keep_weekly_backups: 12
+      keep_monthly_backups: 12
+    monitoring:
+      enable_alerts: true

@@ -1,0 +1,633 @@
+{
+  "name": "Platform Upload Workflow", 
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "upload-content",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Upload Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM content_items WHERE id = $1 AND status = 'completed'",
+        "additionalFields": {
+          "mode": "independently"
+        }
+      },
+      "name": "Get Content Item",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [460, 300],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-main",
+          "name": "AI Factory Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "content-exists",
+              "leftValue": "={{ $json.length }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "name": "Content Ready?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Split platforms and create upload records\nconst platforms = $('Upload Trigger').item.json.platforms || ['youtube'];\nconst content = $('Get Content Item').item.json[0];\nconst uploadConfig = $('Upload Trigger').item.json.upload_config || {};\nconst scheduledAt = $('Upload Trigger').item.json.scheduled_at || null;\n\nreturn platforms.map(platform => {\n  return {\n    json: {\n      platform: platform,\n      content: content,\n      upload_config: uploadConfig[platform] || {},\n      scheduled_at: scheduledAt,\n      upload_id: `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`\n    }\n  };\n});"
+      },
+      "name": "Split by Platform",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "operation": "equal",
+              "value": "youtube"
+            },
+            {
+              "operation": "equal",
+              "value": "tiktok"
+            },
+            {
+              "operation": "equal",
+              "value": "instagram"
+            },
+            {
+              "operation": "equal",
+              "value": "facebook"
+            }
+          ]
+        },
+        "dataPropertyName": "platform"
+      },
+      "name": "Platform Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8003/api/upload/youtube",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content_id",
+              "value": "={{ $json.content.id }}"
+            },
+            {
+              "name": "assets",
+              "value": "={{ $json.content.assets }}"
+            },
+            {
+              "name": "metadata",
+              "value": "={{ $json.upload_config }}"
+            },
+            {
+              "name": "upload_id",
+              "value": "={{ $json.upload_id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "name": "Upload to YouTube",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8003/api/upload/tiktok",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content_id",
+              "value": "={{ $json.content.id }}"
+            },
+            {
+              "name": "assets",
+              "value": "={{ $json.content.assets }}"
+            },
+            {
+              "name": "metadata",
+              "value": "={{ $json.upload_config }}"
+            },
+            {
+              "name": "upload_id",
+              "value": "={{ $json.upload_id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "name": "Upload to TikTok",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8003/api/upload/instagram",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content_id",
+              "value": "={{ $json.content.id }}"
+            },
+            {
+              "name": "assets",
+              "value": "={{ $json.content.assets }}"
+            },
+            {
+              "name": "metadata",
+              "value": "={{ $json.upload_config }}"
+            },
+            {
+              "name": "upload_id",
+              "value": "={{ $json.upload_id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "name": "Upload to Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8003/api/upload/facebook",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content_id",
+              "value": "={{ $json.content.id }}"
+            },
+            {
+              "name": "assets",
+              "value": "={{ $json.content.assets }}"
+            },
+            {
+              "name": "metadata",
+              "value": "={{ $json.upload_config }}"
+            },
+            {
+              "name": "upload_id",
+              "value": "={{ $json.upload_id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "name": "Upload to Facebook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "mode": "multiplex"
+      },
+      "name": "Merge Upload Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [1340, 250]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO uploads (id, content_id, platform, platform_id, url, status, metadata, uploaded_at, error_message) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8)",
+        "additionalFields": {
+          "mode": "independently"
+        }
+      },
+      "name": "Store Upload Records",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1560, 250],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-main",
+          "name": "AI Factory Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calculate upload statistics\nconst results = $input.all();\nconst successful = results.filter(r => r.json.status === 'success').length;\nconst failed = results.length - successful;\n\n// Extract platform-specific results\nconst platformResults = results.map(r => ({\n  platform: r.json.platform || 'unknown',\n  status: r.json.status || 'unknown',\n  platform_id: r.json.platform_id || null,\n  url: r.json.url || null,\n  error: r.json.error || null,\n  upload_time: r.json.upload_time || null\n}));\n\nreturn {\n  total_uploads: results.length,\n  successful_uploads: successful,\n  failed_uploads: failed,\n  success_rate: results.length > 0 ? Math.round((successful / results.length) * 100) : 0,\n  content_id: $('Get Content Item').item.json[0].id,\n  platforms: platformResults,\n  completed_at: new Date().toISOString()\n};"
+      },
+      "name": "Calculate Upload Stats",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 250]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "upload-complete",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Notify Upload Complete",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [2000, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/start-monitoring",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content_id",
+              "value": "={{ $json.content_id }}"
+            },
+            {
+              "name": "platforms",
+              "value": "={{ $json.platforms }}"
+            },
+            {
+              "name": "upload_stats",
+              "value": "={{ $json }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Start Performance Monitoring",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2000, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle content not found\nreturn {\n  status: 'error',\n  message: 'Content not found or not ready for upload',\n  content_id: $('Upload Trigger').item.json.content_id,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Content Not Found Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "is-scheduled",
+              "leftValue": "={{ $('Upload Trigger').item.json.scheduled_at }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "name": "Is Scheduled?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calculate wait time for scheduled upload\nconst scheduledAt = new Date($('Upload Trigger').item.json.scheduled_at);\nconst now = new Date();\nconst waitTimeMs = scheduledAt.getTime() - now.getTime();\n\nif (waitTimeMs > 0) {\n  // Convert to minutes for wait node\n  const waitMinutes = Math.ceil(waitTimeMs / 60000);\n  \n  return {\n    wait_minutes: waitMinutes,\n    scheduled_at: scheduledAt.toISOString(),\n    current_time: now.toISOString(),\n    message: `Waiting ${waitMinutes} minutes until scheduled upload time`\n  };\n} else {\n  // Already past scheduled time, proceed immediately\n  return {\n    wait_minutes: 0,\n    message: 'Scheduled time has passed, proceeding immediately'\n  };\n}"
+      },
+      "name": "Calculate Wait Time",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 100]
+    },
+    {
+      "parameters": {
+        "amount": "={{ $json.wait_minutes }}",
+        "unit": "minutes"
+      },
+      "name": "Wait Until Scheduled",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1120, 50]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle upload errors\nconst errors = $input.all().filter(item => item.json.status === 'error');\nconst successes = $input.all().filter(item => item.json.status === 'success');\n\nreturn {\n  has_errors: errors.length > 0,\n  error_count: errors.length,\n  success_count: successes.length,\n  errors: errors.map(e => ({\n    platform: e.json.platform,\n    error: e.json.error || e.json.message\n  })),\n  partial_success: successes.length > 0 && errors.length > 0\n};"
+      },
+      "name": "Upload Error Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 450]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "upload-error",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Send Error Notification",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [1560, 450]
+    }
+  ],
+  "connections": {
+    "Upload Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Content Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Content Item": {
+      "main": [
+        [
+          {
+            "node": "Content Ready?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Ready?": {
+      "main": [
+        [
+          {
+            "node": "Is Scheduled?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Content Not Found Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Scheduled?": {
+      "main": [
+        [
+          {
+            "node": "Calculate Wait Time",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split by Platform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Wait Time": {
+      "main": [
+        [
+          {
+            "node": "Wait Until Scheduled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Until Scheduled": {
+      "main": [
+        [
+          {
+            "node": "Split by Platform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split by Platform": {
+      "main": [
+        [
+          {
+            "node": "Platform Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Platform Router": {
+      "main": [
+        [
+          {
+            "node": "Upload to YouTube",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Upload to TikTok",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Upload to Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Upload to Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to YouTube": {
+      "main": [
+        [
+          {
+            "node": "Merge Upload Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to TikTok": {
+      "main": [
+        [
+          {
+            "node": "Merge Upload Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Upload to Instagram": {
+      "main": [
+        [
+          {
+            "node": "Merge Upload Results",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Upload to Facebook": {
+      "main": [
+        [
+          {
+            "node": "Merge Upload Results",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Merge Upload Results": {
+      "main": [
+        [
+          {
+            "node": "Store Upload Records",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Upload Records": {
+      "main": [
+        [
+          {
+            "node": "Calculate Upload Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Upload Stats": {
+      "main": [
+        [
+          {
+            "node": "Notify Upload Complete",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Start Performance Monitoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Send Error Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2024-01-15T12:00:00.000Z",
+  "updatedAt": "2024-01-15T12:00:00.000Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2024-01-15T12:00:00.000Z",
+      "updatedAt": "2024-01-15T12:00:00.000Z",
+      "id": "1",
+      "name": "AI Content Factory"
+    }
+  ],
+  "triggerCount": 0,
+  "versionId": "1"
+}

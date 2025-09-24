@@ -1,0 +1,614 @@
+{% extends "base.html" %}
+
+{% block title %}Opportunities - AI Content Factory{% endblock %}
+
+{% block page_title %}Content Opportunities{% endblock %}
+{% block page_subtitle %}โอกาสในการสร้างเนื้อหาจาก AI Analysis{% endblock %}
+
+{% block extra_css %}
+<style>
+    .opportunity-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .opportunity-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        border-color: var(--primary-color);
+    }
+    
+    .priority-indicator {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444);
+    }
+    
+    .priority-high .priority-indicator { background: #ef4444; }
+    .priority-medium .priority-indicator { background: #f59e0b; }
+    .priority-low .priority-indicator { background: #10b981; }
+    
+    .roi-badge {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9em;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+    
+    .competition-badge {
+        padding: 4px 10px;
+        border-radius: 15px;
+        font-size: 0.8em;
+        font-weight: 600;
+    }
+    
+    .competition-low { background: #d1fae5; color: #065f46; }
+    .competition-medium { background: #fef3c7; color: #92400e; }
+    .competition-high { background: #fee2e2; color: #991b1b; }
+    
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.8em;
+        font-weight: 600;
+        border: 2px solid transparent;
+    }
+    
+    .status-pending { background: #f3f4f6; color: #374151; border-color: #d1d5db; }
+    .status-analyzing { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+    .status-ready { background: #d1fae5; color: #065f46; border-color: #86efac; }
+    .status-selected { background: #fce7f3; color: #be185d; border-color: #f9a8d4; }
+    .status-completed { background: #e0e7ff; color: #3730a3; border-color: #c7d2fe; }
+    
+    .metric-item {
+        padding: 8px 12px;
+        background: #f8fafc;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .priority-score {
+        font-size: 1.5em;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .filter-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
+    }
+    
+    .quick-filters {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+    }
+    
+    .quick-filter {
+        padding: 6px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 20px;
+        background: white;
+        color: #374151;
+        text-decoration: none;
+        font-size: 0.85em;
+        transition: all 0.3s ease;
+    }
+    
+    .quick-filter:hover, .quick-filter.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+        text-decoration: none;
+    }
+    
+    .bulk-actions {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        display: none;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .bulk-actions.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+    
+    .content-creation-card {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border: none;
+    }
+    
+    .trend-preview {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 15px;
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .estimated-revenue {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+    }
+    
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+    }
+    
+    .loading-card {
+        animation: pulse 1.5s infinite;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="stat-card text-center">
+            <h3 class="text-primary mb-1">{{ opportunities|length }}</h3>
+            <p class="text-muted mb-0">Total Opportunities</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card text-center">
+            <h3 class="text-success mb-1">{{ opportunities|selectattr("status", "equalto", "ready")|list|length }}</h3>
+            <p class="text-muted mb-0">Ready to Create</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card text-center">
+            <h3 class="text-warning mb-1">{{ "%.1f"|format(opportunities|map(attribute="estimated_roi")|average) }}x</h3>
+            <p class="text-muted mb-0">Average ROI</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card text-center">
+            <h3 class="text-info mb-1">฿{{ "{:,.0f}".format(opportunities|map(attribute="estimated_views")|sum * 0.001) }}</h3>
+            <p class="text-muted mb-0">Est. Revenue</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filters & Search -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="filter-card">
+            <!-- Quick Filters -->
+            <div class="quick-filters">
+                <a href="?status=all" class="quick-filter {{ 'active' if current_filters.status == 'all' else '' }}">
+                    <i class="fas fa-globe me-1"></i>All
+                </a>
+                <a href="?status=ready" class="quick-filter {{ 'active' if current_filters.status == 'ready' else '' }}">
+                    <i class="fas fa-check-circle me-1"></i>Ready
+                </a>
+                <a href="?status=pending" class="quick-filter {{ 'active' if current_filters.status == 'pending' else '' }}">
+                    <i class="fas fa-clock me-1"></i>Pending
+                </a>
+                <a href="?sort=priority_score" class="quick-filter {{ 'active' if current_filters.sort == 'priority_score' else '' }}">
+                    <i class="fas fa-star me-1"></i>High Priority
+                </a>
+                <a href="?sort=estimated_roi" class="quick-filter {{ 'active' if current_filters.sort == 'estimated_roi' else '' }}">
+                    <i class="fas fa-chart-line me-1"></i>Best ROI
+                </a>
+                <a href="?min_roi=3" class="quick-filter {{ 'active' if current_filters.min_roi >= 3 else '' }}">
+                    <i class="fas fa-fire me-1"></i>ROI 3x+
+                </a>
+            </div>
+            
+            <!-- Advanced Filters -->
+            <form method="GET" id="filterForm" class="row align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Sort By</label>
+                    <select name="sort" class="form-select form-select-sm">
+                        <option value="priority_score" {{ 'selected' if current_filters.sort == 'priority_score' else '' }}>Priority Score</option>
+                        <option value="estimated_roi" {{ 'selected' if current_filters.sort == 'estimated_roi' else '' }}>Estimated ROI</option>
+                        <option value="estimated_views" {{ 'selected' if current_filters.sort == 'estimated_views' else '' }}>Est. Views</option>
+                        <option value="created_at" {{ 'selected' if current_filters.sort == 'created_at' else '' }}>Latest</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Status</label>
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="all" {{ 'selected' if current_filters.status == 'all' else '' }}>All Status</option>
+                        <option value="pending" {{ 'selected' if current_filters.status == 'pending' else '' }}>Pending</option>
+                        <option value="analyzing" {{ 'selected' if current_filters.status == 'analyzing' else '' }}>Analyzing</option>
+                        <option value="ready" {{ 'selected' if current_filters.status == 'ready' else '' }}>Ready</option>
+                        <option value="selected" {{ 'selected' if current_filters.status == 'selected' else '' }}>Selected</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Min ROI</label>
+                    <select name="min_roi" class="form-select form-select-sm">
+                        <option value="0" {{ 'selected' if current_filters.min_roi == 0 else '' }}>Any ROI</option>
+                        <option value="2" {{ 'selected' if current_filters.min_roi == 2 else '' }}>2x+</option>
+                        <option value="3" {{ 'selected' if current_filters.min_roi == 3 else '' }}>3x+</option>
+                        <option value="5" {{ 'selected' if current_filters.min_roi == 5 else '' }}>5x+</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Search</label>
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Search opportunities..." value="{{ request.args.get('search', '') }}">
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-filter me-1"></i>Apply
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearFilters()">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Actions -->
+<div class="bulk-actions" id="bulkActions">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h6 class="mb-1">Bulk Actions</h6>
+            <span id="selectedCount">0</span> opportunities selected
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-light btn-sm" onclick="bulkCreateContent()">
+                <i class="fas fa-play me-1"></i>Create Content
+            </button>
+            <button class="btn btn-outline-light btn-sm" onclick="bulkUpdateStatus('selected')">
+                <i class="fas fa-check me-1"></i>Mark Selected
+            </button>
+            <button class="btn btn-outline-light btn-sm" onclick="clearSelection()">
+                <i class="fas fa-times me-1"></i>Clear
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Opportunities Grid -->
+<div class="row" id="opportunitiesGrid">
+    {% for opp in opportunities %}
+    <div class="col-lg-6 col-xl-4 mb-4">
+        <div class="opportunity-card priority-{{ get_priority_level(opp.priority_score) }}" data-opp-id="{{ opp.id }}">
+            <div class="priority-indicator"></div>
+            
+            <div class="card-body p-4">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input opportunity-checkbox" type="checkbox" 
+                               value="{{ opp.id }}" onchange="updateBulkActions()">
+                    </div>
+                    <div class="text-end">
+                        <div class="priority-score">{{ "{:.1f}".format(opp.priority_score) }}</div>
+                        <small class="text-muted">Priority</small>
+                    </div>
+                </div>
+                
+                <!-- Trend Preview -->
+                {% if opp.trend %}
+                <div class="trend-preview">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-muted">From Trend:</span>
+                        <span class="badge bg-primary">{{ opp.trend.source.upper() }}</span>
+                    </div>
+                    <div class="fw-bold">{{ opp.trend.topic }}</div>
+                    <div class="small text-muted">Popularity: {{ "{:.1f}".format(opp.trend.popularity_score) }}/10</div>
+                </div>
+                {% endif %}
+                
+                <!-- Opportunity Title -->
+                <h5 class="card-title mb-3">{{ opp.suggested_angle }}</h5>
+                
+                <!-- Metrics Row -->
+                <div class="row g-2 mb-3">
+                    <div class="col-4">
+                        <div class="metric-item">
+                            <div class="roi-badge small">{{ "{:.1f}".format(opp.estimated_roi) }}x</div>
+                            <div class="small text-muted mt-1">ROI</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="metric-item">
+                            <div class="fw-bold text-primary">{{ "{:,}".format(opp.estimated_views) }}</div>
+                            <div class="small text-muted">Views</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="metric-item">
+                            <div class="fw-bold text-success">฿{{ "{:.0f}".format(opp.production_cost) }}</div>
+                            <div class="small text-muted">Cost</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Status & Competition -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="status-badge status-{{ opp.status }}">
+                        {{ opp.status.title() }}
+                    </span>
+                    <span class="competition-badge competition-{{ opp.competition_level }}">
+                        {{ opp.competition_level.title() }} Competition
+                    </span>
+                </div>
+                
+                <!-- Estimated Revenue -->
+                <div class="estimated-revenue mb-3">
+                    Est. Revenue: ฿{{ "{:,.0f}".format(opp.estimated_views * opp.estimated_roi * 0.001) }}
+                </div>
+                
+                <!-- Timestamp -->
+                <div class="text-muted small mb-3">
+                    <i class="fas fa-clock me-1"></i>
+                    {{ format_timeago(opp.created_at) }}
+                </div>
+                
+                <!-- Actions -->
+                <div class="d-grid gap-2">
+                    {% if opp.status == 'ready' %}
+                    <button class="btn btn-success" onclick="createContentFromOpportunity('{{ opp.id }}')">
+                        <i class="fas fa-play me-2"></i>Create Content
+                    </button>
+                    {% elif opp.status == 'pending' %}
+                    <button class="btn btn-primary" onclick="analyzeOpportunity('{{ opp.id }}')">
+                        <i class="fas fa-brain me-2"></i>Analyze Deeper
+                    </button>
+                    {% else %}
+                    <button class="btn btn-outline-primary" onclick="viewOpportunityDetail('{{ opp.id }}')">
+                        <i class="fas fa-eye me-2"></i>View Details
+                    </button>
+                    {% endif %}
+                    
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-secondary" onclick="viewOpportunityDetail('{{ opp.id }}')">
+                            <i class="fas fa-info me-1"></i>Details
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="shareOpportunity('{{ opp.id }}')">
+                            <i class="fas fa-share me-1"></i>Share
+                        </button>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="editOpportunity('{{ opp.id }}')">
+                                    <i class="fas fa-edit me-2"></i>Edit
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="duplicateOpportunity('{{ opp.id }}')">
+                                    <i class="fas fa-copy me-2"></i>Duplicate
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" onclick="deleteOpportunity('{{ opp.id }}')">
+                                    <i class="fas fa-trash me-2"></i>Delete
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    {% if not opportunities %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="fas fa-lightbulb fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No Opportunities Found</h5>
+            <p class="text-muted">ไม่พบโอกาสในการสร้างเนื้อหา</p>
+            <div class="d-flex gap-2 justify-content-center">
+                <button class="btn btn-primary" onclick="collectTrends()">
+                    <i class="fas fa-download me-1"></i>
+                    Collect Trends
+                </button>
+                <button class="btn btn-success" onclick="analyzeTrends()">
+                    <i class="fas fa-brain me-1"></i>
+                    Analyze Trends
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Content Creation Modal -->
+<div class="modal fade" id="contentCreationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Content</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="contentCreationForm">
+                    <input type="hidden" id="selectedOpportunityId">
+                    
+                    <!-- Opportunity Summary -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">Selected Opportunity</h6>
+                            <div id="opportunitySummary">
+                                <!-- Will be populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Content Settings -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Quality Tier</label>
+                                <select class="form-select" id="qualityTier">
+                                    <option value="budget">Budget (ประหยัด - ฿15-30)</option>
+                                    <option value="balanced" selected>Balanced (สมดุล - ฿50-100)</option>
+                                    <option value="premium">Premium (คุณภาพสูง - ฿150-300)</option>
+                                </select>
+                                <div class="form-text">คุณภาพที่สูงขึ้นจะใช้ AI models ที่ดีกว่า</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Content Type</label>
+                                <select class="form-select" id="contentType">
+                                    <option value="educational">Educational</option>
+                                    <option value="entertainment">Entertainment</option>
+                                    <option value="news">News & Updates</option>
+                                    <option value="tutorial">Tutorial</option>
+                                    <option value="review">Review</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Platform Selection -->
+                    <div class="mb-3">
+                        <label class="form-label">Target Platforms</label>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="youtube" id="platform-youtube" checked>
+                                    <label class="form-check-label" for="platform-youtube">
+                                        <i class="fab fa-youtube text-danger me-1"></i>YouTube
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="tiktok" id="platform-tiktok">
+                                    <label class="form-check-label" for="platform-tiktok">
+                                        <i class="fab fa-tiktok me-1"></i>TikTok
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="instagram" id="platform-instagram">
+                                    <label class="form-check-label" for="platform-instagram">
+                                        <i class="fab fa-instagram text-danger me-1"></i>Instagram
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="facebook" id="platform-facebook">
+                                    <label class="form-check-label" for="platform-facebook">
+                                        <i class="fab fa-facebook text-primary me-1"></i>Facebook
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Custom Instructions -->
+                    <div class="mb-3">
+                        <label class="form-label">Custom Instructions (Optional)</label>
+                        <textarea class="form-control" id="customInstructions" rows="3" 
+                                  placeholder="เพิ่มคำแนะนำพิเศษสำหรับ AI ในการสร้างเนื้อหา..."></textarea>
+                    </div>
+                    
+                    <!-- Cost Estimate -->
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title">Cost Estimate</h6>
+                            <div class="row text-center">
+                                <div class="col">
+                                    <div class="fw-bold text-primary" id="estimatedCost">฿75</div>
+                                    <div class="small text-muted">Production Cost</div>
+                                </div>
+                                <div class="col">
+                                    <div class="fw-bold text-success" id="estimatedTime">45 min</div>
+                                    <div class="small text-muted">Est. Time</div>
+                                </div>
+                                <div class="col">
+                                    <div class="fw-bold text-warning" id="estimatedROI">3.2x</div>
+                                    <div class="small text-muted">Expected ROI</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="submitContentCreation()">
+                    <i class="fas fa-play me-1"></i>Create Content
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Opportunity Detail Modal -->
+<div class="modal fade" id="opportunityDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Opportunity Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="opportunityDetailContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" id="createFromDetail">
+                    <i class="fas fa-play me-1"></i>Create Content
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/opportunities.js') }}"></script>
+{% endblock %}

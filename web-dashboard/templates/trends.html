@@ -1,0 +1,565 @@
+{% extends "base.html" %}
+
+{% block title %}Trends - AI Content Factory{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="text-white mb-2">
+                        <i class="fas fa-trending-up me-3"></i>
+                        Trending Topics
+                    </h1>
+                    <p class="text-white-50 mb-0">Discover what's hot and generate content opportunities</p>
+                </div>
+                <div>
+                    <button class="btn btn-light me-2" onclick="collectTrends()">
+                        <i class="fas fa-sync-alt me-2"></i>
+                        Refresh Trends
+                    </button>
+                    <button class="btn btn-success" onclick="analyzeAllVisible()">
+                        <i class="fas fa-brain me-2"></i>
+                        Analyze All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-lg-3 col-md-6 mb-2">
+                            <select class="form-select" id="categoryFilter" onchange="filterTrends()">
+                                <option value="">All Categories</option>
+                                <option value="Technology">Technology</option>
+                                <option value="Lifestyle">Lifestyle</option>
+                                <option value="Business">Business</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Health">Health</option>
+                                <option value="Education">Education</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-2">
+                            <select class="form-select" id="sourceFilter" onchange="filterTrends()">
+                                <option value="">All Sources</option>
+                                <option value="youtube">YouTube</option>
+                                <option value="google_trends">Google Trends</option>
+                                <option value="twitter">Twitter</option>
+                                <option value="reddit">Reddit</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-2">
+                            <select class="form-select" id="sortFilter" onchange="filterTrends()">
+                                <option value="collected_at">Latest First</option>
+                                <option value="popularity_score">Most Popular</option>
+                                <option value="growth_rate">Highest Growth</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-2">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search trends..." onkeyup="searchTrends()">
+                                <button class="btn btn-outline-secondary" onclick="clearSearch()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                    <h4 id="totalTrends">-</h4>
+                    <p class="mb-0">Total Trends</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-fire fa-2x mb-2"></i>
+                    <h4 id="hotTrends">-</h4>
+                    <p class="mb-0">Hot Trends</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-arrow-up fa-2x mb-2"></i>
+                    <h4 id="growingTrends">-</h4>
+                    <p class="mb-0">Growing Fast</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-lightbulb fa-2x mb-2"></i>
+                    <h4 id="analyzedTrends">-</h4>
+                    <p class="mb-0">Analyzed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trends Grid -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-transparent border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Trending Topics
+                        </h5>
+                        <span class="badge bg-primary" id="trendsCount">0 trends</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="trendsContainer">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-3 text-muted">Loading trends...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <nav id="pagination" class="mt-4" style="display: none;">
+                        <ul class="pagination justify-content-center">
+                            <!-- Pagination items will be inserted here -->
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let allTrends = [];
+    let filteredTrends = [];
+    let currentPage = 1;
+    const trendsPerPage = 10;
+
+    // Load trends data
+    async function loadTrends() {
+        try {
+            const params = new URLSearchParams({
+                page: 1,
+                per_page: 100, // Load more for client-side filtering
+                category: document.getElementById('categoryFilter').value,
+                sort_by: document.getElementById('sortFilter').value
+            });
+
+            const response = await fetch(`/api/trends?${params}`);
+            const data = await response.json();
+            
+            allTrends = data.trends;
+            filteredTrends = [...allTrends];
+            
+            updateStats();
+            displayTrends();
+            updatePagination();
+            
+        } catch (error) {
+            console.error('Error loading trends:', error);
+            showNotification('Error loading trends', 'danger');
+        }
+    }
+
+    function updateStats() {
+        const total = allTrends.length;
+        const hot = allTrends.filter(t => t.popularity_score >= 8.0).length;
+        const growing = allTrends.filter(t => t.growth_rate >= 20.0).length;
+        const analyzed = 0; // Would be calculated from opportunities table
+        
+        document.getElementById('totalTrends').textContent = total;
+        document.getElementById('hotTrends').textContent = hot;
+        document.getElementById('growingTrends').textContent = growing;
+        document.getElementById('analyzedTrends').textContent = analyzed;
+    }
+
+    function displayTrends() {
+        const container = document.getElementById('trendsContainer');
+        const start = (currentPage - 1) * trendsPerPage;
+        const end = start + trendsPerPage;
+        const trendsToShow = filteredTrends.slice(start, end);
+        
+        document.getElementById('trendsCount').textContent = `${filteredTrends.length} trends`;
+
+        if (trendsToShow.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No trends found</h5>
+                    <p class="text-muted">Try adjusting your filters or collect new trends</p>
+                    <button class="btn btn-primary" onclick="collectTrends()">
+                        <i class="fas fa-sync-alt me-2"></i>
+                        Collect Trends
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        const trendsHtml = trendsToShow.map(trend => createTrendCard(trend)).join('');
+        container.innerHTML = trendsHtml;
+    }
+
+    function createTrendCard(trend) {
+        const keywords = trend.keywords ? JSON.parse(trend.keywords) : [];
+        const timeAgo = getTimeAgo(new Date(trend.collected_at));
+        const popularityColor = getPopularityColor(trend.popularity_score);
+        const growthColor = getGrowthColor(trend.growth_rate);
+        
+        return `
+            <div class="trend-card mb-3" data-trend-id="${trend.id}">
+                <div class="row align-items-center">
+                    <div class="col-lg-6">
+                        <div class="d-flex align-items-start">
+                            <div class="trend-icon me-3">
+                                <i class="fas fa-${getSourceIcon(trend.source)} fa-2x text-primary"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="mb-1">${trend.topic}</h5>
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-light text-dark me-2">${trend.category}</span>
+                                    <span class="badge bg-outline-primary me-2">${trend.source}</span>
+                                    <small class="text-muted">${timeAgo}</small>
+                                </div>
+                                <div class="keywords mb-2">
+                                    ${keywords.slice(0, 3).map(keyword => 
+                                        `<span class="badge bg-light text-primary me-1">#${keyword}</span>`
+                                    ).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3">
+                        <div class="metrics">
+                            <div class="metric mb-2">
+                                <span class="text-muted small">Popularity:</span>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                                        <div class="progress-bar ${popularityColor}" style="width: ${trend.popularity_score * 10}%"></div>
+                                    </div>
+                                    <strong class="text-${popularityColor.replace('bg-', '')}">${trend.popularity_score.toFixed(1)}</strong>
+                                </div>
+                            </div>
+                            <div class="metric">
+                                <span class="text-muted small">Growth:</span>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-arrow-up text-${growthColor.replace('bg-', '')} me-1"></i>
+                                    <strong class="text-${growthColor.replace('bg-', '')}">${trend.growth_rate.toFixed(1)}%</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 text-end">
+                        <div class="action-buttons">
+                            <button class="btn btn-primary btn-sm mb-2 w-100" onclick="analyzeTrend('${trend.id}')">
+                                <i class="fas fa-brain me-1"></i>
+                                Analyze
+                            </button>
+                            <button class="btn btn-outline-info btn-sm w-100" onclick="viewTrendDetails('${trend.id}')">
+                                <i class="fas fa-eye me-1"></i>
+                                Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Expandable details -->
+                <div class="trend-details collapse mt-3" id="details-${trend.id}">
+                    <div class="border-top pt-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Raw Data:</h6>
+                                <pre class="bg-light p-2 small"><code>${JSON.stringify(JSON.parse(trend.raw_data || '{}'), null, 2)}</code></pre>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Keywords Analysis:</h6>
+                                <div class="keywords-detailed">
+                                    ${keywords.map(keyword => 
+                                        `<span class="badge bg-primary me-1 mb-1">${keyword}</span>`
+                                    ).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function getSourceIcon(source) {
+        const icons = {
+            'youtube': 'play-circle',
+            'google_trends': 'search',
+            'twitter': 'twitter',
+            'reddit': 'comments'
+        };
+        return icons[source] || 'chart-line';
+    }
+
+    function getPopularityColor(score) {
+        if (score >= 8.0) return 'bg-success';
+        if (score >= 6.0) return 'bg-warning';
+        return 'bg-danger';
+    }
+
+    function getGrowthColor(rate) {
+        if (rate >= 20.0) return 'bg-success';
+        if (rate >= 10.0) return 'bg-warning';
+        return 'bg-danger';
+    }
+
+    function getTimeAgo(date) {
+        const now = new Date();
+        const diff = now - date;
+        const minutes = Math.floor(diff / 60000);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        
+        if (days > 0) return `${days}d ago`;
+        if (hours > 0) return `${hours}h ago`;
+        if (minutes > 0) return `${minutes}m ago`;
+        return 'Just now';
+    }
+
+    function updatePagination() {
+        const totalPages = Math.ceil(filteredTrends.length / trendsPerPage);
+        const pagination = document.getElementById('pagination');
+        
+        if (totalPages <= 1) {
+            pagination.style.display = 'none';
+            return;
+        }
+        
+        pagination.style.display = 'block';
+        const ul = pagination.querySelector('ul');
+        
+        let paginationHtml = '';
+        
+        // Previous button
+        paginationHtml += `
+            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a>
+            </li>
+        `;
+        
+        // Page numbers
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                paginationHtml += `
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                    </li>
+                `;
+            } else if (i === currentPage - 3 || i === currentPage + 3) {
+                paginationHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+        }
+        
+        // Next button
+        paginationHtml += `
+            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a>
+            </li>
+        `;
+        
+        ul.innerHTML = paginationHtml;
+    }
+
+    function changePage(page) {
+        const totalPages = Math.ceil(filteredTrends.length / trendsPerPage);
+        if (page < 1 || page > totalPages) return;
+        
+        currentPage = page;
+        displayTrends();
+        updatePagination();
+        
+        // Scroll to top
+        document.querySelector('.main-content').scrollTop = 0;
+    }
+
+    // Filter functions
+    function filterTrends() {
+        const category = document.getElementById('categoryFilter').value;
+        const source = document.getElementById('sourceFilter').value;
+        const sortBy = document.getElementById('sortFilter').value;
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        
+        filteredTrends = allTrends.filter(trend => {
+            const matchesCategory = !category || trend.category === category;
+            const matchesSource = !source || trend.source === source;
+            const matchesSearch = !searchTerm || 
+                trend.topic.toLowerCase().includes(searchTerm) ||
+                trend.category.toLowerCase().includes(searchTerm);
+            
+            return matchesCategory && matchesSource && matchesSearch;
+        });
+        
+        // Sort trends
+        filteredTrends.sort((a, b) => {
+            switch (sortBy) {
+                case 'popularity_score':
+                    return b.popularity_score - a.popularity_score;
+                case 'growth_rate':
+                    return b.growth_rate - a.growth_rate;
+                case 'collected_at':
+                default:
+                    return new Date(b.collected_at) - new Date(a.collected_at);
+            }
+        });
+        
+        currentPage = 1;
+        displayTrends();
+        updatePagination();
+    }
+
+    function searchTrends() {
+        filterTrends();
+    }
+
+    function clearSearch() {
+        document.getElementById('searchInput').value = '';
+        filterTrends();
+    }
+
+    function viewTrendDetails(trendId) {
+        const detailsElement = document.getElementById(`details-${trendId}`);
+        const collapse = new bootstrap.Collapse(detailsElement, {
+            toggle: true
+        });
+    }
+
+    async function analyzeAllVisible() {
+        const start = (currentPage - 1) * trendsPerPage;
+        const end = start + trendsPerPage;
+        const trendsToAnalyze = filteredTrends.slice(start, end);
+        
+        if (trendsToAnalyze.length === 0) {
+            showNotification('No trends to analyze', 'warning');
+            return;
+        }
+        
+        showLoading();
+        
+        try {
+            let analyzed = 0;
+            for (const trend of trendsToAnalyze) {
+                await analyzeTrend(trend.id);
+                analyzed++;
+                
+                // Update progress
+                showNotification(`Analyzing trends... ${analyzed}/${trendsToAnalyze.length}`, 'info');
+                
+                // Small delay to prevent overwhelming the API
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            showNotification(`Successfully analyzed ${analyzed} trends!`, 'success');
+            
+        } catch (error) {
+            showNotification('Error analyzing trends', 'danger');
+            console.error('Error:', error);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Refresh function for real-time updates
+    function refreshData() {
+        loadTrends();
+    }
+
+    function refreshOpportunities() {
+        // This will be called when opportunities are generated
+        loadTrends();
+    }
+
+    // Load trends when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTrends();
+    });
+</script>
+
+<style>
+    .trend-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 20px;
+        border-left: 5px solid var(--primary-color);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .trend-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        border-left-color: var(--success-color);
+    }
+
+    .trend-icon {
+        min-width: 60px;
+        text-align: center;
+    }
+
+    .metrics .metric {
+        min-height: 25px;
+    }
+
+    .keywords .badge {
+        font-size: 0.75em;
+    }
+
+    .keywords-detailed .badge {
+        font-size: 0.7em;
+    }
+
+    .action-buttons .btn {
+        transition: all 0.2s ease;
+    }
+
+    .action-buttons .btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .progress {
+        background-color: rgba(0,0,0,0.1);
+    }
+
+    .trend-details {
+        background: rgba(248, 249, 250, 0.8);
+        border-radius: 10px;
+        padding: 15px;
+    }
+
+    .trend-details pre {
+        max-height: 200px;
+        overflow-y: auto;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}

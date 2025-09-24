@@ -1,0 +1,627 @@
+{% extends "base.html" %}
+
+{% block title %}Content - AI Content Factory{% endblock %}
+
+{% block page_title %}Content Management{% endblock %}
+{% block page_subtitle %}จัดการเนื้อหาที่สร้างและอัปโหลด{% endblock %}
+
+{% block extra_css %}
+<style>
+    .content-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .content-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        border-color: var(--primary-color);
+    }
+    
+    .status-indicator {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: #e2e8f0;
+    }
+    
+    .status-pending .status-indicator { background: #f59e0b; }
+    .status-generating .status-indicator { background: #3b82f6; }
+    .status-completed .status-indicator { background: #10b981; }
+    .status-failed .status-indicator { background: #ef4444; }
+    .status-uploaded .status-indicator { background: #8b5cf6; }
+    
+    .content-thumbnail {
+        width: 100%;
+        height: 160px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3em;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .content-thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+    
+    .content-thumbnail .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .content-card:hover .content-thumbnail .overlay {
+        opacity: 1;
+    }
+    
+    .quality-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.75em;
+        font-weight: 600;
+        color: white;
+    }
+    
+    .quality-budget { background: #6b7280; }
+    .quality-balanced { background: #3b82f6; }
+    .quality-premium { background: #8b5cf6; }
+    
+    .platform-badges {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+    
+    .platform-badge {
+        padding: 2px 6px;
+        border-radius: 8px;
+        font-size: 0.7em;
+        font-weight: 600;
+        color: white;
+    }
+    
+    .platform-youtube { background: #ff0000; }
+    .platform-tiktok { background: #000000; }
+    .platform-instagram { background: #e4405f; }
+    .platform-facebook { background: #1877f2; }
+    
+    .progress-container {
+        background: #f1f5f9;
+        border-radius: 8px;
+        height: 8px;
+        overflow: hidden;
+        margin-bottom: 10px;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        border-radius: 8px;
+        transition: width 0.5s ease;
+    }
+    
+    .progress-pending { background: #f59e0b; width: 0%; }
+    .progress-generating { background: #3b82f6; width: 50%; }
+    .progress-completed { background: #10b981; width: 100%; }
+    .progress-failed { background: #ef4444; width: 100%; }
+    .progress-uploaded { background: #8b5cf6; width: 100%; }
+    
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+    
+    .metric-item {
+        background: #f8fafc;
+        border-radius: 6px;
+        padding: 8px;
+        text-align: center;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .filter-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
+    }
+    
+    .quick-filters {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+    }
+    
+    .quick-filter {
+        padding: 6px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 20px;
+        background: white;
+        color: #374151;
+        text-decoration: none;
+        font-size: 0.85em;
+        transition: all 0.3s ease;
+    }
+    
+    .quick-filter:hover, .quick-filter.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+        text-decoration: none;
+    }
+    
+    .bulk-actions {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        display: none;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .bulk-actions.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+    
+    .upload-progress-modal .modal-body {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .upload-item {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-left: 4px solid #e2e8f0;
+    }
+    
+    .upload-item.success { border-left-color: #10b981; }
+    .upload-item.error { border-left-color: #ef4444; }
+    .upload-item.pending { border-left-color: #f59e0b; }
+    
+    .cost-breakdown {
+        background: #f1f5f9;
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 0.9em;
+    }
+    
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+    
+    .loading-card {
+        animation: pulse 1.5s infinite;
+    }
+    
+    .performance-chart {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        border: 1px solid #e2e8f0;
+        height: 200px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="stat-card text-center">
+            <h3 class="text-primary mb-1">{{ content_items|length }}</h3>
+            <p class="text-muted mb-0">Total Content</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card text-center">
+            <h3 class="text-success mb-1">{{ content_items|selectattr("production_status", "equalto", "completed")|list|length }}</h3>
+            <p class="text-muted mb-0">Completed</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card text-center">
+            <h3 class="text-warning mb-1">{{ content_items|selectattr("production_status", "equalto", "generating")|list|length }}</h3>
+            <p class="text-muted mb-0">In Progress</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="stat-card text-center">
+            <h3 class="text-info mb-1">{{ content_items|map(attribute="uploads")|map("length")|sum }}</h3>
+            <p class="text-muted mb-0">Published</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filters & Search -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="filter-card">
+            <!-- Quick Filters -->
+            <div class="quick-filters">
+                <a href="?status=all" class="quick-filter {{ 'active' if current_filters.status == 'all' else '' }}">
+                    <i class="fas fa-globe me-1"></i>All Content
+                </a>
+                <a href="?status=completed" class="quick-filter {{ 'active' if current_filters.status == 'completed' else '' }}">
+                    <i class="fas fa-check-circle me-1"></i>Completed
+                </a>
+                <a href="?status=generating" class="quick-filter {{ 'active' if current_filters.status == 'generating' else '' }}">
+                    <i class="fas fa-cog me-1"></i>Generating
+                </a>
+                <a href="?status=uploaded" class="quick-filter {{ 'active' if current_filters.status == 'uploaded' else '' }}">
+                    <i class="fas fa-cloud-upload-alt me-1"></i>Published
+                </a>
+                <a href="?platform=youtube" class="quick-filter {{ 'active' if current_filters.platform == 'youtube' else '' }}">
+                    <i class="fab fa-youtube me-1"></i>YouTube
+                </a>
+                <a href="?platform=tiktok" class="quick-filter {{ 'active' if current_filters.platform == 'tiktok' else '' }}">
+                    <i class="fab fa-tiktok me-1"></i>TikTok
+                </a>
+            </div>
+            
+            <!-- Advanced Filters -->
+            <form method="GET" id="filterForm" class="row align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Status</label>
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="all" {{ 'selected' if current_filters.status == 'all' else '' }}>All Status</option>
+                        <option value="pending" {{ 'selected' if current_filters.status == 'pending' else '' }}>Pending</option>
+                        <option value="generating" {{ 'selected' if current_filters.status == 'generating' else '' }}>Generating</option>
+                        <option value="completed" {{ 'selected' if current_filters.status == 'completed' else '' }}>Completed</option>
+                        <option value="failed" {{ 'selected' if current_filters.status == 'failed' else '' }}>Failed</option>
+                        <option value="uploaded" {{ 'selected' if current_filters.status == 'uploaded' else '' }}>Uploaded</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Platform</label>
+                    <select name="platform" class="form-select form-select-sm">
+                        <option value="all" {{ 'selected' if current_filters.platform == 'all' else '' }}>All Platforms</option>
+                        {% for platform in platforms %}
+                        <option value="{{ platform }}" {{ 'selected' if current_filters.platform == platform else '' }}>
+                            {{ platform.title() }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Quality</label>
+                    <select name="quality" class="form-select form-select-sm">
+                        <option value="all" {{ 'selected' if request.args.get('quality') == 'all' else '' }}>All Quality</option>
+                        <option value="budget" {{ 'selected' if request.args.get('quality') == 'budget' else '' }}>Budget</option>
+                        <option value="balanced" {{ 'selected' if request.args.get('quality') == 'balanced' else '' }}>Balanced</option>
+                        <option value="premium" {{ 'selected' if request.args.get('quality') == 'premium' else '' }}>Premium</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Search</label>
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Search content..." value="{{ request.args.get('search', '') }}">
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-filter me-1"></i>Apply
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearFilters()">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Actions -->
+<div class="bulk-actions" id="bulkActions">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h6 class="mb-1">Bulk Actions</h6>
+            <span id="selectedCount">0</span> content items selected
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-light btn-sm" onclick="bulkUpload()">
+                <i class="fas fa-cloud-upload me-1"></i>Upload to Platforms
+            </button>
+            <button class="btn btn-outline-light btn-sm" onclick="bulkDownload()">
+                <i class="fas fa-download me-1"></i>Download
+            </button>
+            <button class="btn btn-outline-light btn-sm" onclick="bulkDelete()">
+                <i class="fas fa-trash me-1"></i>Delete
+            </button>
+            <button class="btn btn-outline-light btn-sm" onclick="clearSelection()">
+                <i class="fas fa-times me-1"></i>Clear
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Content Grid -->
+<div class="row" id="contentGrid">
+    {% for content in content_items %}
+    <div class="col-lg-6 col-xl-4 mb-4">
+        <div class="content-card status-{{ content.production_status }}" data-content-id="{{ content.id }}">
+            <div class="status-indicator"></div>
+            
+            <div class="card-body p-4">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input content-checkbox" type="checkbox" 
+                               value="{{ content.id }}" onchange="updateBulkActions()">
+                    </div>
+                    <div class="quality-badge quality-{{ content.quality_tier }}">
+                        {{ content.quality_tier.title() }}
+                    </div>
+                </div>
+                
+                <!-- Thumbnail -->
+                <div class="content-thumbnail">
+                    {% if content.assets and content.assets.thumbnail %}
+                        <img src="{{ content.assets.thumbnail }}" alt="Content thumbnail">
+                    {% else %}
+                        <i class="fas fa-video"></i>
+                    {% endif %}
+                    
+                    <div class="overlay">
+                        <button class="btn btn-light btn-sm" onclick="previewContent('{{ content.id }}')">
+                            <i class="fas fa-play me-1"></i>Preview
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Title -->
+                <h5 class="card-title mb-2">{{ content.title }}</h5>
+                
+                <!-- Platform Badges -->
+                <div class="platform-badges">
+                    {% for platform in content.target_platforms %}
+                    <span class="platform-badge platform-{{ platform }}">
+                        {{ platform.upper() }}
+                    </span>
+                    {% endfor %}
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="progress-container">
+                    <div class="progress-bar progress-{{ content.production_status }}"></div>
+                </div>
+                
+                <!-- Status Info -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge bg-{{ get_status_color(content.production_status) }}">
+                        {{ content.production_status.title() }}
+                    </span>
+                    {% if content.completed_at %}
+                    <small class="text-muted">
+                        <i class="fas fa-clock me-1"></i>
+                        {{ format_timeago(content.completed_at) }}
+                    </small>
+                    {% endif %}
+                </div>
+                
+                <!-- Metrics -->
+                {% if content.uploads %}
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <div class="fw-bold text-primary">{{ content.uploads|map(attribute="performance.views")|sum|default(0) }}</div>
+                        <div class="small text-muted">Total Views</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="fw-bold text-success">{{ content.uploads|map(attribute="performance.likes")|sum|default(0) }}</div>
+                        <div class="small text-muted">Total Likes</div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Cost Info -->
+                {% if content.cost_breakdown %}
+                <div class="cost-breakdown mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="small">Production Cost:</span>
+                        <span class="small fw-bold">฿{{ content.cost_breakdown.total|default(0) }}</span>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Actions -->
+                <div class="d-grid gap-2">
+                    {% if content.production_status == 'completed' and not content.uploads %}
+                    <button class="btn btn-success" onclick="uploadContent('{{ content.id }}')">
+                        <i class="fas fa-cloud-upload me-2"></i>Upload to Platforms
+                    </button>
+                    {% elif content.production_status == 'failed' %}
+                    <button class="btn btn-warning" onclick="retryGeneration('{{ content.id }}')">
+                        <i class="fas fa-redo me-2"></i>Retry Generation
+                    </button>
+                    {% elif content.production_status == 'generating' %}
+                    <button class="btn btn-outline-secondary" disabled>
+                        <i class="fas fa-spinner fa-spin me-2"></i>Generating...
+                    </button>
+                    {% else %}
+                    <button class="btn btn-outline-primary" onclick="viewContentDetail('{{ content.id }}')">
+                        <i class="fas fa-eye me-2"></i>View Details
+                    </button>
+                    {% endif %}
+                    
+                    <div class="btn-group btn-group-sm">
+                        {% if content.assets and content.assets.video_file %}
+                        <button class="btn btn-outline-secondary" onclick="downloadContent('{{ content.id }}')">
+                            <i class="fas fa-download me-1"></i>Download
+                        </button>
+                        {% endif %}
+                        <button class="btn btn-outline-secondary" onclick="shareContent('{{ content.id }}')">
+                            <i class="fas fa-share me-1"></i>Share
+                        </button>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="editContent('{{ content.id }}')">
+                                    <i class="fas fa-edit me-2"></i>Edit
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="duplicateContent('{{ content.id }}')">
+                                    <i class="fas fa-copy me-2"></i>Duplicate
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" onclick="deleteContent('{{ content.id }}')">
+                                    <i class="fas fa-trash me-2"></i>Delete
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Upload Status -->
+                {% if content.uploads %}
+                <div class="mt-3">
+                    <h6 class="small text-muted mb-2">Published on:</h6>
+                    {% for upload in content.uploads %}
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="platform-badge platform-{{ upload.platform }} small">
+                            {{ upload.platform.upper() }}
+                        </span>
+                        {% if upload.url %}
+                        <a href="{{ upload.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                        {% else %}
+                        <span class="badge bg-warning">Processing</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    {% if not content_items %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="fas fa-video fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No Content Found</h5>
+            <p class="text-muted">ยังไม่มีเนื้อหาที่สร้าง</p>
+            <div class="d-flex gap-2 justify-content-center">
+                <a href="{{ url_for('opportunities_page') }}" class="btn btn-primary">
+                    <i class="fas fa-lightbulb me-1"></i>
+                    View Opportunities
+                </a>
+                <button class="btn btn-success" onclick="createContentQuick()">
+                    <i class="fas fa-plus me-1"></i>
+                    Create Content
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Upload Progress Modal -->
+<div class="modal fade upload-progress-modal" id="uploadProgressModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload Progress</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="uploadProgressContent">
+                <!-- Progress items will be added dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Content Detail Modal -->
+<div class="modal fade" id="contentDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Content Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="contentDetailContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="actionFromDetail">
+                    <i class="fas fa-cloud-upload me-1"></i>Upload
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Content Preview Modal -->
+<div class="modal fade" id="contentPreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Content Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center" id="contentPreviewBody">
+                <!-- Preview content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/content.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,264 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ai-content-factory-ingress
+  namespace: ai-content-factory
+  labels:
+    app: ai-content-factory
+    component: ingress
+  annotations:
+    # Nginx ingress controller annotations
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    
+    # Rate limiting
+    nginx.ingress.kubernetes.io/rate-limit-requests-per-minute: "300"
+    nginx.ingress.kubernetes.io/limit-connections: "10"
+    
+    # CORS settings
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+    
+    # Security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Frame-Options DENY;
+      add_header X-Content-Type-Options nosniff;
+      add_header X-XSS-Protection "1; mode=block";
+      add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+      add_header Referrer-Policy "strict-origin-when-cross-origin";
+      add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' wss:; media-src 'self'; object-src 'none'; child-src 'self'; frame-ancestors 'none';";
+    
+    # Proxy settings
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    
+    # Load balancing
+    nginx.ingress.kubernetes.io/upstream-hash-by: "$binary_remote_addr"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "ai-content-factory-session"
+    nginx.ingress.kubernetes.io/session-cookie-expires: "86400"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "86400"
+    
+    # Certificate management (cert-manager)
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    
+spec:
+  tls:
+  - hosts:
+    - ai-content-factory.com
+    - www.ai-content-factory.com
+    - api.ai-content-factory.com
+    secretName: ai-content-factory-tls
+  
+  rules:
+  # Main web dashboard
+  - host: ai-content-factory.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-dashboard-service
+            port:
+              number: 3000
+  
+  # WWW redirect
+  - host: www.ai-content-factory.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-dashboard-service
+            port:
+              number: 3000
+  
+  # API Gateway
+  - host: api.ai-content-factory.com
+    http:
+      paths:
+      # Trend Monitor API
+      - path: /trends
+        pathType: Prefix
+        backend:
+          service:
+            name: trend-monitor-service
+            port:
+              number: 8001
+      
+      # Content Engine API
+      - path: /content
+        pathType: Prefix
+        backend:
+          service:
+            name: content-engine-service
+            port:
+              number: 8002
+      
+      # Platform Manager API
+      - path: /platforms
+        pathType: Prefix
+        backend:
+          service:
+            name: platform-manager-service
+            port:
+              number: 8003
+      
+      # Monitoring API
+      - path: /monitoring
+        pathType: Prefix
+        backend:
+          service:
+            name: monitoring-service
+            port:
+              number: 8004
+      
+      # Health checks
+      - path: /health
+        pathType: Prefix
+        backend:
+          service:
+            name: api-gateway-service
+            port:
+              number: 8080
+      
+      # Metrics endpoint
+      - path: /metrics
+        pathType: Prefix
+        backend:
+          service:
+            name: api-gateway-service
+            port:
+              number: 9090
+
+---
+# Separate ingress for WebSocket connections
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ai-content-factory-websocket-ingress
+  namespace: ai-content-factory
+  labels:
+    app: ai-content-factory
+    component: websocket-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    
+    # WebSocket specific annotations
+    nginx.ingress.kubernetes.io/proxy-set-headers: "ai-content-factory/websocket-headers"
+    nginx.ingress.kubernetes.io/websocket-services: "api-gateway-service"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    
+    # Certificate management
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    
+spec:
+  tls:
+  - hosts:
+    - ws.ai-content-factory.com
+    secretName: ai-content-factory-ws-tls
+  
+  rules:
+  - host: ws.ai-content-factory.com
+    http:
+      paths:
+      - path: /ws
+        pathType: Prefix
+        backend:
+          service:
+            name: api-gateway-service
+            port:
+              number: 8080
+
+---
+# Internal ingress for admin/monitoring tools
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ai-content-factory-admin-ingress
+  namespace: ai-content-factory
+  labels:
+    app: ai-content-factory
+    component: admin-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    
+    # Basic authentication for admin access
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: admin-auth
+    nginx.ingress.kubernetes.io/auth-realm: "AI Content Factory Admin"
+    
+    # IP whitelist for admin access (optional)
+    nginx.ingress.kubernetes.io/whitelist-source-range: "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+    
+    # Certificate management
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    
+spec:
+  tls:
+  - hosts:
+    - admin.ai-content-factory.com
+    secretName: ai-content-factory-admin-tls
+  
+  rules:
+  - host: admin.ai-content-factory.com
+    http:
+      paths:
+      # Grafana monitoring dashboard
+      - path: /grafana
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana-service
+            port:
+              number: 3000
+      
+      # Prometheus metrics
+      - path: /prometheus
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus-service
+            port:
+              number: 9090
+      
+      # n8n workflow management
+      - path: /n8n
+        pathType: Prefix
+        backend:
+          service:
+            name: n8n-service
+            port:
+              number: 5678
+      
+      # Database admin (pgAdmin)
+      - path: /pgadmin
+        pathType: Prefix
+        backend:
+          service:
+            name: pgadmin-service
+            port:
+              number: 80
+      
+      # Redis admin (RedisInsight)
+      - path: /redis
+        pathType: Prefix
+        backend:
+          service:
+            name: redis-insight-service
+            port:
+              number: 8001

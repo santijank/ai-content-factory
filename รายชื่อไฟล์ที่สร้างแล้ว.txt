@@ -1,0 +1,272 @@
+Services/service_registry.py
+Services/ai_director.py
+image_ai/ base_image_ai.py
+image_ai/ stable_diffusion.py
+image_ai/leonardo_ai.py
+image_ai/midjourney_api.py
+image_ai/base_image_ai.py
+text_ai/groq_service.py
+text_ai/openai_service.py
+text_ai/claude_service.py
+shared/models/content_plan.py
+content-engine/services/trend_analyzer.py
+content-engine/services/ai_director.py
+content-engine/services /opportunity_engine.py
+content-engine/services /content_pipeline.py
+content-engine/services /content_generator.py
+content-engine/ai_services/audio_ai/base_audio_ai.py
+content-engine/ai_services/audio_ai/__init__.py
+content-engine/ai_services/audio_ai/gtts_service.py
+content-engine/ai_services/audio_ai/azure_tts.py
+content-engine/ai_services/audio_ai/elevenlabs_service.py
+content-engine/models/quality_tier.py
+content-engine/models/__init__.py
+content-engine/models/content_opportunity.py
+platform-manager/services/uploaders/youtube_uploader.py
+platform-manager/services/uploaders/tiktok_uploader.py
+database/repositories/trend_repository.py
+database/models/base.py
+templates/base.html
+templates/analytics.html
+templates/index.html
+templates/dashboard.html
+main_app.py
+database/models/base.py
+database/models/trends.py
+database/models/content_opportunities
+database/models/content_items.py
+database/repositories/performance_repository
+database/repositories/opportunity_repository.py
+database/repositories/content_repository.py
+database/repositories/__init__.py
+templates/opportunities.html
+templates/trends.html
+static/js/opportunities.js
+api/opportunities_api.py
+api/trends_api.py
+api/analytics_api.py
+docker-compose.yml
+requirements.txt
+Dockerfile
+.env.example
+content-engine/utils/__init__.py
+content-engine/utils/config_manager.py
+content-engine/utils/video_assembler.py
+content-engine/app.py
+config/app_config.yaml
+content-engine/templates/dashboard.html
+platform-manager/app.py
+ platform-manager/services/platform_manager.py
+ platform-manager/models/platform_type.py
+platform-manager/models/upload_metadata.py
+platform-manager/utils/content_optimizer.py
+platform-manager/utils/config_manager.py
+templates/content.html
+static/js/content.js
+static/js/dashboard.js
+static/css/dashboard.css
+static/js/analytics.js
+config/app_config.py
+app.py
+test/test_core_functions.py
+test/conftest.py
+test/test_api_integration.py
+test/run_tests.py
+test/integration_config.py
+quick_test.py
+web-dashboard/src/pages/content.js
+web-dashboard/src/pages/Analytics.js
+web-dashboard/src/pages/Setting.js
+web-dashboard/src/pages/Dashboard.css
+web-dashboard/src/pages/Trends.css
+web-dashboard/src/pages/Opportunities.css
+web-dashboard/src/pages/Content.css
+web-dashboard/src/pages/Analytics.css
+web-dashboard/src/pages/Settings.css
+web-dashboard/src/pages/Modal.css
+web-dashboard/src/components/ContentCard.js
+web-dashboard/src/components/OpportunityCard.js
+web-dashboard/src/components/TrendCard.js
+web-dashboard/src/components/PerformanceChart.js
+web-dashboard/src/components/FilterBar.js
+web-dashboard/src/components/Modal.js
+monitoring/dashboard/performance_dashboard.py
+monitoring/dashboard/metrics_collector.py
+monitoring/dashboard/alert_manager.py
+monitoring/grafana/dashboard/system-matrics.json
+monitoring/grafana/dashboard/content-performance.json
+monitoring/prometheus/prometheus.yml
+monitoring/app.py
+monitoring/template/monitoring_dashboard.html
+ai-content-factory/trend_monitor/ app.py
+ai-content-factory/trend_monitor/models/trend_data.py
+ai-content-factory/trend_monitor/ services/trend_collector.py
+ai-content-factory/trend_monitor/ services/youtube_trends.py
+ai-content-factory/trend_monitor/ services/google_trends.py
+ai-content-factory/trend_monitor/ services/twitter_trends.py
+ai-content-factory/trend_monitor/services/reddit_trends.py
+ai-content-factory/trend_monitor/config/trend_sources.yaml
+ai-content-factory/trend_monitor/models/__init__.py
+ai-content-factory/trend_monitor/services/__init__.py
+ai-content-factory/trend_monitor/requirments.txt
+ai-content-factory/trend_monitor/Dockerfile
+ai-content-factory/database/init_database.py
+ai-content-factory/database/setup.sh
+ai-content-factory/database/migrations/001_create_trends_table.sql
+ai-content-factory/database/migrations/002_create_opportunities_table.sql
+ai-content-factory/database/migrations/003_create_content_items_table.sql
+ai-content-factory/database/migrations/004_create_uploads_table.sql
+ai-content-factory/database/migrations/005_create_performance_metrics_table.sql
+ai-content-factory/database/config/database_config.yaml
+ai-content-factory/database/repositories/trend_repository.py
+ai-content-factory/database/migrate.py
+ai-content-factory\platform-manager\services\uploaders/instagram_uploader.py
+ai-content-factory\platform-manager\services\uploaders/facebook_uploader.py
+ai-content-factory\platform-manager\services\uploaders/__init__.py
+ai-content-factory\platform-manager\services\enhanced_platform_manager.py
+ai-content-factory/database/config/platforms_config.yaml
+ai-content-factory/config/ai_models.yaml
+ai-content-factory/config/quality_tiers.yaml
+ai-content-factory/config/trend_sources.yaml
+ai-content-factory/config/platform_configs/youtube.yaml
+ai-content-factory/config/platform_configs/tiktok.yaml
+ai-content-factory/config/platform_configs/instagram.yaml
+ai-content-factory/config/platform_configs/facebook.yaml
+ai-content-factory/config/__init__.py
+ai-content-factory/config/README.md
+ai-content-factory/n8n-workflows/trend-collection-workflow.json
+ai-content-factory/n8n-workflows/content-generation-workflow.json
+ai-content-factory/n8n-workflows/master-workflow.json
+ai-content-factory/n8n-workflows/ import-workflows.sh  
+ai-content-factory/n8n-workflows/platform-upload-workflow.json
+ai-content-factory/n8n-workflows/performance-monitoring-workflow.json
+ai-content-factory/n8n-workflows/WORKFLOW_SUMMARY.md 
+ai-content-factory/n8n-workflows/package.json
+ai-content-factory/main.py
+ai-content-factory/shared/utils/logger.py
+ai-content-factory/shared/models/service_status.py
+ai-content-factory/shared/utils/cache.py
+ai-content-factory/shared/models/service_status.py
+ai-content-factory/database/models/uploads.py
+ai-content-factory/database/models/performance_metrics.py
+api/content_api.py
+# api/content_api.py
+ai-content-factory/content-engine/services/service_registry.py
+# api/content_api.py
+ai-content-factory/web-dashboard/package.json
+ai-content-factory/web-dashboard/src/App.js
+ai-content-factory/web-dashboard/src/store/appStore.js
+ai-content-factory/web-dashboard/src/components/Navbar.js
+ai-content-factory/web-dashboard/src/components/Slidebar.js
+ai-content-factory/web-dashboard/src/pages/Dashboard.js
+ai-content-factory/web-dashboard/src/pages/Trends.js
+ai-content-factory/web-dashboard/src/pages/Opportunities.js
+ai-content-factory/web-dashboard/src/pages/Content.js
+ai-content-factory/web-dashboard/src/pages/Analytics.js
+ai-content-factory/web-dashboard/src/index.js
+ai-content-factory/web-dashboard/src/index.css
+ai-content-factory/shared/utils/error_handler.py
+ai-content-factory/shared/utils/rate_limiter.py
+ai-content-factory/shared/constants/platform_constants.py 
+ai-content-factory/content-engine/ai_services/audio_ai/gtts_service.py
+ai-content-factory/platform-manager/utils/content_optimizer.py 
+ai-content-factory/web-dashboard/src/services/api.js
+ai-content-factory/web-dashboard/public/index.htm
+ai-content-factory/web-dashboard/src/services/websocket.js
+ai-content-factory/.gitignore
+* ai-content-factory/Makefile
+* ai-content-factory/VERSION
+* ai-content-factory/LICENSE
+* ai-content-factory/README.md
+ai-content-factory/database/models/__init__.py
+ai-content-factory/database/repositories/__init__.py 
+ai-content-factory/shared/models/base_model.py
+
+ai-content-factory/shared/models/trend_model.py
+
+ai-content-factory/shared/models/content_model.py
+
+ai-content-factory/shared/models/platform_model.py
+ai-content-factory/shared/utils/__init__.py
+ai-content-factory/shared/constants/__init__.py
+content-factory/shared/constants/quality_constants.py
+ai-content-factory/platform-manager/Dockerfile
+ai-content-factory/platform-manager/requirements.txt 
+ai-content-factory/platform-manager/services/__init__.py
+ai-content-factory/platform-manager/models/__init__.py
+ai-content-factory/platform-manager/utils/__init__.py
+* ai-content-factory/tests/unit/__init__.py
+* ai-content-factory/tests/unit/test_trend_collector.py
+* ai-content-factory/tests/unit/test_ai_director.py
+ai-content-factory/tests/unit/test_content_pipeline.py
+ai-content-factory/tests/unit/test_platform_manager.py
+ai-content-factory/tests/integration/test_trend_to_content_flow.py
+ai-content-factory/tests/integration/test_content_to_upload_flow.py
+ai-content-factory/content-engine/services/__init__.py
+ai-content-factory/content-engine/ai_services/__init__.py
+ai-content-factory/content-engine/ai_services/text_ai/__init__.py
+ai-content-factory/content-engine/ai_services/image_ai/__init__.py
+ai-content-factory/content-engine/requirements.txt
+ai-content-factory/content-engine/Dockerfile
+ai-content-factory/content-engine/ai_services/text_ai/base_text_ai.py
+ai-content-factory/namespace.yaml
+ai-content-factory/configmap.yaml
+ai-content-factory/secrets.yaml
+ai-content-factory/deployments/trend-monitor-deployment.yaml
+ai-content-factory/kubernetes/deployment/content-engine-deployment.yaml
+ai-content-factory/kubernetes/deployment/platform-manager-deployment.yaml
+ai-content-factory/kubernetes/deployment/web-dashboard-deployment
+ai-content-factory/kubernetes/deployment/postgres-deployment.yaml
+ai-content-factory/kubernetes/services/all-services.yaml
+ai-content-factory/kubernetes/ingress/main-ingress.yaml
+ai-content-factory/kubernetes/hpa/hpa-configs.yaml
+ai-content-factory/kubernetes/storage/persistent-volumes.yaml
+ai-content-factory/scripts/backup.sh
+ai-content-factory/scripts/migrate.sh
+ai-content-factory/scripts/deploy.sh
+ai-content-factory/scripts/build.sh
+ai-content-factory/scripts/setup.sh
+ai-content-factory/.github/workflows/build-and-test.yml
+ai-content-factory/.github/workflows/deploy-staging.yml
+ai-content-factory/.github/workflows/deploy-production.yml
+ai-content-factory/docs/architecture.md
+ai-content-factory/docs/api/trend-monitor.md
+ai-content-factory/docs/api/platform-manager-api.md
+ai-content-factory/docs/api/content-engine-api.md
+ai-content-factory/docs/deployment/local-setup.md
+ai-content-factory/docs/deployment/docker-setup.md
+ai-content-factory/docs/deployment/ขาด kubernetes-setup.md
+ai-content-factory/docs/guides/user-guide.md
+ai-content-factory/docs/guides/troubleshooting.md
+ai-content-factory/docs/guides/admin-guide.md
+ai-content-factory/web-dashboard/src/components/LoadingSpinner.js
+ai-content-factory/web-dashboard/src/components/ErrorBoundary.js
+ai-content-factory/web-dashboard/src/utils/helpers.js
+ ai-content-factory/web-dashboard/src/styles/global.css
+ai-content-factory/config/environment/development.env
+ ai-content-factory/config/environment/staging.env
+ai-content-factory/config/environment/production.env
+ docker-compose.prod.yml
+ai-content-factory/docs/README.md (หลัก)
+ai-content-factory/docs/CHANGELOG.md
+ai-content-factory/docs/CONTRIBUTING.md
+ai-content-factory/docs/guides/quick-start.md
+ai-content-factory/n8n-workflows/backup-workflow.json
+ai-content-factory/n8n-workflows/error-handling-workflow.json
+ai-content-factory/n8n-workflows/webhook-handlers.json
+ai-content-factory/shared/utils/caching.py
+ai-content-factory/shared/utils/async_helpers.py
+ai-content-factory/shared/utils/performance_monitor.py
+ai-content-factory/ scripts/data_migration.py
+ai-content-factory/scripts/cleanup.py
+ai-content-factory/database/backup/backup_script.py
+ai-content-factory/auth/middleware.py
+ai-content-factory/ auth/jwt_handler.py
+ai-content-factory/auth/permissions.py
+ai-content-factory/ health_check.py (สำหรับตรวจสอบระบบ)
+ai-content-factory/monitoring/health/service_health.py
+ai-content-factory/monitoring/alerts/webhook_alerts.py
+content-engine/ai_services/text_ai/groq_service.py
+content-engine/services/video_assembler.py
+content-engine/services/audio_generator.py
+content-engine/services/visual_generator.py

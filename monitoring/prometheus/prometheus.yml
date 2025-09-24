@@ -1,0 +1,151 @@
+# Prometheus configuration for AI Content Factory
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'ai-content-factory'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Rules files
+rule_files:
+  - "rules/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # Node Exporter for system metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+    metrics_path: /metrics
+
+  # AI Content Factory Services
+  - job_name: 'content-engine'
+    static_configs:
+      - targets: ['content-engine:5001']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    scrape_timeout: 10s
+    honor_labels: true
+    params:
+      format: ['prometheus']
+
+  - job_name: 'platform-manager'
+    static_configs:
+      - targets: ['platform-manager:5002']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    scrape_timeout: 10s
+
+  - job_name: 'trend-monitor'
+    static_configs:
+      - targets: ['trend-monitor:5003']
+    scrape_interval: 60s  # Trends don't change as frequently
+    metrics_path: /metrics
+    scrape_timeout: 15s
+
+  # Web Dashboard
+  - job_name: 'web-dashboard'
+    static_configs:
+      - targets: ['web-dashboard:3000']
+    scrape_interval: 30s
+    metrics_path: /api/metrics
+
+  # Database metrics
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # Redis metrics (if using Redis for caching)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    honor_labels: true
+
+  # N8N workflow metrics
+  - job_name: 'n8n'
+    static_configs:
+      - targets: ['n8n:5678']
+    scrape_interval: 60s
+    metrics_path: /metrics
+    basic_auth:
+      username: 'admin'
+      password: 'n8n_password'
+
+  # Custom metrics endpoint for performance dashboard
+  - job_name: 'performance-dashboard'
+    static_configs:
+      - targets: ['performance-dashboard:8080']
+    scrape_interval: 30s
+    metrics_path: /metrics/prometheus
+    scrape_timeout: 10s
+
+  # External API health checks
+  - job_name: 'external-apis'
+    static_configs:
+      - targets: 
+        - 'api.groq.com'
+        - 'api.openai.com'
+        - 'api.elevenlabs.io'
+    scrape_interval: 120s  # Check external APIs less frequently
+    metrics_path: /health
+    scheme: https
+    scrape_timeout: 30s
+
+# Remote write configuration (for long-term storage)
+remote_write:
+  - url: "http://victoriametrics:8428/api/v1/write"
+    queue_config:
+      max_samples_per_send: 10000
+      batch_send_deadline: 5s
+      max_retries: 3
+      min_backoff: 30ms
+      max_backoff: 100ms
+
+# Remote read configuration
+remote_read:
+  - url: "http://victoriametrics:8428/api/v1/read"
+    read_recent: true
+
+# Storage configuration
+storage:
+  tsdb:
+    path: /prometheus/data
+    retention.time: 30d
+    retention.size: 10GB
+    min-block-duration: 2h
+    max-block-duration: 25h
+    no-lockfile: false
+    allow-overlapping-blocks: false
+    wal-compression: true
+
+# Web configuration
+web:
+  listen-address: ':9090'
+  external-url: 'http://prometheus:9090'
+  enable-lifecycle: true
+  enable-admin-api: true
+  console.templates: 'consoles'
+  console.libraries: 'console_libraries'
+
+# Runtime configuration
+runtime:
+  gogc: 75

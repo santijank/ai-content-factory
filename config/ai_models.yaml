@@ -1,0 +1,438 @@
+# AI Models Configuration
+# Configure AI services and models for different quality tiers and tasks
+
+# Service Registry Configuration
+service_registry:
+  auto_discover: true
+  health_check_interval: 300  # 5 minutes
+  fallback_enabled: true
+  load_balancing: "round_robin"  # round_robin, weighted, priority
+  circuit_breaker:
+    enabled: true
+    failure_threshold: 3
+    timeout_seconds: 60
+
+# Text AI Services Configuration
+text_ai:
+  # Budget Tier - Free/Low cost options
+  budget:
+    primary:
+      service: "groq"
+      model: "llama2-70b-4096"
+      api_key: ${GROQ_API_KEY}
+      max_tokens: 4096
+      temperature: 0.7
+      top_p: 0.9
+      frequency_penalty: 0.0
+      presence_penalty: 0.0
+      cost_per_1k_tokens: 0.0  # Free tier
+      requests_per_minute: 30
+      context_window: 4096
+      
+    fallback:
+      service: "ollama"
+      model: "llama2"
+      endpoint: ${OLLAMA_ENDPOINT:-"http://localhost:11434"}
+      max_tokens: 2048
+      temperature: 0.7
+      cost_per_1k_tokens: 0.0  # Self-hosted
+      unlimited_requests: true
+      context_window: 2048
+      
+  # Balanced Tier - Good quality at reasonable cost
+  balanced:
+    primary:
+      service: "openai"
+      model: "gpt-3.5-turbo-16k"
+      api_key: ${OPENAI_API_KEY}
+      max_tokens: 4096
+      temperature: 0.7
+      top_p: 0.9
+      frequency_penalty: 0.0
+      presence_penalty: 0.0
+      cost_per_1k_tokens: 0.002
+      requests_per_minute: 3500
+      context_window: 16384
+      
+    fallback:
+      service: "groq"
+      model: "mixtral-8x7b-32768"
+      api_key: ${GROQ_API_KEY}
+      max_tokens: 8192
+      temperature: 0.7
+      cost_per_1k_tokens: 0.0
+      requests_per_minute: 30
+      context_window: 32768
+      
+  # Premium Tier - Highest quality
+  premium:
+    primary:
+      service: "anthropic"
+      model: "claude-3-sonnet-20240229"
+      api_key: ${ANTHROPIC_API_KEY}
+      max_tokens: 4096
+      temperature: 0.7
+      top_p: 0.9
+      cost_per_1k_tokens: 0.015
+      requests_per_minute: 1000
+      context_window: 200000
+      
+    fallback:
+      service: "openai"
+      model: "gpt-4-turbo-preview"
+      api_key: ${OPENAI_API_KEY}
+      max_tokens: 4096
+      temperature: 0.7
+      cost_per_1k_tokens: 0.03
+      requests_per_minute: 500
+      context_window: 128000
+
+# Image AI Services Configuration  
+image_ai:
+  # Budget Tier - Free/Self-hosted options
+  budget:
+    primary:
+      service: "stable_diffusion_local"
+      model: "stable-diffusion-v1-5"
+      endpoint: ${SD_LOCAL_ENDPOINT:-"http://localhost:7860"}
+      steps: 20
+      cfg_scale: 7.5
+      sampler: "DPM++ 2M Karras"
+      cost_per_image: 0.0
+      generation_time_seconds: 30
+      max_concurrent: 2
+      
+    fallback:
+      service: "stable_diffusion_api"
+      model: "stable-diffusion-xl"
+      api_key: ${STABILITY_API_KEY}
+      steps: 30
+      cfg_scale: 7
+      cost_per_image: 0.04
+      generation_time_seconds: 10
+      max_concurrent: 3
+      
+  # Balanced Tier - Good quality APIs
+  balanced:
+    primary:
+      service: "leonardo_ai"
+      model: "Leonardo Phoenix"
+      api_key: ${LEONARDO_API_KEY}
+      guidance_scale: 7
+      inference_steps: 30
+      cost_per_image: 0.08
+      generation_time_seconds: 15
+      max_concurrent: 5
+      
+    fallback:
+      service: "runpod"
+      model: "stable-diffusion-xl"
+      api_key: ${RUNPOD_API_KEY}
+      endpoint: ${RUNPOD_ENDPOINT}
+      steps: 25
+      cost_per_image: 0.05
+      generation_time_seconds: 20
+      max_concurrent: 3
+      
+  # Premium Tier - Highest quality
+  premium:
+    primary:
+      service: "midjourney"
+      api_key: ${MIDJOURNEY_API_KEY}
+      quality: "high"
+      stylize: 100
+      chaos: 0
+      cost_per_image: 0.15
+      generation_time_seconds: 60
+      max_concurrent: 2
+      
+    fallback:
+      service: "dall_e_3"
+      model: "dall-e-3"
+      api_key: ${OPENAI_API_KEY}
+      quality: "hd"
+      style: "vivid"
+      cost_per_image: 0.08
+      generation_time_seconds: 30
+      max_concurrent: 5
+
+# Audio AI Services Configuration
+audio_ai:
+  # Text-to-Speech Services
+  text_to_speech:
+    # Budget Tier
+    budget:
+      primary:
+        service: "gtts"
+        language: "en"
+        slow: false
+        cost_per_minute: 0.0
+        max_concurrent: 10
+        
+      fallback:
+        service: "espeak"
+        voice: "en+f3"
+        speed: 175
+        pitch: 50
+        cost_per_minute: 0.0
+        unlimited_concurrent: true
+        
+    # Balanced Tier  
+    balanced:
+      primary:
+        service: "azure_tts"
+        api_key: ${AZURE_SPEECH_KEY}
+        region: ${AZURE_SPEECH_REGION}
+        voice: "en-US-AriaNeural"
+        style: "neutral"
+        cost_per_minute: 0.004
+        max_concurrent: 20
+        
+      fallback:
+        service: "aws_polly"
+        api_key: ${AWS_ACCESS_KEY_ID}
+        secret_key: ${AWS_SECRET_ACCESS_KEY}
+        region: "us-east-1"
+        voice_id: "Joanna"
+        output_format: "mp3"
+        cost_per_minute: 0.004
+        max_concurrent: 10
+        
+    # Premium Tier
+    premium:
+      primary:
+        service: "elevenlabs"
+        api_key: ${ELEVENLABS_API_KEY}
+        voice_id: "21m00Tcm4TlvDq8ikWAM"  # Rachel
+        stability: 0.5
+        similarity_boost: 0.8
+        cost_per_minute: 0.30
+        max_concurrent: 3
+        
+      fallback:
+        service: "murf_ai"
+        api_key: ${MURF_API_KEY}
+        voice: "en-US-sara"
+        speed: "normal"
+        pitch: "normal"
+        cost_per_minute: 0.25
+        max_concurrent: 5
+        
+  # Speech-to-Text Services (for analysis)
+  speech_to_text:
+    budget:
+      primary:
+        service: "openai_whisper_local"
+        model: "base"
+        cost_per_minute: 0.0
+        processing_speed: "2x"
+        
+    balanced:
+      primary:
+        service: "openai_whisper_api"
+        api_key: ${OPENAI_API_KEY}
+        model: "whisper-1"
+        cost_per_minute: 0.006
+        
+    premium:
+      primary:
+        service: "azure_stt"
+        api_key: ${AZURE_SPEECH_KEY}
+        region: ${AZURE_SPEECH_REGION}
+        cost_per_minute: 0.01
+
+# Video AI Services Configuration
+video_ai:
+  # Video generation (future feature)
+  generation:
+    budget:
+      primary:
+        service: "runway_ml"
+        api_key: ${RUNWAY_API_KEY}
+        model: "gen-2"
+        resolution: "720p"
+        duration_seconds: 4
+        cost_per_second: 0.05
+        
+    premium:
+      primary:
+        service: "pika_labs"
+        api_key: ${PIKA_API_KEY}
+        model: "pika-1.0"
+        resolution: "1080p"
+        duration_seconds: 10
+        cost_per_second: 0.08
+        
+  # Video editing/processing
+  editing:
+    budget:
+      primary:
+        service: "ffmpeg_local"
+        endpoint: "local"
+        cost_per_minute: 0.0
+        max_concurrent: 2
+        
+    balanced:
+      primary:
+        service: "cloudinary"
+        api_key: ${CLOUDINARY_API_KEY}
+        api_secret: ${CLOUDINARY_API_SECRET}
+        cloud_name: ${CLOUDINARY_CLOUD_NAME}
+        cost_per_minute: 0.02
+        
+    premium:
+      primary:
+        service: "adobe_premiere_api"
+        api_key: ${ADOBE_API_KEY}
+        cost_per_minute: 0.10
+
+# Model-specific Prompts and Settings
+model_prompts:
+  content_script_generation:
+    system_prompt: |
+      You are an expert content creator and scriptwriter. Create engaging, viral-worthy content scripts based on trending topics. 
+      
+      Guidelines:
+      - Hook viewers in the first 3 seconds
+      - Use storytelling techniques
+      - Include clear call-to-actions
+      - Optimize for platform-specific formats
+      - Keep language conversational and engaging
+      
+  content_idea_generation:
+    system_prompt: |
+      You are a creative content strategist. Generate innovative content ideas based on trends and audience interests.
+      
+      Focus on:
+      - Originality and uniqueness
+      - Viral potential
+      - Audience engagement
+      - Platform optimization
+      - Monetization opportunities
+      
+  thumbnail_generation:
+    base_prompt: |
+      Create an eye-catching thumbnail image for [CONTENT_TYPE] about [TOPIC].
+      Style: High contrast, bold text, vibrant colors, clickable design
+      Elements: [ELEMENTS]
+      Text overlay: [TITLE]
+      Aspect ratio: 16:9
+      
+  video_description_generation:
+    system_prompt: |
+      Write compelling video descriptions that boost SEO and engagement.
+      
+      Include:
+      - Hook in first line
+      - Key timestamps
+      - Relevant hashtags
+      - Call-to-action
+      - SEO keywords naturally integrated
+
+# Quality Control and Monitoring
+quality_control:
+  # Content filtering
+  content_filters:
+    enabled: true
+    adult_content: false
+    violence: false
+    hate_speech: false
+    spam: false
+    
+  # Quality thresholds
+  minimum_quality_scores:
+    coherence: 0.7
+    relevance: 0.8
+    engagement_potential: 0.6
+    
+  # Automatic retries
+  retry_on_low_quality: true
+  max_retries: 2
+  quality_improvement_prompts: true
+
+# Cost Management
+cost_management:
+  # Budget controls
+  daily_budget_usd: 50.0
+  monthly_budget_usd: 1000.0
+  
+  # Cost tracking
+  track_usage: true
+  alert_threshold: 0.8  # Alert at 80% of budget
+  
+  # Cost optimization
+  prefer_cheaper_alternatives: true
+  cache_similar_requests: true
+  batch_processing: true
+  
+  # Emergency fallbacks
+  emergency_fallback_tier: "budget"
+  suspend_on_budget_exceeded: true
+
+# Performance Optimization
+performance:
+  # Caching
+  enable_response_caching: true
+  cache_duration_hours: 24
+  cache_similar_prompts: true
+  
+  # Request optimization  
+  batch_requests: true
+  connection_pooling: true
+  request_timeout_seconds: 300
+  
+  # Load balancing
+  distribute_load: true
+  health_check_endpoints: true
+  automatic_failover: true
+
+# Development and Testing
+development:
+  # Testing
+  test_mode: false
+  mock_responses: false
+  
+  # Debugging
+  debug_mode: false
+  log_all_requests: false
+  save_prompts: false
+  
+  # Rate limiting (for development)
+  development_rate_limits:
+    requests_per_minute: 10
+    daily_requests: 100
+
+# Environment-specific overrides
+environments:
+  development:
+    cost_management:
+      daily_budget_usd: 5.0
+      monthly_budget_usd: 50.0
+    text_ai:
+      budget:
+        primary:
+          requests_per_minute: 5
+    development:
+      debug_mode: true
+      test_mode: true
+      
+  staging:
+    cost_management:
+      daily_budget_usd: 20.0
+      monthly_budget_usd: 200.0
+    performance:
+      enable_response_caching: true
+      
+  production:
+    cost_management:
+      daily_budget_usd: 100.0
+      monthly_budget_usd: 2000.0
+    quality_control:
+      minimum_quality_scores:
+        coherence: 0.8
+        relevance: 0.9
+        engagement_potential: 0.7
+    performance:
+      enable_response_caching: true
+      batch_requests: true
+      distribute_load: true

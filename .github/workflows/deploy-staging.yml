@@ -1,0 +1,531 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [ develop ]
+  workflow_run:
+    workflows: ["Build and Test"]
+    branches: [ develop ]
+    types: 
+      - completed
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to deploy'
+        required: false
+        default: 'latest'
+      force_deploy:
+        description: 'Force deployment even if tests failed'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ai-content-factory
+  ENVIRONMENT: staging
+  NAMESPACE: ai-content-factory-staging
+
+jobs:
+  # Job 1: Pre-deployment Checks
+  pre-deployment:
+    name: Pre-deployment Checks
+    runs-on: ubuntu-latest
+    
+    outputs:
+      should-deploy: ${{ steps.check.outputs.should-deploy }}
+      image-tag: ${{ steps.check.outputs.image-tag }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Check deployment conditions
+      id: check
+      run: |
+        echo "Checking deployment conditions..."
+        
+        # Check if workflow was triggered by successful build
+        if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+          if [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "image-tag=${{ github.sha }}" >> $GITHUB_OUTPUT
+          else
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+            echo "Build workflow failed, skipping deployment"
+          fi
+        elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          if [[ "${{ inputs.force_deploy }}" == "true" ]]; then
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "image-tag=${{ inputs.image_tag || github.sha }}" >> $GITHUB_OUTPUT
+            echo "Force deployment requested"
+          else
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "image-tag=${{ inputs.image_tag || github.sha }}" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "should-deploy=true" >> $GITHUB_OUTPUT
+          echo "image-tag=${{ github.sha }}" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Validate image exists
+      if: steps.check.outputs.should-deploy == 'true'
+      run: |
+        echo "Validating image: ${{ steps.check.outputs.image-tag }}"
+        
+        # Check if images exist in registry
+        docker manifest inspect ${{ env.REGISTRY }}/${{ github.repository }}/content-engine:${{ steps.check.outputs.image-tag }} || {
+          echo "Image not found in registry!"
+          exit 1
+        }
+
+  # Job 2: Database Migration
+  database-migration:
+    name: Database Migration
+    runs-on: ubuntu-latest
+    needs: pre-deployment
+    if: needs.pre-deployment.outputs.should-deploy == 'true'
+    
+    environment:
+      name: staging
+      url: https://staging.ai-content-factory.com
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Configure kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+    
+    - name: Setup Kubernetes config
+      run: |
+        echo "${{ secrets.STAGING_KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+        chmod 600 $HOME/.kube/config
+    
+    - name: Test Kubernetes connection
+      run: |
+        kubectl cluster-info
+        kubectl get nodes
+    
+    - name: Create namespace if not exists
+      run: |
+        kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+    
+    - name: Backup current database
+      run: |
+        echo "Creating database backup before migration..."
+        
+        # Get postgres pod
+        POSTGRES_POD=$(kubectl get pods -n ${{ env.NAMESPACE }} -l app=postgres -o jsonpath='{.items[0].metadata.name}')
+        
+        if [[ ! -z "$POSTGRES_POD" ]]; then
+          # Create backup
+          kubectl exec $POSTGRES_POD -n ${{ env.NAMESPACE }} -- pg_dump -U admin content_factory > staging_backup_$(date +%Y%m%d_%H%M%S).sql
+          
+          # Store backup as artifact
+          echo "Database backup created successfully"
+        else
+          echo "PostgreSQL pod not found, skipping backup"
+        fi
+    
+    - name: Run database migrations
+      run: |
+        echo "Running database migrations..."
+        
+        # Create migration job
+        cat << EOF | kubectl apply -f -
+        apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: db-migration-$(date +%s)
+          namespace: ${{ env.NAMESPACE }}
+        spec:
+          template:
+            spec:
+              containers:
+              - name: migrator
+                image: ${{ env.REGISTRY }}/${{ github.repository }}/content-engine:${{ needs.pre-deployment.outputs.image-tag }}
+                command: ["python", "database/migrate.py"]
+                env:
+                - name: DB_HOST
+                  value: "postgres"
+                - name: DB_PORT
+                  value: "5432"
+                - name: DB_NAME
+                  value: "content_factory"
+                - name: DB_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secret
+                      key: username
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secret
+                      key: password
+              restartPolicy: Never
+          backoffLimit: 3
+        EOF
+        
+        # Wait for migration to complete
+        kubectl wait --for=condition=complete --timeout=300s job -l job-name=db-migration -n ${{ env.NAMESPACE }}
+
+  # Job 3: Deploy to Staging
+  deploy:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [pre-deployment, database-migration]
+    if: needs.pre-deployment.outputs.should-deploy == 'true'
+    
+    environment:
+      name: staging
+      url: https://staging.ai-content-factory.com
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Configure kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+    
+    - name: Setup Kubernetes config
+      run: |
+        echo "${{ secrets.STAGING_KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+        chmod 600 $HOME/.kube/config
+    
+    - name: Update image tags in manifests
+      run: |
+        # Update image tags in Kubernetes manifests
+        find kubernetes/ -name "*.yaml" -exec sed -i "s/IMAGE_TAG_PLACEHOLDER/${{ needs.pre-deployment.outputs.image-tag }}/g" {} +
+        find kubernetes/ -name "*.yaml" -exec sed -i "s/REGISTRY_PLACEHOLDER/${{ env.REGISTRY }}\/${{ github.repository }}/g" {} +
+    
+    - name: Apply Kubernetes manifests
+      run: |
+        echo "Deploying to staging environment..."
+        
+        # Apply configurations in order
+        kubectl apply -f kubernetes/namespace.yaml || true
+        kubectl apply -f kubernetes/configmap.yaml -n ${{ env.NAMESPACE }}
+        kubectl apply -f kubernetes/secrets.yaml -n ${{ env.NAMESPACE }}
+        kubectl apply -f kubernetes/storage/ -n ${{ env.NAMESPACE }}
+        kubectl apply -f kubernetes/deployments/ -n ${{ env.NAMESPACE }}
+        kubectl apply -f kubernetes/services/ -n ${{ env.NAMESPACE }}
+        kubectl apply -f kubernetes/ingress/ -n ${{ env.NAMESPACE }}
+        kubectl apply -f kubernetes/hpa/ -n ${{ env.NAMESPACE }}
+    
+    - name: Wait for deployment to complete
+      run: |
+        echo "Waiting for deployments to be ready..."
+        
+        # Wait for all deployments
+        kubectl rollout status deployment/trend-monitor -n ${{ env.NAMESPACE }} --timeout=600s
+        kubectl rollout status deployment/content-engine -n ${{ env.NAMESPACE }} --timeout=600s
+        kubectl rollout status deployment/platform-manager -n ${{ env.NAMESPACE }} --timeout=600s
+        kubectl rollout status deployment/web-dashboard -n ${{ env.NAMESPACE }} --timeout=600s
+        kubectl rollout status deployment/monitoring -n ${{ env.NAMESPACE }} --timeout=600s
+    
+    - name: Verify deployment
+      run: |
+        echo "Verifying deployment..."
+        
+        # Check pod status
+        kubectl get pods -n ${{ env.NAMESPACE }}
+        
+        # Check service endpoints
+        kubectl get services -n ${{ env.NAMESPACE }}
+        
+        # Check ingress
+        kubectl get ingress -n ${{ env.NAMESPACE }}
+
+  # Job 4: Health Checks
+  health-checks:
+    name: Health Checks
+    runs-on: ubuntu-latest
+    needs: [pre-deployment, deploy]
+    if: needs.pre-deployment.outputs.should-deploy == 'true'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Configure kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+    
+    - name: Setup Kubernetes config
+      run: |
+        echo "${{ secrets.STAGING_KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+        chmod 600 $HOME/.kube/config
+    
+    - name: Wait for services to be ready
+      run: |
+        echo "Waiting for services to be healthy..."
+        sleep 60  # Give services time to start
+    
+    - name: Check service health
+      run: |
+        echo "Checking service health..."
+        
+        # Get ingress IP
+        INGRESS_IP=$(kubectl get ingress main-ingress -n ${{ env.NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+        
+        if [[ -z "$INGRESS_IP" ]]; then
+          echo "Ingress IP not available, using port-forward for health checks"
+          
+          # Port forward for health checks
+          kubectl port-forward svc/content-engine 8080:8002 -n ${{ env.NAMESPACE }} &
+          sleep 10
+          
+          # Health check using localhost
+          curl -f http://localhost:8080/health || {
+            echo "Health check failed!"
+            exit 1
+          }
+          
+          # Kill port-forward
+          pkill -f "kubectl port-forward"
+        else
+          echo "Using ingress IP: $INGRESS_IP"
+          
+          # Health check using ingress
+          curl -f http://$INGRESS_IP/health || {
+            echo "Health check failed!"
+            exit 1
+          }
+        fi
+    
+    - name: Run smoke tests
+      run: |
+        echo "Running smoke tests..."
+        
+        # Set up Python environment for tests
+        python -m pip install --upgrade pip
+        pip install requests pytest
+        
+        # Run smoke tests
+        if [[ -f "tests/smoke_tests.py" ]]; then
+          python tests/smoke_tests.py --env staging
+        else
+          echo "No smoke tests found, running basic connectivity test"
+          python -c "
+          import requests
+          import sys
+          try:
+              response = requests.get('${{ secrets.STAGING_URL }}/health', timeout=30)
+              if response.status_code == 200:
+                  print('✅ Smoke test passed')
+                  sys.exit(0)
+              else:
+                  print(f'❌ Smoke test failed: HTTP {response.status_code}')
+                  sys.exit(1)
+          except Exception as e:
+              print(f'❌ Smoke test failed: {e}')
+              sys.exit(1)
+          "
+        fi
+
+  # Job 5: Performance Tests
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: [pre-deployment, health-checks]
+    if: needs.pre-deployment.outputs.should-deploy == 'true'
+    continue-on-error: true  # Don't fail deployment if performance tests fail
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install k6
+      run: |
+        sudo gpg -k
+        sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+        echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+        sudo apt-get update
+        sudo apt-get install k6
+    
+    - name: Run performance tests
+      run: |
+        if [[ -f "tests/performance/load-test.js" ]]; then
+          k6 run tests/performance/load-test.js --env BASE_URL=${{ secrets.STAGING_URL }}
+        else
+          echo "Creating basic performance test..."
+          cat << 'EOF' > basic-load-test.js
+          import http from 'k6/http';
+          import { check, sleep } from 'k6';
+
+          export let options = {
+            stages: [
+              { duration: '1m', target: 10 },
+              { duration: '2m', target: 10 },
+              { duration: '1m', target: 0 },
+            ],
+          };
+
+          export default function() {
+            let response = http.get(__ENV.BASE_URL + '/health');
+            check(response, {
+              'status is 200': (r) => r.status === 200,
+              'response time < 500ms': (r) => r.timings.duration < 500,
+            });
+            sleep(1);
+          }
+          EOF
+          
+          k6 run basic-load-test.js --env BASE_URL=${{ secrets.STAGING_URL }}
+        fi
+    
+    - name: Upload performance results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: performance-test-results
+        path: |
+          *.json
+          *.html
+        retention-days: 30
+
+  # Job 6: Notification and Rollback
+  post-deployment:
+    name: Post-deployment Actions
+    runs-on: ubuntu-latest
+    needs: [pre-deployment, deploy, health-checks, performance-tests]
+    if: always() && needs.pre-deployment.outputs.should-deploy == 'true'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Configure kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+    
+    - name: Setup Kubernetes config
+      run: |
+        echo "${{ secrets.STAGING_KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+        chmod 600 $HOME/.kube/config
+    
+    - name: Check deployment status
+      id: status
+      run: |
+        if [[ "${{ needs.deploy.result }}" == "success" && "${{ needs.health-checks.result }}" == "success" ]]; then
+          echo "deployment-status=success" >> $GITHUB_OUTPUT
+          echo "✅ Deployment successful"
+        else
+          echo "deployment-status=failed" >> $GITHUB_OUTPUT
+          echo "❌ Deployment failed"
+        fi
+    
+    - name: Rollback on failure
+      if: steps.status.outputs.deployment-status == 'failed'
+      run: |
+        echo "🔄 Rolling back deployment..."
+        
+        # Rollback all deployments
+        kubectl rollout undo deployment/trend-monitor -n ${{ env.NAMESPACE }}
+        kubectl rollout undo deployment/content-engine -n ${{ env.NAMESPACE }}
+        kubectl rollout undo deployment/platform-manager -n ${{ env.NAMESPACE }}
+        kubectl rollout undo deployment/web-dashboard -n ${{ env.NAMESPACE }}
+        kubectl rollout undo deployment/monitoring -n ${{ env.NAMESPACE }}
+        
+        # Wait for rollback to complete
+        kubectl rollout status deployment/trend-monitor -n ${{ env.NAMESPACE }} --timeout=300s
+        kubectl rollout status deployment/content-engine -n ${{ env.NAMESPACE }} --timeout=300s
+        kubectl rollout status deployment/platform-manager -n ${{ env.NAMESPACE }} --timeout=300s
+        kubectl rollout status deployment/web-dashboard -n ${{ env.NAMESPACE }} --timeout=300s
+        kubectl rollout status deployment/monitoring -n ${{ env.NAMESPACE }} --timeout=300s
+        
+        echo "✅ Rollback completed"
+    
+    - name: Send Slack notification
+      uses: 8398a7/action-slack@v3
+      if: always()
+      with:
+        status: ${{ steps.status.outputs.deployment-status == 'success' && 'success' || 'failure' }}
+        channel: '#deployments'
+        username: 'GitHub Actions'
+        icon_emoji: ':rocket:'
+        title: 'Staging Deployment'
+        message: |
+          ${{ steps.status.outputs.deployment-status == 'success' && '✅' || '❌' }} **Staging Deployment ${{ steps.status.outputs.deployment-status == 'success' && 'Successful' || 'Failed' }}**
+          
+          **Environment:** Staging
+          **Branch:** ${{ github.ref_name }}
+          **Commit:** ${{ github.sha }}
+          **Image Tag:** ${{ needs.pre-deployment.outputs.image-tag }}
+          **Triggered by:** ${{ github.actor }}
+          
+          **Results:**
+          • Deploy: ${{ needs.deploy.result }}
+          • Health Checks: ${{ needs.health-checks.result }}
+          • Performance Tests: ${{ needs.performance-tests.result }}
+          
+          **URL:** ${{ secrets.STAGING_URL }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    
+    - name: Update deployment status
+      run: |
+        echo "📊 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "===================" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Environment:** Staging" >> $GITHUB_STEP_SUMMARY
+        echo "**Status:** ${{ steps.status.outputs.deployment-status == 'success' && '✅ Success' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "**Image Tag:** \`${{ needs.pre-deployment.outputs.image-tag }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "**Deployed by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Deployment Time:** $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Job Results:**" >> $GITHUB_STEP_SUMMARY
+        echo "- Database Migration: ${{ needs.database-migration.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Application Deploy: ${{ needs.deploy.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Health Checks: ${{ needs.health-checks.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Performance Tests: ${{ needs.performance-tests.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Access URLs:**" >> $GITHUB_STEP_SUMMARY
+        echo "- Application: ${{ secrets.STAGING_URL }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Health Check: ${{ secrets.STAGING_URL }}/health" >> $GITHUB_STEP_SUMMARY
+        echo "- Monitoring: ${{ secrets.STAGING_URL }}/monitoring" >> $GITHUB_STEP_SUMMARY
+    
+    - name: Create deployment record
+      if: steps.status.outputs.deployment-status == 'success'
+      run: |
+        # Create deployment record file
+        cat << EOF > staging-deployment-record.json
+        {
+          "environment": "staging",
+          "status": "success",
+          "deployed_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "git_ref": "${{ github.ref_name }}",
+          "git_sha": "${{ github.sha }}",
+          "image_tag": "${{ needs.pre-deployment.outputs.image-tag }}",
+          "deployed_by": "${{ github.actor }}",
+          "workflow_run_id": "${{ github.run_id }}",
+          "services": {
+            "trend-monitor": "deployed",
+            "content-engine": "deployed",
+            "platform-manager": "deployed",
+            "web-dashboard": "deployed",
+            "monitoring": "deployed"
+          },
+          "tests": {
+            "health_checks": "${{ needs.health-checks.result }}",
+            "performance_tests": "${{ needs.performance-tests.result }}"
+          }
+        }
+        EOF
+    
+    - name: Upload deployment record
+      if: steps.status.outputs.deployment-status == 'success'
+      uses: actions/upload-artifact@v3
+      with:
+        name: staging-deployment-record
+        path: staging-deployment-record.json
+        retention-days: 365

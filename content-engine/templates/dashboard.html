@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Content Factory - Dashboard</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #059669;
+            --warning-color: #d97706;
+            --danger-color: #dc2626;
+            --light-bg: #f8fafc;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .sidebar {
+            background: linear-gradient(135deg, var(--primary-color), #1e40af);
+            min-height: 100vh;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin: 2px 0;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+        
+        .main-content {
+            padding: 20px;
+        }
+        
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+        
+        .trend-item {
+            background: white;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .trend-item:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+        
+        .tier-badge {
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .tier-budget { background-color: #f3f4f6; color: #374151; }
+        .tier-balanced { background-color: #dbeafe; color: #1e40af; }
+        .tier-premium { background-color: #fef3c7; color: #d97706; }
+        
+        .btn-generate {
+            background: linear-gradient(135deg, var(--success-color), #047857);
+            border: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
+        }
+        
+        .loading-spinner {
+            display: none;
+        }
+        
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        .status-healthy { background-color: var(--success-color); }
+        .status-warning { background-color: var(--warning-color); }
+        .status-error { background-color: var(--danger-color); }
+        
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                z-index: 1050;
+                width: 250px;
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 px-0">
+                <div class="sidebar">
+                    <div class="p-3">
+                        <h4 class="text-white mb-0">
+                            <i class="bi bi-robot"></i>
+                            AI Content Factory
+                        </h4>
+                        <small class="text-white-50">v1.0.0</small>
+                    </div>
+                    
+                    <nav class="nav flex-column px-3">
+                        <a class="nav-link active" href="#dashboard" data-tab="dashboard">
+                            <i class="bi bi-speedometer2 me-2"></i>
+                            Dashboard
+                        </a>
+                        <a class="nav-link" href="#trends" data-tab="trends">
+                            <i class="bi bi-graph-up-arrow me-2"></i>
+                            Trends Analysis
+                        </a>
+                        <a class="nav-link" href="#content" data-tab="content">
+                            <i class="bi bi-file-earmark-play me-2"></i>
+                            Content Generation
+                        </a>
+                        <a class="nav-link" href="#opportunities" data-tab="opportunities">
+                            <i class="bi bi-lightbulb me-2"></i>
+                            Opportunities
+                        </a>
+                        <a class="nav-link" href="#services" data-tab="services">
+                            <i class="bi bi-gear me-2"></i>
+                            Services Status
+                        </a>
+                        <a class="nav-link" href="#costs" data-tab="costs">
+                            <i class="bi bi-currency-dollar me-2"></i>
+                            Cost Estimation
+                        </a>
+                    </nav>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10">
+                <div class="main-content">
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h2 class="mb-0">Dashboard</h2>
+                            <p class="text-muted mb-0">AI-powered content creation system</p>
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('trends-results').style.display = 'block';
+                    document.getElementById('trends-results-content').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Error analyzing trends: ${error.message}
+                        </div>
+                    `;
+                })
+                .finally(() => {
+                    // Hide loading
+                    spinner.style.display = 'none';
+                    button.disabled = false;
+                });
+                
+            } catch (error) {
+                document.getElementById('trends-results').style.display = 'block';
+                document.getElementById('trends-results-content').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Invalid JSON format. Please check your input.
+                    </div>
+                `;
+                spinner.style.display = 'none';
+                button.disabled = false;
+            }
+        });
+        
+        document.getElementById('content-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const topic = document.getElementById('content-topic').value;
+            const contentType = document.getElementById('content-type').value;
+            const tier = document.getElementById('content-tier').value;
+            
+            // Get selected platforms
+            const platforms = [];
+            document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+                platforms.push(checkbox.value);
+            });
+            
+            if (!topic.trim()) {
+                alert('Please enter a topic');
+                return;
+            }
+            
+            // Show loading
+            const button = this.querySelector('button[type="submit"]');
+            const spinner = button.querySelector('.loading-spinner');
+            spinner.style.display = 'inline-block';
+            button.disabled = true;
+            
+            fetch('/api/content/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    topic: topic,
+                    content_type: contentType,
+                    tier: tier,
+                    target_platforms: platforms
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Show results
+                document.getElementById('content-results').style.display = 'block';
+                document.getElementById('content-results-content').innerHTML = `
+                    <div class="alert alert-success">
+                        <h6>Content Generated Successfully!</h6>
+                        <p><strong>Topic:</strong> ${data.topic}</p>
+                        <p><strong>Tier Used:</strong> ${data.tier_used}</p>
+                        <p><strong>Estimated Cost:</strong> ฿${data.estimated_cost ? data.estimated_cost.toFixed(4) : '0.00'}</p>
+                    </div>
+                    <div class="mt-3">
+                        <h6>Content Plan:</h6>
+                        <pre class="bg-light p-3 rounded">${JSON.stringify(data.content_plan, null, 2)}</pre>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('content-results').style.display = 'block';
+                document.getElementById('content-results-content').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Error generating content: ${error.message}
+                    </div>
+                `;
+            })
+            .finally(() => {
+                // Hide loading
+                spinner.style.display = 'none';
+                button.disabled = false;
+            });
+        });
+        
+        // Initialize charts
+        function initCharts() {
+            // Content generation chart
+            const contentCtx = document.getElementById('contentChart').getContext('2d');
+            new Chart(contentCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Content Generated',
+                        data: [12, 19, 3, 5, 2, 3, 8],
+                        borderColor: 'rgb(37, 99, 235)',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Service usage chart
+            const serviceCtx = document.getElementById('serviceChart').getContext('2d');
+            new Chart(serviceCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Budget', 'Balanced', 'Premium'],
+                    datasets: [{
+                        data: [60, 30, 10],
+                        backgroundColor: [
+                            '#6b7280',
+                            '#2563eb',
+                            '#d97706'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            initCharts();
+        });
+        
+        // Health check
+        function checkHealth() {
+            fetch('/health')
+                .then(response => response.json())
+                .then(data => {
+                    const indicator = document.querySelector('.status-indicator');
+                    const text = indicator.nextElementSibling;
+                    
+                    if (data.status === 'healthy') {
+                        indicator.className = 'status-indicator status-healthy';
+                        text.className = 'text-success fw-bold';
+                        text.textContent = 'System Healthy';
+                    } else {
+                        indicator.className = 'status-indicator status-warning';
+                        text.className = 'text-warning fw-bold';
+                        text.textContent = 'System Issues';
+                    }
+                })
+                .catch(error => {
+                    const indicator = document.querySelector('.status-indicator');
+                    const text = indicator.nextElementSibling;
+                    indicator.className = 'status-indicator status-error';
+                    text.className = 'text-danger fw-bold';
+                    text.textContent = 'System Error';
+                });
+        }
+        
+        // Check health every 30 seconds
+        setInterval(checkHealth, 30000);
+        checkHealth(); // Initial check
+    </script>
+</body>
+</html>
+                        <div>
+                            <span class="status-indicator status-healthy"></span>
+                            <span class="text-success fw-bold">System Healthy</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Dashboard Tab -->
+                    <div id="dashboard-tab" class="tab-content">
+                        <!-- Stats Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-3 mb-3">
+                                <div class="card stats-card h-100">
+                                    <div class="card-body text-center">
+                                        <div class="stats-icon mx-auto mb-3" style="background: linear-gradient(135deg, var(--primary-color), #1e40af);">
+                                            <i class="bi bi-lightbulb"></i>
+                                        </div>
+                                        <h3 class="fw-bold text-primary">{{ stats.total_opportunities or 0 }}</h3>
+                                        <p class="text-muted mb-0">Total Opportunities</p>
+                                        <small class="text-success">
+                                            <i class="bi bi-arrow-up"></i>
+                                            +{{ stats.opportunities_today or 0 }} today
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <div class="card stats-card h-100">
+                                    <div class="card-body text-center">
+                                        <div class="stats-icon mx-auto mb-3" style="background: linear-gradient(135deg, var(--success-color), #047857);">
+                                            <i class="bi bi-file-earmark-play"></i>
+                                        </div>
+                                        <h3 class="fw-bold text-success">{{ stats.content_generated_today or 0 }}</h3>
+                                        <p class="text-muted mb-0">Content Generated</p>
+                                        <small class="text-muted">Today</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <div class="card stats-card h-100">
+                                    <div class="card-body text-center">
+                                        <div class="stats-icon mx-auto mb-3" style="background: linear-gradient(135deg, var(--warning-color), #b45309);">
+                                            <i class="bi bi-currency-dollar"></i>
+                                        </div>
+                                        <h3 class="fw-bold text-warning">฿{{ "%.2f"|format(stats.total_cost_today or 0) }}</h3>
+                                        <p class="text-muted mb-0">Cost Today</p>
+                                        <small class="text-muted">{{ stats.active_tier|title or 'Budget' }} Tier</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <div class="card stats-card h-100">
+                                    <div class="card-body text-center">
+                                        <div class="stats-icon mx-auto mb-3" style="background: linear-gradient(135deg, var(--secondary-color), #475569);">
+                                            <i class="bi bi-gear"></i>
+                                        </div>
+                                        <h3 class="fw-bold text-secondary">
+                                            {% if stats.services_healthy %}
+                                                <i class="bi bi-check-circle text-success"></i>
+                                            {% else %}
+                                                <i class="bi bi-exclamation-triangle text-warning"></i>
+                                            {% endif %}
+                                        </h3>
+                                        <p class="text-muted mb-0">Services Status</p>
+                                        <small class="{% if stats.services_healthy %}text-success{% else %}text-warning{% endif %}">
+                                            {{ 'All Healthy' if stats.services_healthy else 'Issues Detected' }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Charts Row -->
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <div class="chart-container">
+                                    <h5 class="mb-3">Content Generation Trends</h5>
+                                    <canvas id="contentChart" height="100"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="chart-container">
+                                    <h5 class="mb-3">Service Usage</h5>
+                                    <canvas id="serviceChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Activity -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header bg-primary text-white">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-clock-history me-2"></i>
+                                            Recent Opportunities
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="recent-opportunities">
+                                            <div class="text-center text-muted py-3">
+                                                <i class="bi bi-hourglass-split"></i>
+                                                Loading opportunities...
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header bg-success text-white">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-graph-up me-2"></i>
+                                            Top Trending Topics
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="trending-topics">
+                                            <div class="text-center text-muted py-3">
+                                                <i class="bi bi-hourglass-split"></i>
+                                                Loading trends...
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Trends Analysis Tab -->
+                    <div id="trends-tab" class="tab-content" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-graph-up-arrow me-2"></i>
+                                    Analyze Trends
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="trends-form">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="trends-input" class="form-label">Trends Data (JSON)</label>
+                                                <textarea class="form-control" id="trends-input" rows="10" placeholder='[{"topic": "AI Technology", "keywords": ["AI", "technology"], "popularity_score": 8.5, "growth_rate": 1.5}]'></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="analysis-tier" class="form-label">Analysis Tier</label>
+                                                <select class="form-select" id="analysis-tier">
+                                                    <option value="budget">Budget (Free/Low Cost)</option>
+                                                    <option value="balanced" selected>Balanced (Good Quality)</option>
+                                                    <option value="premium">Premium (Best Quality)</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <h6>Quick Examples:</h6>
+                                                <button type="button" class="btn btn-outline-primary btn-sm me-2" onclick="loadSampleTrends('tech')">
+                                                    Tech Trends
+                                                </button>
+                                                <button type="button" class="btn btn-outline-success btn-sm me-2" onclick="loadSampleTrends('lifestyle')">
+                                                    Lifestyle
+                                                </button>
+                                                <button type="button" class="btn btn-outline-warning btn-sm" onclick="loadSampleTrends('news')">
+                                                    News
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-search me-2"></i>
+                                        Analyze Trends
+                                        <span class="loading-spinner spinner-border spinner-border-sm ms-2"></span>
+                                    </button>
+                                </form>
+                                
+                                <div id="trends-results" class="mt-4" style="display: none;">
+                                    <h6>Analysis Results:</h6>
+                                    <div id="trends-results-content"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Content Generation Tab -->
+                    <div id="content-tab" class="tab-content" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-file-earmark-play me-2"></i>
+                                    Generate Content
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="content-form">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="content-topic" class="form-label">Topic</label>
+                                                <input type="text" class="form-control" id="content-topic" placeholder="Enter content topic">
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label for="content-type" class="form-label">Content Type</label>
+                                                <select class="form-select" id="content-type">
+                                                    <option value="educational">Educational</option>
+                                                    <option value="entertainment">Entertainment</option>
+                                                    <option value="news">News</option>
+                                                    <option value="review">Review</option>
+                                                    <option value="tutorial">Tutorial</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="content-tier" class="form-label">Quality Tier</label>
+                                                <select class="form-select" id="content-tier">
+                                                    <option value="budget">Budget (Fast & Free)</option>
+                                                    <option value="balanced" selected>Balanced (Good Quality)</option>
+                                                    <option value="premium">Premium (Best Quality)</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Target Platforms</label>
+                                                <div>
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input" type="checkbox" id="platform-youtube" value="youtube" checked>
+                                                        <label class="form-check-label" for="platform-youtube">YouTube</label>
+                                                    </div>
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input" type="checkbox" id="platform-tiktok" value="tiktok">
+                                                        <label class="form-check-label" for="platform-tiktok">TikTok</label>
+                                                    </div>
+                                                    <div class="form-check form-check-inline">
+                                                        <input class="form-check-input" type="checkbox" id="platform-instagram" value="instagram">
+                                                        <label class="form-check-label" for="platform-instagram">Instagram</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-generate text-white">
+                                        <i class="bi bi-magic me-2"></i>
+                                        Generate Content
+                                        <span class="loading-spinner spinner-border spinner-border-sm ms-2"></span>
+                                    </button>
+                                </form>
+                                
+                                <div id="content-results" class="mt-4" style="display: none;">
+                                    <h6>Generated Content:</h6>
+                                    <div id="content-results-content"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Services Status Tab -->
+                    <div id="services-tab" class="tab-content" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-gear me-2"></i>
+                                    AI Services Status
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="services-status">
+                                    <div class="text-center">
+                                        <div class="spinner-border text-primary" role="status"></div>
+                                        <p class="mt-2">Loading services status...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Tab switching
+        document.querySelectorAll('[data-tab]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all links
+                document.querySelectorAll('[data-tab]').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Hide all tabs
+                document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+                
+                // Show selected tab
+                const targetTab = this.getAttribute('data-tab') + '-tab';
+                document.getElementById(targetTab).style.display = 'block';
+                
+                // Load tab-specific data
+                loadTabData(this.getAttribute('data-tab'));
+            });
+        });
+        
+        // Load tab-specific data
+        function loadTabData(tab) {
+            switch(tab) {
+                case 'services':
+                    loadServicesStatus();
+                    break;
+                case 'dashboard':
+                    loadDashboardData();
+                    break;
+            }
+        }
+        
+        // Load dashboard data
+        function loadDashboardData() {
+            // Load recent opportunities (mock data for now)
+            const opportunitiesContainer = document.getElementById('recent-opportunities');
+            opportunitiesContainer.innerHTML = `
+                <div class="trend-item p-3 mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">AI in Healthcare</h6>
+                            <small class="text-muted">Score: 8.5/10</small>
+                        </div>
+                        <span class="tier-badge tier-premium px-2 py-1">Premium</span>
+                    </div>
+                </div>
+                <div class="trend-item p-3 mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Sustainable Technology</h6>
+                            <small class="text-muted">Score: 7.8/10</small>
+                        </div>
+                        <span class="tier-badge tier-balanced px-2 py-1">Balanced</span>
+                    </div>
+                </div>
+            `;
+            
+            // Load trending topics (mock data)
+            const trendsContainer = document.getElementById('trending-topics');
+            trendsContainer.innerHTML = `
+                <div class="trend-item p-3 mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Machine Learning</h6>
+                            <small class="text-muted">Growth: +45%</small>
+                        </div>
+                        <span class="badge bg-success">Hot</span>
+                    </div>
+                </div>
+                <div class="trend-item p-3 mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Remote Work Tools</h6>
+                            <small class="text-muted">Growth: +32%</small>
+                        </div>
+                        <span class="badge bg-warning">Rising</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Load services status
+        function loadServicesStatus() {
+            fetch('/api/services/status')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('services-status');
+                    let html = '';
+                    
+                    Object.entries(data.services).forEach(([serviceType, tiers]) => {
+                        html += `
+                            <div class="mb-4">
+                                <h6 class="text-uppercase fw-bold text-primary">${serviceType.replace('_', ' ')}</h6>
+                                <div class="row">
+                        `;
+                        
+                        Object.entries(tiers).forEach(([tier, config]) => {
+                            const statusClass = config.available ? 'status-healthy' : 'status-error';
+                            const statusText = config.available ? 'Available' : 'Unavailable';
+                            
+                            html += `
+                                <div class="col-md-4 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <span class="status-indicator ${statusClass}"></span>
+                                                <strong>${tier.charAt(0).toUpperCase() + tier.slice(1)}</strong>
+                                            </div>
+                                            <p class="mb-1"><strong>Service:</strong> ${config.service}</p>
+                                            <p class="mb-1"><strong>Status:</strong> ${statusText}</p>
+                                            <p class="mb-1"><strong>Cost:</strong> ฿${config.cost_per_unit}/unit</p>
+                                            <p class="mb-0"><strong>Quality:</strong> ${config.quality_score}/10</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        html += '</div></div>';
+                    });
+                    
+                    container.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error loading services status:', error);
+                    document.getElementById('services-status').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Failed to load services status
+                        </div>
+                    `;
+                });
+        }
+        
+        // Sample trends loader
+        function loadSampleTrends(type) {
+            const samples = {
+                tech: [
+                    {
+                        topic: "AI Technology Trends",
+                        keywords: ["AI", "technology", "machine learning"],
+                        popularity_score: 8.5,
+                        growth_rate: 1.5,
+                        source: "youtube"
+                    },
+                    {
+                        topic: "Blockchain Applications",
+                        keywords: ["blockchain", "cryptocurrency", "web3"],
+                        popularity_score: 7.2,
+                        growth_rate: 1.3,
+                        source: "google_trends"
+                    }
+                ],
+                lifestyle: [
+                    {
+                        topic: "Healthy Living Tips",
+                        keywords: ["health", "fitness", "wellness"],
+                        popularity_score: 7.8,
+                        growth_rate: 1.2,
+                        source: "youtube"
+                    }
+                ],
+                news: [
+                    {
+                        topic: "Global Economic Trends",
+                        keywords: ["economy", "global", "trends"],
+                        popularity_score: 6.5,
+                        growth_rate: 1.1,
+                        source: "google_trends"
+                    }
+                ]
+            };
+            
+            document.getElementById('trends-input').value = JSON.stringify(samples[type], null, 2);
+        }
+        
+        // Form submissions
+        document.getElementById('trends-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const trendsData = document.getElementById('trends-input').value;
+            const tier = document.getElementById('analysis-tier').value;
+            
+            // Show loading
+            const button = this.querySelector('button[type="submit"]');
+            const spinner = button.querySelector('.loading-spinner');
+            spinner.style.display = 'inline-block';
+            button.disabled = true;
+            
+            try {
+                const trends = JSON.parse(trendsData);
+                
+                fetch('/api/trends/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        trends: trends,
+                        tier: tier
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Show results
+                    document.getElementById('trends-results').style.display = 'block';
+                    document.getElementById('trends-results-content').innerHTML = `
+                        <div class="alert alert-success">
+                            <h6>Analysis Complete!</h6>
+                            <p><strong>Total Analyzed:</strong> ${data.total_analyzed}</p>
+                            <p><strong>Opportunities Generated:</strong> ${data.opportunities_generated}</p>
+                            <p><strong>Tier Used:</strong> ${data.tier_used}</p>
+                        </div>
+                        <div class="mt-3">
+                            <h6>Top Opportunities:</h6>
+                            ${

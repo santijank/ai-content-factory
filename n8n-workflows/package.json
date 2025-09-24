@@ -1,0 +1,11 @@
+{
+  "name": "ai-content-factory-n8n",
+  "version": "1.0.0",
+  "description": "N8N workflows for AI Content Factory",
+  "scripts": {
+    "start": "n8n start",
+    "import": "./import-workflows.sh",
+    "setup": "npm install -g n8n && ./import-workflows.sh"
+  },
+  "keywords": ["n8n", "automation", "ai", "content"]
+}

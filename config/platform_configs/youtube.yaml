@@ -1,0 +1,383 @@
+# YouTube Platform Configuration
+# Specific settings and optimizations for YouTube uploads
+
+# API Configuration
+api:
+  version: "v3"
+  base_url: "https://www.googleapis.com/youtube/v3"
+  oauth_scope: "https://www.googleapis.com/auth/youtube.upload"
+  
+  # Authentication
+  client_id: ${YOUTUBE_CLIENT_ID}
+  client_secret: ${YOUTUBE_CLIENT_SECRET}
+  api_key: ${YOUTUBE_API_KEY}
+  
+  # Rate limiting
+  quota_limit: 10000  # Points per day
+  requests_per_second: 100
+  
+# Upload Settings
+upload:
+  # File specifications
+  max_file_size_gb: 256
+  max_duration_hours: 12
+  supported_formats:
+    - ".mp4"
+    - ".mov"
+    - ".avi"
+    - ".wmv"
+    - ".flv"
+    - ".webm"
+    - ".mkv"
+    
+  # Quality settings
+  recommended_specs:
+    resolution: "1920x1080"
+    frame_rate: 60
+    bitrate_mbps: 8
+    audio_bitrate_kbps: 128
+    codec: "H.264"
+    audio_codec: "AAC"
+    
+  # Upload modes
+  resumable_upload: true
+  chunk_size_mb: 8
+  timeout_seconds: 3600
+  
+# Content Optimization
+content:
+  # Title optimization
+  title:
+    max_length: 100
+    optimal_length: 60
+    seo_keywords: 3
+    emotional_triggers: true
+    click_bait_level: "moderate"  # low, moderate, high
+    
+  # Description optimization  
+  description:
+    max_length: 5000
+    optimal_length: 250
+    include_timestamps: true
+    include_links: true
+    include_hashtags: false  # YouTube uses tags instead
+    call_to_action: true
+    
+  # Tags optimization
+  tags:
+    max_count: 500
+    optimal_count: 12
+    character_limit: 100
+    mix_broad_specific: true
+    include_misspellings: false
+    
+  # Thumbnail optimization
+  thumbnail:
+    resolution: "1280x720"
+    aspect_ratio: "16:9"
+    file_formats: [".jpg", ".jpeg", ".png", ".gif", ".bmp"]
+    max_file_size_mb: 2
+    design_guidelines:
+      high_contrast: true
+      minimal_text: true
+      faces_prominent: true
+      bright_colors: true
+      
+# Category Mapping
+categories:
+  "1": "Film & Animation"
+  "2": "Autos & Vehicles"
+  "10": "Music"
+  "15": "Pets & Animals"
+  "17": "Sports"
+  "19": "Travel & Events"
+  "20": "Gaming"
+  "22": "People & Blogs"
+  "23": "Comedy"
+  "24": "Entertainment"
+  "25": "News & Politics"
+  "26": "Howto & Style"
+  "27": "Education"
+  "28": "Science & Technology"
+  "29": "Nonprofits & Activism"
+
+# Default category mapping by content type
+default_categories:
+  technology: "28"
+  gaming: "20"
+  music: "10"
+  education: "27"
+  entertainment: "24"
+  sports: "17"
+  news: "25"
+  lifestyle: "26"
+  comedy: "23"
+  default: "22"
+
+# Privacy Settings
+privacy:
+  options:
+    - "public"
+    - "unlisted"
+    - "private"
+  default: "public"
+  scheduled_publishing: true
+
+# Monetization
+monetization:
+  enable_ads: true
+  ad_formats:
+    - "display"
+    - "overlay"
+    - "skippable_video"
+    - "non_skippable_video"
+    - "bumper"
+  mid_roll_ads: true
+  mid_roll_frequency: 300  # seconds
+
+# Analytics and Tracking
+analytics:
+  track_metrics:
+    - "views"
+    - "watch_time"
+    - "subscribers"
+    - "likes"
+    - "comments"
+    - "shares"
+    - "click_through_rate"
+    - "audience_retention"
+    - "traffic_sources"
+    - "demographics"
+    
+  reporting_dimensions:
+    - "day"
+    - "country"
+    - "province"
+    - "age_group"
+    - "gender"
+    - "traffic_source"
+    - "device_type"
+
+# SEO Optimization
+seo:
+  # Keyword optimization
+  keywords:
+    research_tools:
+      - "youtube_suggest"
+      - "google_trends"
+      - "vidiq"
+      - "tubebuddy"
+    
+    keyword_density: 0.02  # 2% of total text
+    long_tail_keywords: true
+    competitor_analysis: true
+    
+  # Optimization strategies
+  strategies:
+    title_keywords: "front_load"  # Put keywords at start
+    description_keywords: "natural"  # Natural integration
+    tag_variations: true
+    seasonal_keywords: true
+
+# Content Strategy
+strategy:
+  # Upload schedule
+  upload_schedule:
+    optimal_times:
+      monday: ["14:00", "20:00"]
+      tuesday: ["14:00", "20:00"]  
+      wednesday: ["14:00", "20:00"]
+      thursday: ["14:00", "20:00"]
+      friday: ["12:00", "15:00", "20:00"]
+      saturday: ["09:00", "14:00"]
+      sunday: ["11:00", "15:00"]
+    
+    frequency: "daily"  # daily, weekly, bi-weekly
+    consistency_score: 0.9
+    
+  # Content types performance
+  content_types:
+    tutorials:
+      avg_watch_time: 0.65
+      engagement_rate: 0.08
+      subscriber_conversion: 0.12
+      
+    entertainment:
+      avg_watch_time: 0.45
+      engagement_rate: 0.12
+      subscriber_conversion: 0.08
+      
+    reviews:
+      avg_watch_time: 0.55
+      engagement_rate: 0.10
+      subscriber_conversion: 0.10
+
+# Advanced Features
+advanced_features:
+  # YouTube Shorts
+  shorts:
+    enabled: true
+    max_duration: 60
+    aspect_ratio: "9:16"
+    resolution: "1080x1920"
+    optimization:
+      hook_duration: 3
+      music_integration: true
+      trending_hashtags: true
+      
+  # Live streaming
+  live_streaming:
+    enabled: false  # Requires 50+ subscribers
+    bitrate_kbps: 4500
+    resolution: "1080p"
+    frame_rate: 60
+    
+  # Premieres
+  premieres:
+    enabled: true
+    advance_notice_hours: 24
+    chat_moderation: true
+    
+  # Community posts
+  community_posts:
+    enabled: false  # Requires 500+ subscribers
+    post_types: ["text", "image", "poll", "gif"]
+
+# Platform-specific Optimizations
+optimizations:
+  # Algorithm factors
+  algorithm:
+    click_through_rate_weight: 0.3
+    watch_time_weight: 0.4
+    engagement_weight: 0.2
+    freshness_weight: 0.1
+    
+  # Engagement tactics
+  engagement:
+    ask_questions: true
+    include_polls: true
+    respond_to_comments: true
+    pin_important_comments: true
+    heart_good_comments: true
+    
+  # Cross-promotion
+  cross_promotion:
+    end_screens: true
+    cards: true
+    playlists: true
+    channel_trailer: true
+
+# Compliance and Guidelines
+compliance:
+  # Community guidelines
+  community_guidelines:
+    spam_prevention: true
+    misleading_content_check: true
+    harmful_content_filter: true
+    copyright_check: true
+    
+  # Content policies
+  content_policies:
+    advertiser_friendly: true
+    family_safe: true
+    avoid_controversial: true
+    fact_check_news: true
+    
+  # Legal compliance
+  legal:
+    gdpr_compliant: true
+    coppa_compliant: true
+    disclosure_requirements: true
+
+# Error Handling
+error_handling:
+  # Common errors
+  retry_errors:
+    - "quotaExceeded"
+    - "rateLimitExceeded"
+    - "backendError"
+    - "internalServerError"
+    
+  # Permanent errors
+  permanent_errors:
+    - "forbidden"
+    - "authError"
+    - "invalidVideoMetadata"
+    - "uploadLimitExceeded"
+    
+  # Retry strategy
+  retry_strategy:
+    max_retries: 3
+    backoff_multiplier: 2
+    base_delay_seconds: 30
+
+# Performance Benchmarks
+benchmarks:
+  # Engagement benchmarks by subscriber count
+  engagement_rates:
+    "0-1000": 0.08
+    "1000-10000": 0.06
+    "10000-100000": 0.04
+    "100000-1000000": 0.03
+    "1000000+": 0.02
+    
+  # View benchmarks
+  views_24h:
+    excellent: 1000
+    good: 500
+    average: 100
+    poor: 50
+    
+  # Watch time benchmarks
+  watch_time_percentage:
+    excellent: 0.70
+    good: 0.50
+    average: 0.35
+    poor: 0.20
+
+# Integration Settings
+integrations:
+  # Third-party tools
+  third_party:
+    vidiq:
+      enabled: false
+      api_key: ${VIDIQ_API_KEY}
+      
+    tubebuddy:
+      enabled: false
+      api_key: ${TUBEBUDDY_API_KEY}
+      
+    social_blade:
+      enabled: false
+      api_key: ${SOCIALBLADE_API_KEY}
+      
+  # Analytics tools
+  analytics_tools:
+    google_analytics:
+      enabled: true
+      tracking_id: ${GA_TRACKING_ID}
+      
+    youtube_analytics:
+      enabled: true
+      detailed_demographics: true
+      
+# A/B Testing
+ab_testing:
+  enabled: true
+  
+  # Test elements
+  test_elements:
+    titles: true
+    thumbnails: true
+    descriptions: false
+    tags: false
+    
+  # Test configuration
+  config:
+    test_duration_hours: 48
+    min_sample_size: 100
+    confidence_level: 0.95
+    
+  # Automatic winner selection
+  auto_select_winner: true
+  winner_criteria: "click_through_rate"

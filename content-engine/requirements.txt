@@ -1,0 +1,111 @@
+# Core Framework
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.5.0
+python-multipart==0.0.6
+
+# Database
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+alembic==1.13.1
+
+# AI Services - Text
+openai==1.6.1
+groq==0.4.1
+anthropic==0.8.1
+tiktoken==0.5.2
+
+# AI Services - Image  
+stability-sdk==0.8.4
+pillow==10.1.0
+requests==2.31.0
+aiohttp==3.9.1
+aiofiles==23.2.0
+
+# AI Services - Audio
+gtts==2.4.0
+azure-cognitiveservices-speech==1.34.1
+elevenlabs==0.2.26
+pydub==0.25.1
+
+# Video Processing
+moviepy==1.0.3
+opencv-python==4.8.1.78
+ffmpeg-python==0.2.0
+
+# Utilities
+python-dotenv==1.0.0
+pyyaml==6.0.1
+jinja2==3.1.2
+asyncio-mqtt==0.16.1
+redis==5.0.1
+celery==5.3.4
+
+# HTTP Clients
+httpx==0.25.2
+aiohttp==3.9.1
+websockets==12.0
+
+# Data Processing
+pandas==2.1.4
+numpy==1.25.2
+jsonschema==4.20.0
+
+# Monitoring & Logging
+prometheus-client==0.19.0
+structlog==23.2.0
+sentry-sdk==1.38.0
+
+# Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# File Handling
+python-magic==0.4.27
+mimetypes-extended==1.0.0
+
+# Social Media APIs
+google-api-python-client==2.108.0
+google-auth==2.25.2
+google-auth-oauthlib==1.1.0
+google-auth-httplib2==0.2.0
+
+# TikTok (Unofficial)
+TikTokApi==5.2.4
+
+# Instagram (Unofficial)  
+instagrapi==2.0.0
+
+# Facebook/Meta
+facebook-sdk==3.1.0
+
+# Twitter/X
+tweepy==4.14.0
+
+# Reddit
+praw==7.7.1
+
+# YouTube Data
+youtube-transcript-api==0.6.1
+pytube==15.0.0
+
+# Trend Analysis
+pytrends==4.9.2
+googletrends==3.0.2
+
+# Configuration
+dynaconf==3.2.4
+python-decouple==3.8
+
+# Development & Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+black==23.11.0
+flake8==6.1.0
+mypy==1.7.1
+
+# Production
+gunicorn==21.2.0
+supervisor==4.2.5

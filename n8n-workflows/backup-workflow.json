@@ -1,0 +1,403 @@
+{
+  "name": "🗄️ AI Content Factory - Backup Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "value": "0 2 * * *"
+            }
+          ]
+        }
+      },
+      "id": "backup-scheduler",
+      "name": "Daily Backup Schedule",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1.1,
+      "position": [200, 300],
+      "webhookId": "",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) as total_records FROM (\n  SELECT 'trends' as table_name, COUNT(*) as count FROM trends\n  UNION ALL\n  SELECT 'content_opportunities' as table_name, COUNT(*) as count FROM content_opportunities\n  UNION ALL\n  SELECT 'content_items' as table_name, COUNT(*) as count FROM content_items\n  UNION ALL\n  SELECT 'uploads' as table_name, COUNT(*) as count FROM uploads\n  UNION ALL\n  SELECT 'performance_metrics' as table_name, COUNT(*) as count FROM performance_metrics\n) all_tables",
+        "additionalFields": {}
+      },
+      "id": "database-health-check",
+      "name": "Database Health Check",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [400, 300],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-main",
+          "name": "PostgreSQL Main Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "database-healthy",
+              "leftValue": "={{ $json.total_records }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt",
+                "rightType": "number"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-database-status",
+      "name": "Check Database Status",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "command": "#!/bin/bash\n\n# AI Content Factory Database Backup Script\necho \"Starting database backup process...\"\n\n# Set variables\nBACKUP_DATE=$(date +\"%Y%m%d_%H%M%S\")\nBACKUP_DIR=\"/tmp/ai-content-factory-backup\"\nS3_BUCKET=\"${AWS_S3_BACKUP_BUCKET}\"\nDB_NAME=\"${DB_NAME}\"\nDB_USER=\"${DB_USER}\"\nDB_HOST=\"${DB_HOST}\"\n\n# Create backup directory\nmkdir -p $BACKUP_DIR\n\n# Database backup\necho \"Creating database backup...\"\npg_dump -h $DB_HOST -U $DB_USER -d $DB_NAME -f $BACKUP_DIR/database_$BACKUP_DATE.sql\n\nif [ $? -eq 0 ]; then\n    echo \"Database backup completed successfully\"\nelse\n    echo \"Database backup failed\"\n    exit 1\nfi\n\n# Compress backup\necho \"Compressing backup...\"\ngzip $BACKUP_DIR/database_$BACKUP_DATE.sql\n\n# Upload to S3\necho \"Uploading to S3...\"\naws s3 cp $BACKUP_DIR/database_$BACKUP_DATE.sql.gz s3://$S3_BUCKET/database-backups/\n\nif [ $? -eq 0 ]; then\n    echo \"Backup uploaded to S3 successfully\"\n    # Clean up local files\n    rm -rf $BACKUP_DIR\nelse\n    echo \"S3 upload failed\"\n    exit 1\nfi\n\necho \"Database backup process completed successfully\"\necho \"Backup file: database_$BACKUP_DATE.sql.gz\""
+      },
+      "id": "database-backup",
+      "name": "Database Backup",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [800, 200],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "command": "#!/bin/bash\n\n# AI Content Factory File Backup Script\necho \"Starting file backup process...\"\n\n# Set variables\nBACKUP_DATE=$(date +\"%Y%m%d_%H%M%S\")\nUPLOADS_DIR=\"/app/uploads\"\nCONFIG_DIR=\"/app/config\"\nBACKUP_DIR=\"/tmp/file-backup\"\nS3_BUCKET=\"${AWS_S3_BACKUP_BUCKET}\"\n\n# Create backup directory\nmkdir -p $BACKUP_DIR\n\n# Backup uploads directory\nif [ -d \"$UPLOADS_DIR\" ]; then\n    echo \"Backing up uploads directory...\"\n    tar -czf $BACKUP_DIR/uploads_$BACKUP_DATE.tar.gz -C $UPLOADS_DIR .\n    if [ $? -eq 0 ]; then\n        echo \"Uploads backup completed\"\n    else\n        echo \"Uploads backup failed\"\n        exit 1\n    fi\nfi\n\n# Backup configuration files\nif [ -d \"$CONFIG_DIR\" ]; then\n    echo \"Backing up configuration files...\"\n    tar -czf $BACKUP_DIR/config_$BACKUP_DATE.tar.gz -C $CONFIG_DIR .\n    if [ $? -eq 0 ]; then\n        echo \"Config backup completed\"\n    else\n        echo \"Config backup failed\"\n        exit 1\n    fi\nfi\n\n# Upload to S3\necho \"Uploading files to S3...\"\naws s3 sync $BACKUP_DIR s3://$S3_BUCKET/file-backups/\n\nif [ $? -eq 0 ]; then\n    echo \"File backups uploaded successfully\"\n    # Clean up local files\n    rm -rf $BACKUP_DIR\n    echo \"File backup process completed successfully\"\nelse\n    echo \"S3 upload failed\"\n    exit 1\nfi"
+      },
+      "id": "file-backup",
+      "name": "File System Backup",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [800, 300],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "ai_content_factory_backup_status",
+        "value": "={{ JSON.stringify({\n  timestamp: new Date().toISOString(),\n  database_backup: $node[\"Database Backup\"].json.exitCode === 0 ? 'success' : 'failed',\n  file_backup: $node[\"File System Backup\"].json.exitCode === 0 ? 'success' : 'failed',\n  total_records: $node[\"Database Health Check\"].json.total_records\n}) }}",
+        "ttl": 86400
+      },
+      "id": "cache-backup-status",
+      "name": "Cache Backup Status",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1000, 250],
+      "credentials": {
+        "redis": {
+          "id": "redis-main",
+          "name": "Redis Main Cache"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "#!/bin/bash\n\n# Backup Cleanup Script\necho \"Starting backup cleanup process...\"\n\nS3_BUCKET=\"${AWS_S3_BACKUP_BUCKET}\"\nRETENTION_DAYS=\"${BACKUP_RETENTION_DAYS:-30}\"\n\n# Calculate cutoff date\nCUTOFF_DATE=$(date -d \"$RETENTION_DAYS days ago\" +%Y%m%d)\n\necho \"Cleaning up backups older than $RETENTION_DAYS days (before $CUTOFF_DATE)\"\n\n# List and delete old database backups\necho \"Cleaning database backups...\"\naws s3 ls s3://$S3_BUCKET/database-backups/ | while read -r line; do\n    file_date=$(echo $line | awk '{print $4}' | grep -o '[0-9]\\{8\\}')\n    if [[ $file_date < $CUTOFF_DATE ]]; then\n        file_name=$(echo $line | awk '{print $4}')\n        echo \"Deleting old backup: $file_name\"\n        aws s3 rm s3://$S3_BUCKET/database-backups/$file_name\n    fi\ndone\n\n# List and delete old file backups\necho \"Cleaning file backups...\"\naws s3 ls s3://$S3_BUCKET/file-backups/ | while read -r line; do\n    file_date=$(echo $line | awk '{print $4}' | grep -o '[0-9]\\{8\\}')\n    if [[ $file_date < $CUTOFF_DATE ]]; then\n        file_name=$(echo $line | awk '{print $4}')\n        echo \"Deleting old backup: $file_name\"\n        aws s3 rm s3://$S3_BUCKET/file-backups/$file_name\n    fi\ndone\n\necho \"Backup cleanup completed\""
+      },
+      "id": "backup-cleanup",
+      "name": "Backup Cleanup",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1200, 250],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"✅ AI Content Factory - Backup Completed Successfully\",\n  \"attachments\": [\n    {\n      \"color\": \"good\",\n      \"fields\": [\n        {\n          \"title\": \"Backup Date\",\n          \"value\": \"{{ new Date().toLocaleString() }}\",\n          \"short\": true\n        },\n        {\n          \"title\": \"Database Status\",\n          \"value\": \"{{ $node[\\\"Database Backup\\\"].json.exitCode === 0 ? '✅ Success' : '❌ Failed' }}\",\n          \"short\": true\n        },\n        {\n          \"title\": \"File Backup Status\",\n          \"value\": \"{{ $node[\\\"File System Backup\\\"].json.exitCode === 0 ? '✅ Success' : '❌ Failed' }}\",\n          \"short\": true\n        },\n        {\n          \"title\": \"Total Records\",\n          \"value\": \"{{ $node[\\\"Database Health Check\\\"].json.total_records }}\",\n          \"short\": true\n        },\n        {\n          \"title\": \"Cleanup Status\",\n          \"value\": \"{{ $node[\\\"Backup Cleanup\\\"].json.exitCode === 0 ? '✅ Success' : '❌ Failed' }}\",\n          \"short\": true\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "success-notification",
+      "name": "Success Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 200],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"🚨 AI Content Factory - Backup Failed\",\n  \"attachments\": [\n    {\n      \"color\": \"danger\",\n      \"fields\": [\n        {\n          \"title\": \"Backup Date\",\n          \"value\": \"{{ new Date().toLocaleString() }}\",\n          \"short\": true\n        },\n        {\n          \"title\": \"Error Details\",\n          \"value\": \"Database health check failed or returned no records\",\n          \"short\": false\n        },\n        {\n          \"title\": \"Action Required\",\n          \"value\": \"Please check database connectivity and data integrity\",\n          \"short\": false\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "failure-notification",
+      "name": "Failure Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [800, 450],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Backup verification query\nSELECT \n    'trends' as table_name, \n    COUNT(*) as record_count,\n    MAX(created_at) as latest_record\nFROM trends\nWHERE created_at >= NOW() - INTERVAL '24 hours'\n\nUNION ALL\n\nSELECT \n    'content_items' as table_name, \n    COUNT(*) as record_count,\n    MAX(created_at) as latest_record\nFROM content_items\nWHERE created_at >= NOW() - INTERVAL '24 hours'\n\nUNION ALL\n\nSELECT \n    'uploads' as table_name, \n    COUNT(*) as record_count,\n    MAX(uploaded_at) as latest_record\nFROM uploads\nWHERE uploaded_at >= NOW() - INTERVAL '24 hours'",
+        "additionalFields": {}
+      },
+      "id": "backup-verification",
+      "name": "Backup Verification",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1000, 400],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-main",
+          "name": "PostgreSQL Main Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "backup-manual",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "manual-backup-trigger",
+      "name": "Manual Backup Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 500],
+      "webhookId": "manual-backup-webhook",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "backup-success",
+              "leftValue": "={{ $node[\"Database Backup\"].json.exitCode === 0 && $node[\"File System Backup\"].json.exitCode === 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "backup-success-check",
+      "name": "Backup Success Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1200, 350]
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "backup_metrics",
+        "value": "={{ JSON.stringify({\n  last_backup: new Date().toISOString(),\n  database_size_mb: ($node[\"Database Backup\"].json.stdout.match(/\\d+/) || ['0'])[0],\n  files_count: ($node[\"File System Backup\"].json.stdout.match(/files: (\\d+)/) || [0, '0'])[1],\n  success_rate: '100%',\n  retention_days: $env.BACKUP_RETENTION_DAYS || 30\n}) }}",
+        "ttl": 604800
+      },
+      "id": "update-metrics",
+      "name": "Update Backup Metrics",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1400, 400],
+      "credentials": {
+        "redis": {
+          "id": "redis-main",
+          "name": "Redis Main Cache"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily Backup Schedule": {
+      "main": [
+        [
+          {
+            "node": "Database Health Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Database Health Check": {
+      "main": [
+        [
+          {
+            "node": "Check Database Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Database Status": {
+      "main": [
+        [
+          {
+            "node": "Database Backup",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "File System Backup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failure Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Database Backup": {
+      "main": [
+        [
+          {
+            "node": "Cache Backup Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "File System Backup": {
+      "main": [
+        [
+          {
+            "node": "Cache Backup Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cache Backup Status": {
+      "main": [
+        [
+          {
+            "node": "Backup Cleanup",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Backup Verification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Backup Cleanup": {
+      "main": [
+        [
+          {
+            "node": "Backup Success Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Backup Trigger": {
+      "main": [
+        [
+          {
+            "node": "Database Health Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Backup Success Check": {
+      "main": [
+        [
+          {
+            "node": "Success Notification",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Backup Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failure Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "error-handling-workflow"
+  },
+  "versionId": "1.0.0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ai-content-factory"
+  },
+  "id": "backup-workflow",
+  "tags": [
+    {
+      "createdAt": "2024-01-15T00:00:00.000Z",
+      "updatedAt": "2024-01-15T00:00:00.000Z",
+      "id": "backup",
+      "name": "backup"
+    },
+    {
+      "createdAt": "2024-01-15T00:00:00.000Z", 
+      "updatedAt": "2024-01-15T00:00:00.000Z",
+      "id": "maintenance",
+      "name": "maintenance"
+    },
+    {
+      "createdAt": "2024-01-15T00:00:00.000Z",
+      "updatedAt": "2024-01-15T00:00:00.000Z", 
+      "id": "automated",
+      "name": "automated"
+    }
+  ],
+  "triggerCount": 2,
+  "updatedAt": "2024-01-15T12:00:00.000Z",
+  "createdAt": "2024-01-15T12:00:00.000Z"
+}

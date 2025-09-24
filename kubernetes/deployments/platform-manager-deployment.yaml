@@ -1,0 +1,225 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: platform-manager
+  namespace: ai-content-factory
+  labels:
+    app: platform-manager
+    component: backend
+    version: v1.0.0
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: platform-manager
+  template:
+    metadata:
+      labels:
+        app: platform-manager
+        component: backend
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8003"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: ai-content-factory-sa
+      imagePullSecrets:
+      - name: registry-secret
+      containers:
+      - name: platform-manager
+        image: ai-content-factory/platform-manager:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8003
+          name: http
+          protocol: TCP
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+        env:
+        - name: APP_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: APP_ENV
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: LOG_LEVEL
+        - name: SUPPORTED_PLATFORMS
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: SUPPORTED_PLATFORMS
+        - name: MAX_UPLOAD_RETRIES
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: MAX_UPLOAD_RETRIES
+        - name: MAX_FILE_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: MAX_FILE_SIZE
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: DB_NAME
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: ai-content-factory-secrets
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ai-content-factory-secrets
+              key: DB_PASSWORD
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: REDIS_PORT
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ai-content-factory-secrets
+              key: REDIS_PASSWORD
+        # Platform OAuth credentials
+        - name: YOUTUBE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: oauth-secrets
+              key: YOUTUBE_CLIENT_ID
+        - name: YOUTUBE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth-secrets
+              key: YOUTUBE_CLIENT_SECRET
+        - name: FACEBOOK_APP_ID
+          valueFrom:
+            secretKeyRef:
+              name: oauth-secrets
+              key: FACEBOOK_APP_ID
+        - name: FACEBOOK_APP_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth-secrets
+              key: FACEBOOK_APP_SECRET
+        - name: INSTAGRAM_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: oauth-secrets
+              key: INSTAGRAM_CLIENT_ID
+        - name: INSTAGRAM_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth-secrets
+              key: INSTAGRAM_CLIENT_SECRET
+        - name: TIKTOK_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: oauth-secrets
+              key: TIKTOK_CLIENT_ID
+        - name: TIKTOK_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth-secrets
+              key: TIKTOK_CLIENT_SECRET
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+            ephemeral-storage: "500Mi"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+            ephemeral-storage: "2Gi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8003
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8003
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+        - name: temp-storage
+          mountPath: /app/temp
+        - name: uploads
+          mountPath: /app/uploads
+        - name: config-volume
+          mountPath: /app/config
+          readOnly: true
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: logs
+        emptyDir: {}
+      - name: temp-storage
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: uploads
+        persistentVolumeClaim:
+          claimName: upload-storage-pvc
+      - name: config-volume
+        configMap:
+          name: app-logging-config
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+      - key: "ai-content-factory.com/dedicated"
+        operator: "Equal"
+        value: "backend"
+        effect: "NoSchedule"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - platform-manager
+              topologyKey: kubernetes.io/hostname

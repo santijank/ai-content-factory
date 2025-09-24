@@ -1,0 +1,403 @@
+# TikTok Platform Configuration
+# Specific settings and optimizations for TikTok uploads
+
+# API Configuration
+api:
+  version: "v1"
+  base_url: "https://open-api.tiktok.com"
+  
+  # Authentication
+  client_key: ${TIKTOK_CLIENT_KEY}
+  client_secret: ${TIKTOK_CLIENT_SECRET}
+  access_token: ${TIKTOK_ACCESS_TOKEN}
+  
+  # Scopes
+  scopes:
+    - "video.upload"
+    - "video.publish"
+    - "user.info.basic"
+    - "user.info.stats"
+    
+  # Rate limiting
+  requests_per_day: 1000
+  requests_per_hour: 100
+
+# Upload Settings
+upload:
+  # File specifications
+  max_file_size_mb: 500
+  max_duration_seconds: 600  # 10 minutes
+  min_duration_seconds: 3
+  
+  supported_formats:
+    - ".mp4"
+    - ".mov"
+    - ".webm"
+    
+  # Quality settings
+  recommended_specs:
+    resolution: "1080x1920"  # 9:16 aspect ratio
+    aspect_ratio: "9:16"
+    frame_rate: 30
+    bitrate_kbps: 2000
+    audio_bitrate_kbps: 128
+    codec: "H.264"
+    audio_codec: "AAC"
+    
+  # Alternative aspect ratios
+  supported_ratios:
+    vertical: "9:16"    # Recommended
+    square: "1:1"       # Supported
+    horizontal: "16:9"  # Supported but not optimal
+
+# Content Optimization
+content:
+  # Caption optimization
+  caption:
+    max_length: 150
+    optimal_length: 100
+    hashtag_limit: 10
+    mention_limit: 20
+    emoji_usage: "encouraged"
+    
+  # Hashtag strategy
+  hashtags:
+    total_limit: 10
+    trending_count: 3
+    niche_count: 4
+    branded_count: 1
+    
+    # Trending hashtag categories
+    trending_categories:
+      - "#fyp"
+      - "#foryou"
+      - "#viral"
+      - "#trending"
+      - "#tiktok"
+      
+    # Research tools
+    research_sources:
+      - "tiktok_creative_center"
+      - "trending_hashtags_api"
+      - "competitor_analysis"
+
+# Algorithm Optimization
+algorithm:
+  # Key ranking factors
+  ranking_factors:
+    user_interactions: 0.30      # Likes, shares, comments
+    video_information: 0.25      # Sounds, effects, text
+    device_settings: 0.20        # Language, location
+    completion_rate: 0.15        # Watch time percentage  
+    rewatches: 0.10             # Loop factor
+    
+  # Engagement optimization
+  engagement:
+    hook_duration: 3            # First 3 seconds crucial
+    call_to_action_placement: "early"  # Within first 15 seconds
+    question_prompts: true
+    trend_participation: true
+    
+  # Timing optimization
+  timing:
+    optimal_posting_times:
+      monday: ["06:00", "10:00", "19:00"]
+      tuesday: ["02:00", "04:00", "09:00"]
+      wednesday: ["07:00", "08:00", "11:00"]
+      thursday: ["09:00", "12:00", "19:00"]
+      friday: ["05:00", "13:00", "16:00"]
+      saturday: ["11:00", "13:00", "16:00"]
+      sunday: ["07:00", "08:00", "16:00"]
+    
+    timezone: "UTC"
+    frequency: "1-4 per day"
+
+# Content Strategy
+strategy:
+  # Content types performance
+  content_types:
+    dance:
+      avg_engagement_rate: 0.18
+      viral_potential: 0.85
+      difficulty: "medium"
+      
+    comedy:
+      avg_engagement_rate: 0.15
+      viral_potential: 0.75
+      difficulty: "high"
+      
+    tutorial:
+      avg_engagement_rate: 0.12
+      viral_potential: 0.60
+      difficulty: "low"
+      
+    lifestyle:
+      avg_engagement_rate: 0.10
+      viral_potential: 0.50
+      difficulty: "low"
+      
+    transition:
+      avg_engagement_rate: 0.14
+      viral_potential: 0.70
+      difficulty: "medium"
+      
+  # Trend categories
+  trend_categories:
+    music_trends:
+      lifecycle_days: 7
+      participation_window: 3
+      
+    challenge_trends:
+      lifecycle_days: 14
+      participation_window: 7
+      
+    effect_trends:
+      lifecycle_days: 10
+      participation_window: 5
+      
+    meme_trends:
+      lifecycle_days: 5
+      participation_window: 2
+
+# Audio and Music
+audio:
+  # Music settings
+  music:
+    max_duration_seconds: 60
+    recommended_duration: 15
+    trending_sounds: true
+    original_audio: true
+    
+  # Popular music categories
+  categories:
+    trending: "High viral potential"
+    original: "Good for brand building"
+    classical: "Broad appeal"
+    electronic: "Young audience"
+    pop: "Mainstream appeal"
+    
+  # Audio optimization
+  optimization:
+    beat_sync: true
+    volume_levels: "normalized"
+    fade_in_out: true
+
+# Effects and Filters
+effects:
+  # Visual effects categories
+  categories:
+    beauty: "Face enhancement"
+    ar: "Augmented reality"
+    transition: "Scene changes"
+    color: "Color grading"
+    distortion: "Creative effects"
+    
+  # Trending effects tracking
+  trending_effects:
+    update_frequency: "hourly"
+    top_count: 20
+    category_rotation: true
+    
+  # Brand safety
+  brand_safe_effects:
+    enabled: true
+    exclude_controversial: true
+    family_friendly_only: false
+
+# Privacy and Settings
+privacy:
+  options:
+    - "public"
+    - "friends"
+    - "private"
+  default: "public"
+  
+  # Additional settings
+  allow_comments: true
+  allow_duet: true
+  allow_stitch: true
+  allow_download: true
+
+# Analytics and Metrics
+analytics:
+  # Core metrics
+  core_metrics:
+    - "views"
+    - "likes"
+    - "shares"
+    - "comments"
+    - "completion_rate"
+    - "average_watch_time"
+    - "profile_visits"
+    - "followers_gained"
+    
+  # Advanced metrics
+  advanced_metrics:
+    - "reach"
+    - "impressions"
+    - "engagement_rate"
+    - "hashtag_performance"
+    - "sound_performance"
+    - "effect_performance"
+    
+  # Audience insights
+  audience_insights:
+    - "age_groups"
+    - "gender_split"
+    - "geographic_distribution"
+    - "activity_times"
+    - "interests"
+
+# Monetization
+monetization:
+  # Creator fund eligibility
+  creator_fund:
+    min_followers: 10000
+    min_age: 18
+    content_guidelines: true
+    
+  # Live gifts
+  live_gifts:
+    enabled: false
+    min_followers: 1000
+    
+  # Brand partnerships
+  partnerships:
+    disclosure_required: true
+    hashtags: ["#ad", "#sponsored", "#partnership"]
+
+# Content Moderation
+moderation:
+  # Automatic moderation
+  auto_moderation:
+    enabled: true
+    
+    # Content filters
+    filters:
+      inappropriate_content: true
+      copyright_music: true
+      spam_detection: true
+      hate_speech: true
+      violence: true
+      adult_content: true
+      
+  # Manual review triggers
+  review_triggers:
+    - "mass_reports"
+    - "copyright_claim"
+    - "community_violation"
+    - "suspicious_activity"
+
+# Compliance and Guidelines
+compliance:
+  # Community guidelines
+  community_guidelines:
+    minor_safety: true
+    dangerous_acts: false
+    harassment_bullying: false
+    adult_nudity: false
+    suicide_self_harm: false
+    hateful_behavior: false
+    
+  # Copyright policies
+  copyright:
+    music_library_only: false
+    original_content_preferred: true
+    fair_use_consideration: true
+    
+  # Regional compliance
+  regional:
+    gdpr_compliant: true
+    coppa_compliant: true
+    local_regulations: true
+
+# Performance Benchmarks
+benchmarks:
+  # Engagement rate benchmarks
+  engagement_rates:
+    "0-10K": 0.17
+    "10K-100K": 0.15
+    "100K-1M": 0.12
+    "1M-10M": 0.09
+    "10M+": 0.06
+    
+  # Completion rate benchmarks
+  completion_rates:
+    excellent: 0.80
+    good: 0.60
+    average: 0.40
+    poor: 0.20
+    
+  # Viral indicators
+  viral_indicators:
+    views_24h: 100000
+    share_rate: 0.05
+    completion_rate: 0.75
+    comment_rate: 0.02
+
+# A/B Testing
+ab_testing:
+  enabled: true
+  
+  # Test elements
+  test_elements:
+    captions: true
+    hashtags: true
+    posting_times: true
+    thumbnails: false  # Auto-generated
+    
+  # Test configuration
+  config:
+    test_duration_hours: 24
+    min_views: 1000
+    confidence_level: 0.90
+
+# Error Handling
+error_handling:
+  # Retry errors
+  retry_errors:
+    - "rate_limit_exceeded"
+    - "server_error"
+    - "network_timeout"
+    - "temporary_unavailable"
+    
+  # Permanent errors
+  permanent_errors:
+    - "invalid_token"
+    - "insufficient_permissions"
+    - "content_violation"
+    - "file_too_large"
+    - "unsupported_format"
+    
+  # Retry strategy
+  retry_strategy:
+    max_retries: 3
+    exponential_backoff: true
+    base_delay_seconds: 60
+
+# Integration Settings
+integrations:
+  # Analytics tools
+  analytics_tools:
+    tiktok_analytics: true
+    third_party_analytics: false
+    
+  # Content creation tools
+  creation_tools:
+    canva_integration: false
+    capcut_integration: false
+    
+# Automation Features
+automation:
+  # Auto-posting
+  scheduled_posting: true
+  optimal_time_posting: true
+  
+  # Auto-engagement
+  auto_reply: false
+  auto_like_comments: false
+  
+  # Content suggestions
+  trend_notifications: true
+  hashtag_suggestions: true
+  music_suggestions: true

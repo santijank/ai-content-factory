@@ -1,0 +1,314 @@
+# Storage Classes
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ai-content-factory-ssd
+  labels:
+    app: ai-content-factory
+    component: storage
+provisioner: kubernetes.io/aws-ebs  # Change based on cloud provider
+parameters:
+  type: gp3
+  fsType: ext4
+  encrypted: "true"
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ai-content-factory-hdd
+  labels:
+    app: ai-content-factory
+    component: storage
+provisioner: kubernetes.io/aws-ebs  # Change based on cloud provider
+parameters:
+  type: gp2
+  fsType: ext4
+  encrypted: "true"
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
+
+---
+# PostgreSQL Persistent Volume Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: ai-content-factory
+  labels:
+    app: postgres
+    component: database
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ai-content-factory-ssd
+  resources:
+    requests:
+      storage: 50Gi
+  # Optional: selector for specific PV
+  # selector:
+  #   matchLabels:
+  #     app: postgres
+
+---
+# Redis Persistent Volume Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: ai-content-factory
+  labels:
+    app: redis
+    component: cache
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ai-content-factory-ssd
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+# Content Storage for generated files
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: content-storage-pvc
+  namespace: ai-content-factory
+  labels:
+    app: content-engine
+    component: storage
+spec:
+  accessModes:
+    - ReadWriteMany  # Multiple pods can read/write
+  storageClassName: ai-content-factory-hdd
+  resources:
+    requests:
+      storage: 100Gi
+
+---
+# Upload Storage for platform uploads
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: upload-storage-pvc
+  namespace: ai-content-factory
+  labels:
+    app: platform-manager
+    component: storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ai-content-factory-hdd
+  resources:
+    requests:
+      storage: 200Gi
+
+---
+# Monitoring data storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: monitoring-storage-pvc
+  namespace: ai-content-factory
+  labels:
+    app: monitoring
+    component: storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ai-content-factory-ssd
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+# Backup storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-storage-pvc
+  namespace: ai-content-factory
+  labels:
+    app: backup
+    component: storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ai-content-factory-hdd
+  resources:
+    requests:
+      storage: 500Gi
+
+---
+# For cloud-agnostic setup, you can create static PVs
+# Example for local/on-premise storage
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+  labels:
+    app: postgres
+    component: database
+spec:
+  capacity:
+    storage: 50Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ai-content-factory-ssd
+  hostPath:
+    path: /mnt/data/postgres
+    type: DirectoryOrCreate
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - database-node-1
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: content-storage-pv
+  labels:
+    app: content-engine
+    component: storage
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ai-content-factory-hdd
+  nfs:
+    server: nfs-server.example.com
+    path: /exports/ai-content-factory/content
+  # Alternative: use hostPath for single node
+  # hostPath:
+  #   path: /mnt/data/content
+  #   type: DirectoryOrCreate
+
+---
+# Volume Snapshot Class for backups
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: ai-content-factory-snapshot-class
+  labels:
+    app: ai-content-factory
+    component: backup
+driver: ebs.csi.aws.com  # Change based on CSI driver
+deletionPolicy: Retain
+parameters:
+  encrypted: "true"
+
+---
+# Example Volume Snapshot for PostgreSQL backup
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  name: postgres-snapshot
+  namespace: ai-content-factory
+  labels:
+    app: postgres
+    component: backup
+spec:
+  volumeSnapshotClassName: ai-content-factory-snapshot-class
+  source:
+    persistentVolumeClaimName: postgres-pvc
+
+---
+# Service Account for storage operations
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ai-content-factory-sa
+  namespace: ai-content-factory
+  labels:
+    app: ai-content-factory
+    component: serviceaccount
+
+---
+# Role for storage operations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ai-content-factory-storage-role
+  namespace: ai-content-factory
+  labels:
+    app: ai-content-factory
+    component: rbac
+rules:
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["persistentvolumes"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["snapshot.storage.k8s.io"]
+  resources: ["volumesnapshots"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+
+---
+# Role Binding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-content-factory-storage-binding
+  namespace: ai-content-factory
+  labels:
+    app: ai-content-factory
+    component: rbac
+subjects:
+- kind: ServiceAccount
+  name: ai-content-factory-sa
+  namespace: ai-content-factory
+roleRef:
+  kind: Role
+  name: ai-content-factory-storage-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Cluster role for cross-namespace operations (if needed)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ai-content-factory-cluster-role
+  labels:
+    app: ai-content-factory
+    component: rbac
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["nodes", "pods"]
+  verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ai-content-factory-cluster-binding
+  labels:
+    app: ai-content-factory
+    component: rbac
+subjects:
+- kind: ServiceAccount
+  name: ai-content-factory-sa
+  namespace: ai-content-factory
+roleRef:
+  kind: ClusterRole
+  name: ai-content-factory-cluster-role
+  apiGroup: rbac.authorization.k8s.io

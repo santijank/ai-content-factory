@@ -1,0 +1,101 @@
+🎯 เป้าหมายเฟส 3
+
+Web Interface - Dashboard และหน้าจัดการต่างๆ
+Real AI Integration - เชื่อมต่อ API จริง
+Complete Integration - รวมทุกส่วนเข้าด้วยกัน
+Database Complete - Repository และ Model ครบถ้วน
+
+📂 โครงสร้างไฟล์ที่ต้องสร้างในเฟส 3
+ai-content-factory/
+├── 📄 main_app.py                          # ✅ สร้างแล้ว - Flask Main App
+├── 📄 requirements.txt                     # 🔧 ต้องสร้าง - Python dependencies
+├── 📄 .env.example                         # 🔧 ต้องสร้าง - Environment template
+├── 📄 docker-compose.yml                   # 🔧 ต้องสร้าง - Development setup
+│
+├── 📁 database/
+│   ├── 📁 models/
+│   │   ├── 📄 base.py                      # ✅ สร้างแล้ว - Base model & DB connection
+│   │   ├── 📄 __init__.py                  # 🔧 ต้องสร้าง
+│   │   ├── 📄 trends.py                    # 🔧 ต้องสร้าง - Trend model
+│   │   ├── 📄 content_opportunities.py     # 🔧 ต้องสร้าง - Opportunity model
+│   │   ├── 📄 content_items.py             # 🔧 ต้องสร้าง - Content model
+│   │   ├── 📄 uploads.py                   # 🔧 ต้องสร้าง - Upload model
+│   │   └── 📄 performance_metrics.py       # 🔧 ต้องสร้าง - Performance model
+│   │
+│   └── 📁 repositories/
+│       ├── 📄 __init__.py                  # 🔧 ต้องสร้าง
+│       ├── 📄 trend_repository.py          # ✅ สร้างแล้ว - Trend data access
+│       ├── 📄 opportunity_repository.py    # 🔧 ต้องสร้าง - Opportunity data access
+│       ├── 📄 content_repository.py        # 🔧 ต้องสร้าง - Content data access
+│       └── 📄 performance_repository.py    # 🔧 ต้องสร้าง - Performance data access
+│
+├── 📁 templates/
+│   ├── 📄 base.html                        # ✅ สร้างแล้ว - Base template
+│   ├── 📄 dashboard.html                   # ✅ สร้างแล้ว - Main dashboard
+│   ├── 📄 trends.html                      # 🔧 ต้องสร้าง - Trends management
+│   ├── 📄 opportunities.html               # 🔧 ต้องสร้าง - Opportunities page
+│   ├── 📄 content.html                     # 🔧 ต้องสร้าง - Content management
+│   ├── 📄 analytics.html                   # 🔧 ต้องสร้าง - Analytics dashboard
+│   ├── 📄 404.html                         # 🔧 ต้องสร้าง - Error page
+│   ├── 📄 500.html                         # 🔧 ต้องสร้าง - Error page
+│   └── 📄 error.html                       # 🔧 ต้องสร้าง - General error page
+│
+├── 📁 static/
+│   ├── 📁 css/
+│   │   ├── 📄 dashboard.css                # 🔧 ต้องสร้าง - Custom styles
+│   │   └── 📄 charts.css                   # 🔧 ต้องสร้าง - Chart styles
+│   ├── 📁 js/
+│   │   ├── 📄 dashboard.js                 # 🔧 ต้องสร้าง - Dashboard functions
+│   │   ├── 📄 trends.js                    # 🔧 ต้องสร้าง - Trends page functions
+│   │   ├── 📄 opportunities.js             # 🔧 ต้องสร้าง - Opportunities functions
+│   │   ├── 📄 content.js                   # 🔧 ต้องสร้าง - Content functions
+│   │   └── 📄 analytics.js                 # 🔧 ต้องสร้าง - Analytics functions
+│   └── 📁 images/
+│       ├── 📄 logo.png                     # 🔧 ต้องสร้าง - Logo
+│       └── 📄 placeholder.jpg              # 🔧 ต้องสร้าง - Placeholder images
+│
+├── 📁 api/
+│   ├── 📄 __init__.py                      # 🔧 ต้องสร้าง
+│   ├── 📄 trends_api.py                    # 🔧 ต้องสร้าง - Trends API endpoints
+│   ├── 📄 opportunities_api.py             # 🔧 ต้องสร้าง - Opportunities API
+│   ├── 📄 content_api.py                   # 🔧 ต้องสร้าง - Content API
+│   └── 📄 analytics_api.py                 # 🔧 ต้องสร้าง - Analytics API
+│
+├── 📁 services/
+│   ├── 📄 __init__.py                      # 🔧 ต้องสร้าง
+│   ├── 📄 websocket_service.py             # 🔧 ต้องสร้าง - Real-time updates
+│   ├── 📄 notification_service.py          # 🔧 ต้องสร้าง - User notifications
+│   ├── 📄 task_queue.py                    # 🔧 ต้องสร้าง - Background tasks
+│   └── 📄 auth_service.py                  # 🔧 ต้องสร้าง - Authentication (optional)
+│
+├── 📁 utils/
+│   ├── 📄 __init__.py                      # 🔧 ต้องสร้าง
+│   ├── 📄 helpers.py                       # 🔧 ต้องสร้าง - Helper functions
+│   ├── 📄 validators.py                    # 🔧 ต้องสร้าง - Data validation
+│   └── 📄 formatters.py                    # 🔧 ต้องสร้าง - Data formatting
+│
+├── 📁 integration/
+│   ├── 📄 __init__.py                      # 🔧 ต้องสร้าง
+│   ├── 📄 trend_monitor_client.py          # 🔧 ต้องสร้าง - Client for trend service
+│   ├── 📄 content_engine_client.py         # 🔧 ต้องสร้าง - Client for content service
+│   ├── 📄 platform_manager_client.py       # 🔧 ต้องสร้าง - Client for platform service
+│   └── 📄 service_coordinator.py           # 🔧 ต้องสร้าง - Coordinate all services
+│
+├── 📁 config/
+│   ├── 📄 __init__.py                      # 🔧 ต้องสร้าง
+│   ├── 📄 app_config.py                    # 🔧 ต้องสร้าง - Application config
+│   ├── 📄 database_config.py               # 🔧 ต้องสร้าง - Database config
+│   └── 📄 api_config.py                    # 🔧 ต้องสร้าง - API configurations
+│
+├── 📁 tests/
+│   ├── 📄 __init__.py                      # 🔧 ต้องสร้าง
+│   ├── 📄 test_database.py                 # 🔧 ต้องสร้าง - Database tests
+│   ├── 📄 test_api.py                      # 🔧 ต้องสร้าง - API tests
+│   ├── 📄 test_integration.py              # 🔧 ต้องสร้าง - Integration tests
+│   └── 📄 conftest.py                      # 🔧 ต้องสร้าง - Test configuration
+│
+└── 📁 scripts/
+    ├── 📄 setup_database.py                # 🔧 ต้องสร้าง - Database setup script
+    ├── 📄 migrate_data.py                  # 🔧 ต้องสร้าง - Data migration
+    ├── 📄 seed_data.py                     # 🔧 ต้องสร้าง - Sample data
+    └── 📄 run_development.py               # 🔧 ต้องสร้าง - Development runner

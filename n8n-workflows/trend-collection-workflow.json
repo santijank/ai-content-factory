@@ -1,0 +1,357 @@
+{
+  "name": "Trend Collection Workflow",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "collect-trends",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8001/api/trends/youtube",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "Collect YouTube Trends",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        460,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST", 
+        "url": "http://localhost:8001/api/trends/google",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "Collect Google Trends",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8001/api/trends/twitter", 
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "Collect Twitter Trends",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        460,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8001/api/trends/reddit",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "Collect Reddit Trends", 
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        460,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "multiplex"
+      },
+      "name": "Merge All Trends",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        680,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8002/api/analyze-trends",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "trends",
+              "value": "={{ $json }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "name": "AI Trend Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        900,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter high-potential trends based on AI analysis\nconst trends = $input.first().json.analyzed_trends || [];\n\nconst highPotential = trends.filter(trend => \n  trend.viral_potential >= 7 && \n  trend.content_saturation <= 5 &&\n  trend.monetization_opportunity >= 6\n);\n\nreturn {\n  high_potential_trends: highPotential,\n  total_trends: trends.length,\n  filtered_count: highPotential.length,\n  filter_criteria: {\n    min_viral_potential: 7,\n    max_content_saturation: 5,\n    min_monetization_opportunity: 6\n  },\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Filter High-Potential Trends",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8002/api/opportunities/generate",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "trends", 
+              "value": "={{ $json.high_potential_trends }}"
+            },
+            {
+              "name": "max_opportunities",
+              "value": "20"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 180000
+        }
+      },
+      "name": "Generate Content Opportunities",
+      "type": "n8n-nodes-base.httpRequest", 
+      "typeVersion": 4.1,
+      "position": [
+        1340,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO content_opportunities (trend_id, suggested_angle, estimated_views, competition_level, production_cost, estimated_roi, priority_score, status, created_at) SELECT unnest($1::uuid[]), unnest($2::text[]), unnest($3::integer[]), unnest($4::text[]), unnest($5::decimal[]), unnest($6::float[]), unnest($7::float[]), 'pending', NOW()",
+        "additionalFields": {
+          "mode": "independently"
+        }
+      },
+      "name": "Store Opportunities",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1560,
+        350
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-main",
+          "name": "AI Factory Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST", 
+        "path": "opportunities-ready",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Notify Opportunities Ready",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        1780,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle and log errors gracefully\nconsole.error('Trend collection error:', $input.first().json.error);\n\nreturn {\n  status: 'error',\n  error: $input.first().json.error,\n  timestamp: new Date().toISOString(),\n  recovered: true,\n  message: 'Error logged, workflow continues'\n};"
+      },
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        550
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Collect YouTube Trends",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Collect Google Trends", 
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Collect Twitter Trends",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Collect Reddit Trends",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect YouTube Trends": {
+      "main": [
+        [
+          {
+            "node": "Merge All Trends",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Google Trends": {
+      "main": [
+        [
+          {
+            "node": "Merge All Trends",
+            "type": "main", 
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Collect Twitter Trends": {
+      "main": [
+        [
+          {
+            "node": "Merge All Trends",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Collect Reddit Trends": {
+      "main": [
+        [
+          {
+            "node": "Merge All Trends",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Merge All Trends": {
+      "main": [
+        [
+          {
+            "node": "AI Trend Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Trend Analysis": {
+      "main": [
+        [
+          {
+            "node": "Filter High-Potential Trends",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter High-Potential Trends": {
+      "main": [
+        [
+          {
+            "node": "Generate Content Opportunities",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Content Opportunities": {
+      "main": [
+        [
+          {
+            "node": "Store Opportunities",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Opportunities": {
+      "main": [
+        [
+          {
+            "node": "Notify Opportunities Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2024-01-15T12:00:00.000Z",
+  "updatedAt": "2024-01-15T12:00:00.000Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2024-01-15T12:00:00.000Z",
+      "updatedAt": "2024-01-15T12:00:00.000Z", 
+      "id": "1",
+      "name": "AI Content Factory"
+    }
+  ],
+  "triggerCount": 0,
+  "versionId": "1"
+}

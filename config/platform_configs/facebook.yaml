@@ -1,0 +1,418 @@
+# Facebook Platform Configuration
+# Specific settings and optimizations for Facebook uploads
+
+# API Configuration
+api:
+  version: "v18.0"
+  base_url: "https://graph.facebook.com/v18.0"
+  
+  # Authentication
+  app_id: ${FACEBOOK_APP_ID}
+  app_secret: ${FACEBOOK_APP_SECRET}
+  access_token: ${FACEBOOK_ACCESS_TOKEN}
+  page_id: ${FACEBOOK_PAGE_ID}
+  page_access_token: ${FACEBOOK_PAGE_ACCESS_TOKEN}
+  
+  # Permissions
+  required_permissions:
+    - "pages_manage_posts"
+    - "pages_read_engagement"
+    - "pages_show_list"
+    - "publish_video"
+    - "manage_pages"
+  
+  # Rate limiting
+  calls_per_hour: 600
+  calls_per_application: 4800
+
+# Content Types and Specifications
+content_types:
+  # Text Posts
+  text_post:
+    max_length: 63206
+    optimal_length: 480  # Research shows optimal engagement
+    emoji_usage: "moderate"
+    
+  # Image Posts
+  image_post:
+    max_file_size_mb: 100
+    supported_formats: [".jpg", ".jpeg", ".png", ".gif", ".bmp"]
+    recommended_resolution: "1200x630"
+    aspect_ratios:
+      landscape: "1.91:1"
+      square: "1:1"
+      vertical: "4:5"
+      
+  # Video Posts
+  video_post:
+    max_file_size_gb: 10
+    max_duration_seconds: 14400  # 4 hours
+    supported_formats: [".mp4", ".mov", ".avi", ".wmv", ".flv", ".webm"]
+    recommended_specs:
+      resolution: "1280x720"
+      frame_rate: 30
+      bitrate_kbps: 4000
+      
+  # Link Posts
+  link_post:
+    auto_preview: true
+    custom_preview: true
+    image_override: true
+    
+  # Live Video
+  live_video:
+    max_duration_hours: 8
+    recommended_bitrate: 4000
+    supported_resolutions: ["720p", "1080p"]
+    
+  # Events
+  events:
+    required_fields: ["name", "start_time"]
+    optional_fields: ["end_time", "description", "location", "cover_photo"]
+
+# Content Optimization
+content:
+  # Post optimization
+  post_optimization:
+    use_native_video: true  # Better reach than YouTube links
+    include_captions: true  # 85% watch without sound
+    square_videos: true    # Better mobile experience
+    
+  # Text optimization
+  text:
+    hook_first_sentence: true
+    break_into_paragraphs: true
+    use_bullet_points: true
+    include_call_to_action: true
+    
+  # Visual optimization
+  visual:
+    bright_colors: true
+    minimal_text_overlay: true
+    faces_in_images: true
+    branded_elements: true
+
+# Algorithm Optimization
+algorithm:
+  # News Feed ranking factors
+  ranking_factors:
+    meaningful_social_interactions: 0.40
+    time_spent: 0.25
+    relationship_with_creator: 0.20
+    content_type_preference: 0.10
+    recency: 0.05
+    
+  # Engagement signals
+  engagement_signals:
+    comments: 5          # Highest weight
+    shares: 4           # Very high weight
+    reactions: 3        # High weight
+    clicks: 2           # Medium weight
+    time_spent: 1       # Baseline weight
+    
+  # Content prioritization
+  content_priority:
+    friends_family: "highest"
+    groups: "high"
+    pages_followed: "medium"
+    pages_liked: "low"
+
+# Posting Strategy
+posting_strategy:
+  # Optimal posting times
+  optimal_times:
+    monday: ["09:00", "15:00", "21:00"]
+    tuesday: ["09:00", "15:00", "21:00"]
+    wednesday: ["09:00", "15:00", "21:00"]
+    thursday: ["09:00", "15:00", "21:00"]
+    friday: ["09:00", "15:00", "21:00"]
+    saturday: ["12:00", "15:00", "21:00"]
+    sunday: ["12:00", "15:00", "21:00"]
+    
+  # Content frequency
+  frequency:
+    pages: "1-2 per day"
+    groups: "1 per day"
+    personal: "1-3 per day"
+    
+  # Content mix
+  content_mix:
+    video: 0.40         # Highest engagement
+    images: 0.30        # Good engagement
+    text: 0.20         # Lower reach
+    links: 0.10        # Lowest reach
+
+# Video Strategy
+video_strategy:
+  # Video optimization
+  optimization:
+    first_3_seconds: "crucial"  # Hook viewers early
+    captions_required: true     # Most watch without sound
+    square_format: true         # Mobile optimization
+    thumbnail_custom: true      # Better click-through
+    
+  # Video types performance
+  video_types:
+    native_upload: 0.85        # Best performance
+    facebook_live: 0.75        # Good engagement
+    shared_youtube: 0.30       # Limited reach
+    
+  # Length recommendations
+  length_recommendations:
+    feed_videos: 60            # 1 minute optimal
+    story_videos: 15           # 15 seconds optimal
+    live_videos: 1800          # 30 minutes optimal
+
+# Audience Targeting
+audience_targeting:
+  # Demographics
+  demographics:
+    age_groups: ["25-34", "35-44", "45-54"]
+    genders: ["all", "male", "female"]
+    locations: ["countries", "regions", "cities"]
+    
+  # Interests
+  interests:
+    categories: ["business", "entertainment", "fitness", "food", "technology"]
+    behaviors: ["frequent_travelers", "online_shoppers", "mobile_users"]
+    
+  # Custom audiences
+  custom_audiences:
+    website_visitors: true
+    email_subscribers: true
+    app_users: true
+    engagement_audiences: true
+
+# Analytics and Insights
+analytics:
+  # Page insights
+  page_metrics:
+    - "page_views"
+    - "page_likes"
+    - "page_reach"
+    - "page_impressions"
+    - "page_engaged_users"
+    - "page_posts_impressions"
+    - "page_video_views"
+    
+  # Post insights
+  post_metrics:
+    - "post_impressions"
+    - "post_reach"
+    - "post_engaged_users"
+    - "post_clicks"
+    - "post_reactions"
+    - "post_comments"
+    - "post_shares"
+    
+  # Video insights
+  video_metrics:
+    - "video_views"
+    - "video_views_10s"
+    - "video_views_30s"
+    - "video_complete_views"
+    - "video_avg_time_watched"
+
+# Business Features
+business_features:
+  # Facebook Business Manager
+  business_manager:
+    enabled: true
+    asset_management: true
+    user_permissions: true
+    
+  # Advertising
+  advertising:
+    boosted_posts: true
+    facebook_ads: true
+    instagram_ads: true
+    audience_network: true
+    
+  # E-commerce
+  ecommerce:
+    facebook_shop: false
+    product_catalog: false
+    dynamic_ads: false
+    
+  # Messaging
+  messaging:
+    messenger: true
+    automated_responses: true
+    chat_plugins: false
+
+# Content Moderation
+content_moderation:
+  # Community standards
+  community_standards:
+    violence_incitement: false
+    dangerous_organizations: false
+    bullying_harassment: false
+    adult_nudity: false
+    sexual_solicitation: false
+    cruel_insensitive: false
+    
+  # Automated moderation
+  automated_moderation:
+    spam_detection: true
+    hate_speech_detection: true
+    violence_detection: true
+    adult_content_detection: true
+    
+  # Manual moderation
+  manual_moderation:
+    comment_moderation: true
+    post_approval: false
+    user_blocking: true
+
+# Privacy Settings
+privacy:
+  # Post privacy options
+  post_privacy:
+    - "PUBLIC"
+    - "FRIENDS"
+    - "FRIENDS_OF_FRIENDS"
+    - "CUSTOM"
+  default: "PUBLIC"
+  
+  # Page settings
+  page_settings:
+    visitor_posts: true
+    message_privacy: "everyone"
+    review_posts: false
+
+# Performance Benchmarks
+benchmarks:
+  # Engagement rates by industry
+  engagement_rates:
+    media: 0.0093
+    non_profit: 0.0084
+    education: 0.0073
+    healthcare: 0.0065
+    retail: 0.0058
+    technology: 0.0048
+    
+  # Content type performance
+  content_performance:
+    video: 0.0155
+    photo: 0.0087
+    link: 0.0045
+    status: 0.0043
+    
+  # Optimal post length
+  post_length:
+    highest_engagement: "1-80 characters"
+    good_engagement: "81-120 characters"
+    average_engagement: "121-160 characters"
+
+# Crisis Management
+crisis_management:
+  # Response protocols
+  response_protocols:
+    acknowledgment_time: 60     # minutes
+    resolution_time: 240        # minutes
+    escalation_threshold: 10    # negative comments
+    
+  # Communication strategy
+  communication:
+    transparency: true
+    accountability: true
+    solution_focused: true
+    follow_up: true
+
+# Compliance and Legal
+compliance:
+  # Advertising policies
+  advertising_policies:
+    prohibited_content: true
+    restricted_content: true
+    community_standards: true
+    
+  # Data protection
+  data_protection:
+    gdpr_compliance: true
+    ccpa_compliance: true
+    data_retention: "2 years"
+    
+  # Regional compliance
+  regional:
+    local_laws: true
+    cultural_sensitivity: true
+    language_requirements: true
+
+# A/B Testing
+ab_testing:
+  enabled: true
+  
+  # Test elements
+  test_elements:
+    headlines: true
+    images: true
+    call_to_actions: true
+    posting_times: true
+    audience_segments: true
+    
+  # Test configuration
+  config:
+    minimum_audience_size: 1000
+    test_duration_days: 7
+    confidence_level: 0.95
+    statistical_significance: true
+
+# Error Handling
+error_handling:
+  # API errors
+  api_errors:
+    rate_limit: "exponential_backoff"
+    invalid_token: "refresh_token"
+    permissions: "request_permissions"
+    
+  # Content errors
+  content_errors:
+    policy_violation: "content_review"
+    copyright_claim: "dispute_process"
+    spam_detection: "appeal_process"
+    
+  # Technical errors
+  technical_errors:
+    upload_failure: "retry_with_compression"
+    timeout: "chunked_upload"
+    server_error: "delayed_retry"
+
+# Integration Settings
+integrations:
+  # Third-party tools
+  third_party:
+    hootsuite: false
+    buffer: false
+    sprout_social: false
+    
+  # Meta products
+  meta_products:
+    instagram: true
+    whatsapp_business: false
+    messenger: true
+    
+  # Analytics platforms
+  analytics_platforms:
+    google_analytics: true
+    facebook_analytics: true
+    meta_business_suite: true
+
+# Automation Features
+automation:
+  # Scheduled posting
+  scheduled_posting:
+    enabled: true
+    max_scheduled_posts: 350
+    scheduling_window_days: 75
+    
+  # Auto-responses
+  auto_responses:
+    messenger: true
+    comments: false
+    
+  # Content suggestions
+  content_suggestions:
+    trending_topics: true
+    optimal_posting_times: true
+    content_ideas: true

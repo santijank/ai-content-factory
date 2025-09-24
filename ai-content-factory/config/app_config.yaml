@@ -1,0 +1,16 @@
+# AI Content Factory Configuration
+app:
+  name: "AI Content Factory"
+  version: "1.0.0"
+  debug: true
+
+database:
+  url: "sqlite:///content_factory.db"
+
+apis:
+  youtube:
+    enabled: true
+  groq:
+    enabled: true  
+  openai:
+    enabled: true

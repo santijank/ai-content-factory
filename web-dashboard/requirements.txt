@@ -1,0 +1,27 @@
+# AI Content Factory - Shared Dependencies
+# Root level requirements.txt
+
+# Core Python Libraries
+requests==2.31.0
+python-dotenv==1.0.0
+python-dateutil==2.8.2
+
+# Data Processing
+pandas==2.1.1
+numpy==1.24.3
+
+# Database (Common)
+sqlalchemy==2.0.23
+
+# Async Support
+asyncio
+aiohttp==3.8.6
+
+# Utilities
+uuid
+dataclasses-json==0.6.1
+
+# Development Tools
+pytest==7.4.3
+black==23.9.1
+flake8==6.1.0

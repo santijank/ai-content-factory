@@ -1,0 +1,82 @@
+{
+  "name": "🚨 AI Content Factory - Error Handling Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "error-webhook",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "error-webhook-trigger",
+      "name": "Error Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "webhookId": "error-handling-webhook",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "jsCode": "// Error Classification and Processing\nconst errorData = $input.all();\n\nfunction classifyError(error) {\n  const errorMessage = error.message?.toLowerCase() || '';\n  const errorStack = error.stack || '';\n  \n  // Database errors\n  if (errorMessage.includes('connection') || errorMessage.includes('database') || errorMessage.includes('sql')) {\n    return {\n      category: 'database',\n      severity: 'high',\n      icon: '🗄️',\n      action: 'restart_database_connection'\n    };\n  }\n  \n  // API/External service errors\n  if (errorMessage.includes('api') || errorMessage.includes('timeout') || errorMessage.includes('rate limit')) {\n    return {\n      category: 'external_api',\n      severity: 'medium',\n      icon: '🔗',\n      action: 'retry_with_backoff'\n    };\n  }\n  \n  // AI Service errors\n  if (errorMessage.includes('openai') || errorMessage.includes('groq') || errorMessage.includes('claude')) {\n    return {\n      category: 'ai_service',\n      severity: 'medium',\n      icon: '🤖',\n      action: 'fallback_ai_model'\n    };\n  }\n  \n  // File system errors\n  if (errorMessage.includes('file') || errorMessage.includes('upload') || errorMessage.includes('storage')) {\n    return {\n      category: 'filesystem',\n      severity: 'medium',\n      icon: '📁',\n      action: 'check_disk_space'\n    };\n  }\n  \n  // Memory/Performance errors\n  if (errorMessage.includes('memory') || errorMessage.includes('heap') || errorMessage.includes('timeout')) {\n    return {\n      category: 'performance',\n      severity: 'high',\n      icon: '⚡',\n      action: 'restart_service'\n    };\n  }\n  \n  // Platform integration errors\n  if (errorMessage.includes('youtube') || errorMessage.includes('tiktok') || errorMessage.includes('instagram')) {\n    return {\n      category: 'platform_integration',\n      severity: 'medium',\n      icon: '📱',\n      action: 'refresh_tokens'\n    };\n  }\n  \n  // Authentication/Authorization errors\n  if (errorMessage.includes('auth') || errorMessage.includes('token') || errorMessage.includes('unauthorized')) {\n    return {\n      category: 'authentication',\n      severity: 'high',\n      icon: '🔐',\n      action: 'refresh_credentials'\n    };\n  }\n  \n  // Default classification\n  return {\n    category: 'unknown',\n    severity: 'medium',\n    icon: '❓',\n    action: 'manual_investigation'\n  };\n}\n\nconst processedErrors = errorData.map(error => {\n  const classification = classifyError(error);\n  \n  return {\n    ...error,\n    classification,\n    timestamp: new Date().toISOString(),\n    error_id: `err_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,\n    service: error.service || 'unknown',\n    workflow: error.workflow || 'unknown',\n    user_id: error.user_id || null,\n    session_id: error.session_id || null,\n    request_id: error.request_id || null\n  };\n});\n\nreturn processedErrors;"
+      },
+      "id": "error-classification",
+      "name": "Error Classification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 300],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "critical-error",
+              "leftValue": "={{ $json.classification.severity }}",
+              "rightValue": "high",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "severity-check",
+      "name": "Check Error Severity",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": {
+          "value": "public"
+        },
+        "table": {
+          "value": "error_logs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "error_id": "={{ $json.error_id }}",
+            "service": "={{ $json.service }}",
+            "workflow": "={{ $json.workflow }}",
+            "error_category": "={{ $json.classification.category }}",
+            "severity": "={{ $json.classification.severity }}",
+            "message": "={{ $json.message }}",
+            "stack_trace": "={{ $json.stack }}",
+            "user_id": "={{ $json.user_id }}",
+            "session_id": "={{ $json.session_id }}",
+            "request_id": "={{ $json.request_id }}",
+            "metadata": "={{ JSON.stringify($json) }}",
+            "created_at": "NOW()",\n            "resolved": false\n          },\n          \"matchingColumns\": [],\n          \"schema\": [\n            {\n              \"id\": \"error_id\",\n              \"displayName\": \"error_id\",\n              \"required\": false,\n              \"defaultMatch\": false,\n              \"canBeUsedToMatch\": true\n            }\n          ]\n        },\n        \"additionalFields\": {}\n      },\n      \"id\": \"log-error-to-database\",\n      \"name\": \"Log Error to Database\",\n      \"type\": \"n8n-nodes-base.postgres\",\n      \"typeVersion\": 2.4,\n      \"position\": [800, 200],\n      \"credentials\": {\n        \"postgres\": {\n          \"id\": \"postgres-main\",\n          \"name\": \"PostgreSQL Main Database\"\n        }\n      }\n    },\n    {\n      \"parameters\": {\n        \"url\": \"={{ $env.SLACK_WEBHOOK_URL }}\",\n        \"sendBody\": true,\n        \"specifyBody\": \"json\",\n        \"jsonBody\": \"={\\n  \\\"text\\\": \\\"🚨 Critical Error Alert - AI Content Factory\\\",\\n  \\\"attachments\\\": [\\n    {\\n      \\\"color\\\": \\\"danger\\\",\\n      \\\"fields\\\": [\\n        {\\n          \\\"title\\\": \\\"Error ID\\\",\\n          \\\"value\\\": \\\"{{ $json.error_id }}\\\",\\n          \\\"short\\\": true\\n        },\\n        {\\n          \\\"title\\\": \\\"Service\\\",\\n          \\\"value\\\": \\\"{{ $json.service }}\\\",\\n          \\\"short\\\": true\\n        },\\n

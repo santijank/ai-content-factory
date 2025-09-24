@@ -1,0 +1,286 @@
+{
+  "name": "AI Content Factory - Master Workflow",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "hour": 6,
+              "minute": 0
+            },
+            {
+              "hour": 12,
+              "minute": 0
+            },
+            {
+              "hour": 18,
+              "minute": 0
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/api/system/health",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Check System Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c6a4b441-9c2b-4a95-9b2e-5b4c8a1c2bf2",
+              "leftValue": "={{ $json.overall_status }}",
+              "rightValue": "healthy",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "name": "System Healthy?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/collect-trends",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "name": "Trigger Trend Collection",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        900,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "minutes"
+      },
+      "name": "Wait for Trends",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8000/api/opportunities/generate",
+        "options": {
+          "timeout": 180000
+        }
+      },
+      "name": "Generate Opportunities",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1340,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8000/api/system/log",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "level",
+              "value": "error"
+            },
+            {
+              "name": "message",
+              "value": "System health check failed, skipping automated processes"
+            },
+            {
+              "name": "data",
+              "value": "={{ $json }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Log Health Issue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        900,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "health-alert",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Send Alert Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Notify about successful completion\nreturn {\n  status: 'success',\n  message: 'Master workflow completed successfully',\n  timestamp: new Date().toISOString(),\n  trends_collected: $input.first().json.trends_count || 0,\n  opportunities_generated: $input.first().json.opportunities_count || 0\n};"
+      },
+      "name": "Success Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        200
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check System Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check System Health": {
+      "main": [
+        [
+          {
+            "node": "System Healthy?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "System Healthy?": {
+      "main": [
+        [
+          {
+            "node": "Trigger Trend Collection",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Health Issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Trend Collection": {
+      "main": [
+        [
+          {
+            "node": "Wait for Trends",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Trends": {
+      "main": [
+        [
+          {
+            "node": "Generate Opportunities",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Opportunities": {
+      "main": [
+        [
+          {
+            "node": "Success Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Health Issue": {
+      "main": [
+        [
+          {
+            "node": "Send Alert Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2024-01-15T12:00:00.000Z",
+  "updatedAt": "2024-01-15T12:00:00.000Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2024-01-15T12:00:00.000Z",
+      "updatedAt": "2024-01-15T12:00:00.000Z",
+      "id": "1",
+      "name": "AI Content Factory"
+    }
+  ],
+  "triggerCount": 0,
+  "versionId": "1"
+}

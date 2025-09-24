@@ -1,0 +1,393 @@
+# AI Content Factory - Main Configuration File
+# This file contains the primary configuration for the AI Content Factory system
+
+# Application Settings
+app:
+  name: "AI Content Factory"
+  version: "1.0.0"
+  description: "Automated content creation system using AI"
+  debug: false
+  host: "0.0.0.0"
+  port: 5000
+  secret_key: "${SECRET_KEY}"  # Set via environment variable
+  timezone: "Asia/Bangkok"
+  language: "th"
+
+# Database Configuration
+database:
+  url: "${DATABASE_URL}"  # postgresql://user:password@host:port/database
+  pool_size: 10
+  max_overflow: 20
+  echo: false  # Set to true for SQL debugging
+  connect_timeout: 30
+  pool_timeout: 30
+  pool_recycle: 3600  # Recycle connections every hour
+
+# Redis Configuration (for caching and job queue)
+redis:
+  url: "${REDIS_URL}"  # redis://localhost:6379/0
+  password: "${REDIS_PASSWORD}"
+  max_connections: 50
+  socket_timeout: 5
+  socket_connect_timeout: 5
+
+# Service Configuration
+services:
+  default_tier: "budget"  # budget, balanced, premium
+  timeout: 30  # seconds
+  retry_attempts: 3
+  retry_delay: 1  # seconds
+  rate_limit:
+    requests_per_hour: 1000
+    burst_limit: 10
+    window_size: 3600  # seconds
+
+# AI Services Configuration
+ai_services:
+  # Text AI Services
+  text_ai:
+    groq:
+      api_key: "${GROQ_API_KEY}"
+      base_url: "https://api.groq.com/openai/v1"
+      model: "llama3-8b-8192"
+      max_tokens: 8192
+      temperature: 0.7
+      top_p: 0.9
+      frequency_penalty: 0.0
+      presence_penalty: 0.0
+      timeout: 30
+      
+    openai:
+      api_key: "${OPENAI_API_KEY}"
+      base_url: "https://api.openai.com/v1"
+      model: "gpt-3.5-turbo"
+      max_tokens: 16000
+      temperature: 0.7
+      top_p: 0.9
+      frequency_penalty: 0.0
+      presence_penalty: 0.0
+      timeout: 60
+      
+    claude:
+      api_key: "${CLAUDE_API_KEY}"
+      base_url: "https://api.anthropic.com"
+      model: "claude-3-sonnet-20240229"
+      max_tokens: 100000
+      temperature: 0.7
+      timeout: 120
+
+  # Audio AI Services
+  audio_ai:
+    gtts:
+      language: "th"
+      slow: false
+      timeout: 30
+      
+    azure:
+      api_key: "${AZURE_TTS_API_KEY}"
+      region: "${AZURE_TTS_REGION}"  # southeastasia
+      endpoint: "https://${AZURE_TTS_REGION}.tts.speech.microsoft.com"
+      voice: "th-TH-AcharaNeural"
+      output_format: "audio-16khz-128kbitrate-mono-mp3"
+      timeout: 60
+      
+    elevenlabs:
+      api_key: "${ELEVENLABS_API_KEY}"
+      base_url: "https://api.elevenlabs.io/v1"
+      model: "eleven_multilingual_v2"
+      voice_id: "21m00Tcm4TlvDq8ikWAM"  # Rachel
+      stability: 0.75
+      similarity_boost: 0.75
+      style: 0.0
+      timeout: 90
+
+  # Image AI Services
+  image_ai:
+    stable_diffusion:
+      model_path: "./models/stable-diffusion-v1-5"
+      device: "cuda"  # cuda, cpu, mps
+      steps: 20
+      guidance_scale: 7.5
+      width: 512
+      height: 512
+      safety_checker: true
+      
+    leonardo:
+      api_key: "${LEONARDO_API_KEY}"
+      base_url: "https://cloud.leonardo.ai/api/rest/v1"
+      model: "leonardo_creative"
+      width: 1024
+      height: 1024
+      num_images: 1
+      guidance_scale: 7
+      timeout: 180
+      
+    midjourney:
+      api_key: "${MIDJOURNEY_API_KEY}"
+      base_url: "https://api.midjourney.com/v1"
+      version: "6"
+      quality: "1"
+      stylize: 100
+      timeout: 300
+
+# Platform Integration
+platforms:
+  youtube:
+    client_id: "${YOUTUBE_CLIENT_ID}"
+    client_secret: "${YOUTUBE_CLIENT_SECRET}"
+    refresh_token: "${YOUTUBE_REFRESH_TOKEN}"
+    upload_defaults:
+      privacy_status: "private"  # private, public, unlisted
+      category_id: "22"  # People & Blogs
+      default_language: "th"
+      
+  tiktok:
+    client_key: "${TIKTOK_CLIENT_KEY}"
+    client_secret: "${TIKTOK_CLIENT_SECRET}"
+    access_token: "${TIKTOK_ACCESS_TOKEN}"
+    upload_defaults:
+      privacy_level: "SELF_ONLY"  # PUBLIC_TO_EVERYONE, MUTUAL_FOLLOW_FRIENDS, SELF_ONLY
+      allows_comments: true
+      allows_duet: true
+      allows_stitch: true
+      
+  instagram:
+    client_id: "${INSTAGRAM_CLIENT_ID}"
+    client_secret: "${INSTAGRAM_CLIENT_SECRET}"
+    access_token: "${INSTAGRAM_ACCESS_TOKEN}"
+    upload_defaults:
+      caption_max_length: 2200
+      hashtag_limit: 30
+      
+  facebook:
+    app_id: "${FACEBOOK_APP_ID}"
+    app_secret: "${FACEBOOK_APP_SECRET}"
+    access_token: "${FACEBOOK_ACCESS_TOKEN}"
+    page_id: "${FACEBOOK_PAGE_ID}"
+    upload_defaults:
+      published: false  # Save as draft initially
+
+# Storage Configuration
+storage:
+  type: "local"  # local, s3, gcs, azure
+  
+  local:
+    base_path: "./storage"
+    temp_path: "./storage/temp"
+    max_file_size: "100MB"
+    allowed_extensions:
+      - ".mp4"
+      - ".mov"
+      - ".avi"
+      - ".mkv"
+      - ".mp3"
+      - ".wav"
+      - ".jpg"
+      - ".jpeg"
+      - ".png"
+      - ".gif"
+    cleanup_temp_files: true
+    cleanup_interval: 3600  # seconds
+    
+  s3:
+    bucket: "${AWS_S3_BUCKET}"
+    region: "${AWS_S3_REGION}"
+    access_key: "${AWS_ACCESS_KEY_ID}"
+    secret_key: "${AWS_SECRET_ACCESS_KEY}"
+    endpoint_url: null  # For S3-compatible services
+    presigned_url_expiry: 3600  # seconds
+    
+  gcs:
+    bucket: "${GCS_BUCKET}"
+    project_id: "${GCS_PROJECT_ID}"
+    credentials_path: "${GCS_CREDENTIALS_PATH}"
+    
+  azure:
+    account_name: "${AZURE_STORAGE_ACCOUNT}"
+    account_key: "${AZURE_STORAGE_KEY}"
+    container: "${AZURE_STORAGE_CONTAINER}"
+
+# Trend Monitoring Configuration
+trends:
+  collection_interval: 3600  # seconds (1 hour)
+  sources:
+    youtube:
+      enabled: true
+      api_key: "${YOUTUBE_API_KEY}"
+      regions: ["TH", "US", "JP"]
+      categories: [1, 10, 15, 17, 19, 22, 23, 24, 25, 26, 27, 28]
+      max_results: 50
+      
+    google_trends:
+      enabled: true
+      regions: ["TH", "US"]
+      categories: ["all", "business", "entertainment", "health", "science", "sports", "technology"]
+      timeframe: "now 1-d"  # now 1-d, now 7-d, today 1-m
+      
+    twitter:
+      enabled: false  # Requires Twitter API v2
+      bearer_token: "${TWITTER_BEARER_TOKEN}"
+      max_results: 100
+      
+    reddit:
+      enabled: false  # Optional
+      client_id: "${REDDIT_CLIENT_ID}"
+      client_secret: "${REDDIT_CLIENT_SECRET}"
+      user_agent: "AI Content Factory v1.0"
+      subreddits: ["popular", "all", "thailand"]
+
+# Content Generation Settings
+content:
+  default_settings:
+    content_type: "educational"  # educational, entertainment, news, review, tutorial
+    target_duration: 300  # seconds (5 minutes)
+    target_platforms: ["youtube"]
+    language: "th"
+    
+  quality_settings:
+    budget:
+      max_script_length: 500  # words
+      image_resolution: "512x512"
+      audio_quality: "standard"
+      processing_priority: "low"
+      
+    balanced:
+      max_script_length: 1000  # words
+      image_resolution: "1024x1024"
+      audio_quality: "high"
+      processing_priority: "medium"
+      
+    premium:
+      max_script_length: 2000  # words
+      image_resolution: "2048x2048"
+      audio_quality: "premium"
+      processing_priority: "high"
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # File logging
+  file:
+    enabled: true
+    path: "./logs"
+    filename: "app.log"
+    max_file_size: "10MB"
+    backup_count: 5
+    rotation: "time"  # time, size
+    
+  # Console logging
+  console:
+    enabled: true
+    colored: true
+    
+  # Log specific modules
+  loggers:
+    "ai_content_factory":
+      level: "INFO"
+    "flask":
+      level: "WARNING"
+    "werkzeug":
+      level: "WARNING"
+    "urllib3":
+      level: "WARNING"
+
+# Monitoring and Analytics
+monitoring:
+  enabled: true
+  
+  metrics:
+    enabled: true
+    endpoint: "/metrics"
+    include_defaults: true
+    
+  health_checks:
+    enabled: true
+    endpoint: "/health"
+    checks:
+      - "database"
+      - "redis"
+      - "ai_services"
+      - "storage"
+      
+  performance:
+    track_response_times: true
+    track_error_rates: true
+    slow_request_threshold: 5.0  # seconds
+
+# Security Settings
+security:
+  cors:
+    enabled: true
+    origins: ["http://localhost:3000", "http://localhost:8080"]
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    headers: ["Content-Type", "Authorization"]
+    
+  rate_limiting:
+    enabled: true
+    default_limits: "1000 per hour"
+    storage_url: "${REDIS_URL}"
+    
+  api_keys:
+    enabled: false  # Set to true to require API keys
+    header_name: "X-API-Key"
+    
+  content_filtering:
+    enabled: true
+    blocked_keywords: []
+    content_moderation: true
+
+# Job Queue Configuration (for background processing)
+celery:
+  broker_url: "${REDIS_URL}"
+  result_backend: "${REDIS_URL}"
+  task_serializer: "json"
+  accept_content: ["json"]
+  result_serializer: "json"
+  timezone: "Asia/Bangkok"
+  enable_utc: true
+  
+  # Task routing
+  task_routes:
+    "content_generation.*": {"queue": "content"}
+    "trend_analysis.*": {"queue": "trends"}
+    "upload.*": {"queue": "uploads"}
+    
+  # Worker configuration
+  worker_prefetch_multiplier: 1
+  task_acks_late: true
+  worker_max_tasks_per_child: 1000
+
+# Development Settings
+development:
+  debug_toolbar: false
+  profiler: false
+  mock_ai_services: false  # Use mock responses instead of real AI calls
+  auto_reload: true
+  
+# Production Settings
+production:
+  debug: false
+  testing: false
+  ssl_required: true
+  session_cookie_secure: true
+  session_cookie_httponly: true
+  permanent_session_lifetime: 3600  # seconds
+
+# Feature Flags
+features:
+  trend_collection: true
+  content_generation: true
+  platform_upload: true
+  analytics: true
+  user_management: false  # Not implemented yet
+  payment_integration: false  # Future feature
+  advanced_analytics: false  # Future feature
+  
+# Experimental Features (use with caution)
+experimental:
+  ai_voice_cloning: false
+  real_time_trends: false
+  automated_posting: false
+  content_optimization: false

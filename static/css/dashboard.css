@@ -1,0 +1,356 @@
+/* Dashboard Styles */
+:root {
+    --primary-color: #007bff;
+    --success-color: #28a745;
+    --info-color: #17a2b8;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --light-gray: #f8f9fa;
+    --dark-gray: #6c757d;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--light-gray);
+}
+
+/* Custom card styles */
+.card {
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.border-left-primary {
+    border-left: 4px solid var(--primary-color) !important;
+}
+
+.border-left-success {
+    border-left: 4px solid var(--success-color) !important;
+}
+
+.border-left-info {
+    border-left: 4px solid var(--info-color) !important;
+}
+
+.border-left-warning {
+    border-left: 4px solid var(--warning-color) !important;
+}
+
+/* Trend items */
+.trend-item {
+    padding: 15px;
+    margin-bottom: 10px;
+    border-left: 4px solid var(--primary-color);
+    background: white;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.trend-item:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+.trend-title {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.trend-meta {
+    font-size: 0.85rem;
+    color: var(--dark-gray);
+}
+
+.trend-score {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.score-high {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.score-medium {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.score-low {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Opportunity items */
+.opportunity-item {
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.opportunity-item:hover {
+    border-color: var(--success-color);
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.1);
+}
+
+.opportunity-title {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+}
+
+.opportunity-description {
+    color: var(--dark-gray);
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.opportunity-metrics {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.metric {
+    font-size: 0.8rem;
+}
+
+.metric-label {
+    color: var(--dark-gray);
+}
+
+.metric-value {
+    font-weight: 600;
+    color: var(--success-color);
+}
+
+/* Action buttons */
+.btn-group .btn {
+    position: relative;
+    z-index: 1;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    border: none;
+}
+
+.btn-success {
+    background: linear-gradient(45deg, #28a745, #1e7e34);
+    border: none;
+}
+
+.btn-info {
+    background: linear-gradient(45deg, #17a2b8, #138496);
+    border: none;
+}
+
+.btn-warning {
+    background: linear-gradient(45deg, #ffc107, #e0a800);
+    border: none;
+    color: #212529;
+}
+
+/* Loading states */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.spinner-custom {
+    width: 2rem;
+    height: 2rem;
+    border: 0.25em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner-border 0.75s linear infinite;
+}
+
+/* Table styles */
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Status badges */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-processing {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.status-completed {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-failed {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Platform icons */
+.platform-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    margin-right: 5px;
+}
+
+.platform-youtube {
+    background-color: #ff0000;
+}
+
+.platform-tiktok {
+    background-color: #000000;
+}
+
+.platform-instagram {
+    background: linear-gradient(45deg, #405de6, #5851db, #833ab4, #c13584, #e1306c, #fd1d1d);
+}
+
+.platform-facebook {
+    background-color: #1877f2;
+}
+
+/* Progress bars */
+.progress {
+    height: 8px;
+    border-radius: 4px;
+}
+
+.progress-bar {
+    border-radius: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 5px;
+        border-radius: 5px !important;
+    }
+    
+    .opportunity-metrics {
+        flex-direction: column;
+        gap: 5px;
+    }
+}
+
+/* Animation classes */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Toast customization */
+.toast {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Custom scrollbar */
+.trends-container,
+.opportunities-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.trends-container::-webkit-scrollbar,
+.opportunities-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.trends-container::-webkit-scrollbar-track,
+.opportunities-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.trends-container::-webkit-scrollbar-thumb,
+.opportunities-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.trends-container::-webkit-scrollbar-thumb:hover,
+.opportunities-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}

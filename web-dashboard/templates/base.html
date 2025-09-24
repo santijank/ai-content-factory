@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Content Factory{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #f1f5f9;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #1e293b;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+            height: calc(100vh - 40px);
+            position: fixed;
+            width: 280px;
+            z-index: 1000;
+        }
+
+        .main-content {
+            margin-left: 320px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .nav-link {
+            border-radius: 15px;
+            margin: 5px 0;
+            transition: all 0.3s ease;
+            color: var(--dark-color);
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .card {
+            border: none;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+            color: white;
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        .trend-item {
+            border-left: 4px solid var(--primary-color);
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+
+        .trend-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .opportunity-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px 0;
+            border-left: 5px solid var(--success-color);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+        }
+
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-selected { background: #d1fae5; color: #065f46; }
+        .status-in-progress { background: #dbeafe; color: #1e40af; }
+        .status-completed { background: #dcfce7; color: #166534; }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="p-4">
+            <h3 class="text-center mb-4">
+                <i class="fas fa-robot text-primary"></i>
+                AI Content Factory
+            </h3>
+            
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="/">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'trends' %}active{% endif %}" href="/trends">
+                        <i class="fas fa-trending-up me-2"></i>
+                        Trends
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'opportunities' %}active{% endif %}" href="/opportunities">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Opportunities
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'content' %}active{% endif %}" href="/content">
+                        <i class="fas fa-video me-2"></i>
+                        Content
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'analytics' %}active{% endif %}" href="/analytics">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Analytics
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="mt-5 pt-4 border-top">
+                <button class="btn btn-primary w-100" onclick="collectTrends()">
+                    <i class="fas fa-sync-alt me-2"></i>
+                    Collect Trends
+                </button>
+            </div>
+            
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-circle text-success"></i>
+                    System Online
+                </small>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Mobile Toggle Button -->
+    <button class="btn btn-primary d-md-none" style="position: fixed; top: 20px; left: 20px; z-index: 1001;" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Notification Area -->
+    <div id="notifications"></div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Processing...</p>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Utility functions
+        function showLoading() {
+            document.getElementById('loadingSpinner').style.display = 'block';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingSpinner').style.display = 'none';
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} alert-dismissible fade show notification`;
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.getElementById('notifications').appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+        
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('show');
+        }
+        
+        async function collectTrends() {
+            showLoading();
+            try {
+                const response = await fetch('/api/collect-trends', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    // Refresh page after 2 seconds
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    showNotification('Failed to collect trends', 'danger');
+                }
+            } catch (error) {
+                showNotification('Error collecting trends', 'danger');
+                console.error('Error:', error);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        async function analyzeTrend(trendId) {
+            showLoading();
+            try {
+                const response = await fetch(`/api/analyze-trend/${trendId}`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(`Generated ${data.opportunities.length} opportunities!`, 'success');
+                    // Refresh page after 2 seconds
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    showNotification('Failed to analyze trend', 'danger');
+                }
+            } catch (error) {
+                showNotification('Error analyzing trend', 'danger');
+                console.error('Error:', error);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        async function selectOpportunity(opportunityId) {
+            showLoading();
+            try {
+                const response = await fetch(`/api/opportunity/${opportunityId}/select`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    // Refresh page after 2 seconds
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    showNotification('Failed to select opportunity', 'danger');
+                }
+            } catch (error) {
+                showNotification('Error selecting opportunity', 'danger');
+                console.error('Error:', error);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Format numbers
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+        
+        // Format currency
+        function formatCurrency(amount) {
+            return '฿' + amount.toFixed(2);
+        }
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

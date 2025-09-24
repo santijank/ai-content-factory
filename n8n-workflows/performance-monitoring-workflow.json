@@ -1,0 +1,588 @@
+{
+  "name": "Performance Monitoring Workflow",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "minute": 30
+            }
+          ]
+        }
+      },
+      "name": "Hourly Monitoring Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT u.*, ci.title FROM uploads u JOIN content_items ci ON u.content_id = ci.id WHERE u.status = 'completed' AND u.uploaded_at > NOW() - INTERVAL '30 days' ORDER BY u.uploaded_at DESC LIMIT 50",
+        "additionalFields": {
+          "mode": "independently"
+        }
+      },
+      "name": "Get Active Uploads",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [460, 300],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-main",
+          "name": "AI Factory Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-uploads",
+              "leftValue": "={{ $json.length }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "name": "Has Active Uploads?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Group uploads by platform\nconst uploads = $input.first().json;\nconst platformGroups = {};\n\nuploads.forEach(upload => {\n  if (!platformGroups[upload.platform]) {\n    platformGroups[upload.platform] = [];\n  }\n  platformGroups[upload.platform].push(upload);\n});\n\n// Return array of platform groups\nreturn Object.entries(platformGroups).map(([platform, uploads]) => ({\n  json: {\n    platform: platform,\n    uploads: uploads,\n    upload_count: uploads.length\n  }\n}));"
+      },
+      "name": "Group by Platform",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "operation": "equal",
+              "value": "youtube"
+            },
+            {
+              "operation": "equal",
+              "value": "tiktok"
+            },
+            {
+              "operation": "equal",
+              "value": "instagram"
+            },
+            {
+              "operation": "equal",
+              "value": "facebook"
+            }
+          ]
+        },
+        "dataPropertyName": "platform"
+      },
+      "name": "Platform Analytics Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8003/api/analytics/youtube",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "uploads",
+              "value": "={{ $json.uploads }}"
+            },
+            {
+              "name": "metrics_requested",
+              "value": ["views", "likes", "comments", "watchTime", "subscribers", "revenue"]
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "name": "Get YouTube Analytics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8003/api/analytics/tiktok",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "uploads",
+              "value": "={{ $json.uploads }}"
+            },
+            {
+              "name": "metrics_requested",
+              "value": ["views", "likes", "comments", "shares", "followers"]
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "name": "Get TikTok Analytics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8003/api/analytics/instagram",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "uploads",
+              "value": "={{ $json.uploads }}"
+            },
+            {
+              "name": "metrics_requested",
+              "value": ["views", "likes", "comments", "saves", "reach", "impressions"]
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "name": "Get Instagram Analytics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8003/api/analytics/facebook",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "uploads",
+              "value": "={{ $json.uploads }}"
+            },
+            {
+              "name": "metrics_requested",
+              "value": ["views", "likes", "comments", "shares", "reactions", "reach"]
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "name": "Get Facebook Analytics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "mode": "multiplex"
+      },
+      "name": "Merge Platform Analytics",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [1340, 250]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process analytics data and store metrics\nconst analyticsData = $input.all();\nconst metricsToStore = [];\n\nanalyticsData.forEach(platformData => {\n  if (platformData.json.metrics && Array.isArray(platformData.json.metrics)) {\n    platformData.json.metrics.forEach(metric => {\n      metricsToStore.push({\n        upload_id: metric.upload_id,\n        views: metric.views || 0,\n        likes: metric.likes || 0,\n        comments: metric.comments || 0,\n        shares: metric.shares || 0,\n        watch_time_minutes: metric.watch_time_minutes || 0,\n        engagement_rate: metric.engagement_rate || 0,\n        revenue: metric.revenue || 0,\n        unique_viewers: metric.unique_viewers || 0,\n        measured_at: new Date().toISOString(),\n        platform: platformData.json.platform\n      });\n    });\n  }\n});\n\nreturn metricsToStore.map(metric => ({ json: metric }));"
+      },
+      "name": "Process Analytics Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 250]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO performance_metrics (upload_id, views, likes, comments, shares, watch_time_minutes, engagement_rate, revenue, unique_viewers, measured_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (upload_id, DATE(measured_at)) DO UPDATE SET views = $2, likes = $3, comments = $4, shares = $5, watch_time_minutes = $6, engagement_rate = $7, revenue = $8, unique_viewers = $9",
+        "additionalFields": {
+          "mode": "independently"
+        }
+      },
+      "name": "Store Performance Metrics",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1780, 250],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-main",
+          "name": "AI Factory Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Detect performance alerts and anomalies\nconst metricsData = $input.all();\nconst alerts = [];\nconst now = new Date();\n\nmetricsData.forEach(item => {\n  const metric = item.json;\n  \n  // Viral content detection (high views + engagement)\n  if (metric.views > 100000 && metric.engagement_rate > 5) {\n    alerts.push({\n      type: 'viral_content',\n      upload_id: metric.upload_id,\n      platform: metric.platform,\n      message: `🚀 Content going VIRAL! ${metric.views.toLocaleString()} views with ${metric.engagement_rate.toFixed(1)}% engagement`,\n      priority: 'high',\n      metric: {\n        views: metric.views,\n        engagement_rate: metric.engagement_rate,\n        likes: metric.likes,\n        comments: metric.comments\n      }\n    });\n  }\n  \n  // High engagement rate (even with lower views)\n  if (metric.engagement_rate > 15 && metric.views > 1000) {\n    alerts.push({\n      type: 'high_engagement',\n      upload_id: metric.upload_id,\n      platform: metric.platform,\n      message: `💬 High engagement content! ${metric.engagement_rate.toFixed(1)}% engagement rate`,\n      priority: 'medium',\n      metric: {\n        views: metric.views,\n        engagement_rate: metric.engagement_rate\n      }\n    });\n  }\n  \n  // Low performance detection (content older than 24 hours with low views)\n  // Note: This would need upload timestamp comparison in real implementation\n  if (metric.views < 100) {\n    alerts.push({\n      type: 'low_performance',\n      upload_id: metric.upload_id,\n      platform: metric.platform,\n      message: `⚠️ Content underperforming: Only ${metric.views} views`,\n      priority: 'low',\n      metric: {\n        views: metric.views,\n        engagement_rate: metric.engagement_rate\n      }\n    });\n  }\n  \n  // Revenue milestone\n  if (metric.revenue > 100) {\n    alerts.push({\n      type: 'revenue_milestone',\n      upload_id: metric.upload_id,\n      platform: metric.platform,\n      message: `💰 Revenue milestone! $${metric.revenue.toFixed(2)} earned`,\n      priority: 'medium',\n      metric: {\n        revenue: metric.revenue,\n        views: metric.views\n      }\n    });\n  }\n});\n\n// Return alerts as separate items\nreturn alerts.map(alert => ({\n  json: {\n    ...alert,\n    timestamp: now.toISOString(),\n    alert_id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`\n  }\n}));"
+      },
+      "name": "Detect Performance Alerts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 250]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-alerts",
+              "leftValue": "={{ $json.length }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "name": "Has Alerts?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2220, 200]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "performance-alert",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Send Performance Alert",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [2440, 150]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8000/api/notifications/send",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "performance_alert"
+            },
+            {
+              "name": "alerts",
+              "value": "={{ $input.all().map(item => item.json) }}"
+            },
+            {
+              "name": "summary",
+              "value": "={{ $input.all().length }} performance alerts detected"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Send Dashboard Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2440, 250]
+    },
+    {
+      "parameters": {
+        "jsCode": "// No uploads to monitor\nreturn {\n  status: 'info',\n  message: 'No active uploads found for monitoring',\n  timestamp: new Date().toISOString(),\n  next_check: 'Next automated check in 1 hour'\n};"
+      },
+      "name": "No Uploads Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate monitoring summary\nconst alertsData = $('Detect Performance Alerts').all();\nconst metricsData = $('Store Performance Metrics').all();\n\n// Count alerts by type\nconst alertCounts = {};\nalertsData.forEach(alert => {\n  const type = alert.json.type;\n  alertCounts[type] = (alertCounts[type] || 0) + 1;\n});\n\n// Calculate totals\nconst totalViews = metricsData.reduce((sum, item) => sum + (item.json.views || 0), 0);\nconst totalRevenue = metricsData.reduce((sum, item) => sum + (item.json.revenue || 0), 0);\nconst avgEngagement = metricsData.length > 0 \n  ? metricsData.reduce((sum, item) => sum + (item.json.engagement_rate || 0), 0) / metricsData.length \n  : 0;\n\nreturn {\n  monitoring_summary: {\n    timestamp: new Date().toISOString(),\n    uploads_monitored: metricsData.length,\n    total_alerts: alertsData.length,\n    alert_breakdown: alertCounts,\n    performance_summary: {\n      total_views: totalViews,\n      total_revenue: totalRevenue.toFixed(2),\n      avg_engagement_rate: avgEngagement.toFixed(1)\n    },\n    next_monitoring: 'Automated monitoring continues every hour'\n  }\n};"
+      },
+      "name": "Generate Monitoring Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2220, 350]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle analytics API errors\nconst errorData = $input.first().json;\n\nreturn {\n  status: 'error',\n  message: 'Analytics collection failed for some platforms',\n  error: errorData.error || 'Unknown analytics error',\n  timestamp: new Date().toISOString(),\n  action: 'Monitoring will retry in next cycle'\n};"
+      },
+      "name": "Analytics Error Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 450]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "monitoring-error",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Send Error Alert",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [1560, 450]
+    }
+  ],
+  "connections": {
+    "Hourly Monitoring Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Active Uploads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Active Uploads": {
+      "main": [
+        [
+          {
+            "node": "Has Active Uploads?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Active Uploads?": {
+      "main": [
+        [
+          {
+            "node": "Group by Platform",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Uploads Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Group by Platform": {
+      "main": [
+        [
+          {
+            "node": "Platform Analytics Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Platform Analytics Router": {
+      "main": [
+        [
+          {
+            "node": "Get YouTube Analytics",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get TikTok Analytics",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Instagram Analytics",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Facebook Analytics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get YouTube Analytics": {
+      "main": [
+        [
+          {
+            "node": "Merge Platform Analytics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get TikTok Analytics": {
+      "main": [
+        [
+          {
+            "node": "Merge Platform Analytics",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get Instagram Analytics": {
+      "main": [
+        [
+          {
+            "node": "Merge Platform Analytics",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Get Facebook Analytics": {
+      "main": [
+        [
+          {
+            "node": "Merge Platform Analytics",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Merge Platform Analytics": {
+      "main": [
+        [
+          {
+            "node": "Process Analytics Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Analytics Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Analytics Data": {
+      "main": [
+        [
+          {
+            "node": "Store Performance Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Performance Metrics": {
+      "main": [
+        [
+          {
+            "node": "Detect Performance Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Performance Alerts": {
+      "main": [
+        [
+          {
+            "node": "Has Alerts?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate Monitoring Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Alerts?": {
+      "main": [
+        [
+          {
+            "node": "Send Performance Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Dashboard Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analytics Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Send Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2024-01-15T12:00:00.000Z",
+  "updatedAt": "2024-01-15T12:00:00.000Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2024-01-15T12:00:00.000Z",
+      "updatedAt": "2024-01-15T12:00:00.000Z",
+      "id": "1",
+      "name": "AI Content Factory"
+    }
+  ],
+  "triggerCount": 0,
+  "versionId": "1"
+}

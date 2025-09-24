@@ -1,0 +1,234 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: content-engine
+  namespace: ai-content-factory
+  labels:
+    app: content-engine
+    component: backend
+    version: v1.0.0
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 2
+  selector:
+    matchLabels:
+      app: content-engine
+  template:
+    metadata:
+      labels:
+        app: content-engine
+        component: backend
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8002"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: ai-content-factory-sa
+      imagePullSecrets:
+      - name: registry-secret
+      containers:
+      - name: content-engine
+        image: ai-content-factory/content-engine:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8002
+          name: http
+          protocol: TCP
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+        env:
+        - name: APP_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: APP_ENV
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: LOG_LEVEL
+        - name: DEFAULT_QUALITY_TIER
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: DEFAULT_QUALITY_TIER
+        - name: MAX_CONTENT_GENERATION_TIME
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: MAX_CONTENT_GENERATION_TIME
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: DB_NAME
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: ai-content-factory-secrets
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ai-content-factory-secrets
+              key: DB_PASSWORD
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: ai-content-factory-config
+              key: REDIS_PORT
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ai-content-factory-secrets
+              key: REDIS_PASSWORD
+        # AI Service API Keys
+        - name: GROQ_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ai-content-factory-secrets
+              key: GROQ_API_KEY
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ai-content-factory-secrets
+              key: OPENAI_API_KEY
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ai-content-factory-secrets
+              key: ANTHROPIC_API_KEY
+        - name: ELEVENLABS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ai-content-factory-secrets
+              key: ELEVENLABS_API_KEY
+        - name: LEONARDO_AI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ai-content-factory-secrets
+              key: LEONARDO_AI_API_KEY
+        - name: STABILITY_AI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ai-content-factory-secrets
+              key: STABILITY_AI_API_KEY
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+            ephemeral-storage: "1Gi"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+            ephemeral-storage: "5Gi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8002
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8002
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8002
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+        - name: temp-storage
+          mountPath: /app/temp
+        - name: generated-content
+          mountPath: /app/generated_content
+        - name: uploads
+          mountPath: /app/uploads
+        - name: config-volume
+          mountPath: /app/config
+          readOnly: true
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - NET_BIND_SERVICE
+      volumes:
+      - name: logs
+        emptyDir: {}
+      - name: temp-storage
+        emptyDir:
+          sizeLimit: 2Gi
+      - name: generated-content
+        persistentVolumeClaim:
+          claimName: content-storage-pvc
+      - name: uploads
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: config-volume
+        configMap:
+          name: app-logging-config
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+      - key: "ai-content-factory.com/dedicated"
+        operator: "Equal"
+        value: "backend"
+        effect: "NoSchedule"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - content-engine
+              topologyKey: kubernetes.io/hostname
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: node-type
+                operator: In
+                values:
+                - compute-optimized

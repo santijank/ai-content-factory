@@ -1,0 +1,876 @@
+"hook": "Want to create amazing content in half the time? Here's how AI is changing everything for creators like you!",
+        "main_content": "In this comprehensive guide, we'll explore the top AI tools that are revolutionizing content creation. From automated video editing to AI-powered script writing, these tools will transform your workflow. First, let's look at video generation tools like Runway ML and Stable Video Diffusion that can create stunning visuals from simple text prompts. Next, we'll dive into AI writing assistants that can help you craft compelling scripts and captions. Then I'll show you how to use AI voice cloning and text-to-speech tools for professional narration. We'll also cover AI thumbnail generators and social media optimizers. Finally, I'll demonstrate how to integrate these tools into your existing workflow for maximum efficiency and creativity.",
+        "cta": "If this video helped you streamline your content creation process, smash that like button and subscribe for more AI productivity tips! And don't forget to check out the links in the description for all the tools I mentioned.",
+        "full_script_with_timing": [
+          {
+            "timestamp": "0:00-0:05",
+            "content": "Want to create amazing content in half the time? Here's how AI is changing everything for creators like you!",
+            "scene": "hook_intro",
+            "visual_cue": "Dynamic AI graphics animation"
+          },
+          {
+            "timestamp": "0:05-0:15", 
+            "content": "I'm going to show you 5 AI tools that will completely transform how you create content",
+            "scene": "preview_montage",
+            "visual_cue": "Quick preview of all 5 tools"
+          },
+          {
+            "timestamp": "0:15-2:30",
+            "content": "Tool #1 is Runway ML for video generation...",
+            "scene": "tool_demo_1",
+            "visual_cue": "Screen recording of Runway ML interface"
+          },
+          {
+            "timestamp": "2:30-4:45",
+            "content": "Tool #2 is ChatGPT for script writing...",
+            "scene": "tool_demo_2", 
+            "visual_cue": "ChatGPT interface with script examples"
+          },
+          {
+            "timestamp": "4:45-6:30",
+            "content": "Tool #3 is ElevenLabs for AI voice...",
+            "scene": "tool_demo_3",
+            "visual_cue": "Voice cloning demonstration"
+          },
+          {
+            "timestamp": "6:30-8:00",
+            "content": "Tool #4 is Canva AI for thumbnails...",
+            "scene": "tool_demo_4",
+            "visual_cue": "Thumbnail creation process"
+          },
+          {
+            "timestamp": "8:00-9:15",
+            "content": "Tool #5 is Buffer AI for social optimization...",
+            "scene": "tool_demo_5",
+            "visual_cue": "Social media scheduling interface"
+          },
+          {
+            "timestamp": "9:15-9:30",
+            "content": "If this video helped you streamline your content creation process...",
+            "scene": "cta_outro",
+            "visual_cue": "Subscribe animation with bell"
+          }
+        ]
+      },
+      "visual_plan": {
+        "style": "modern_professional",
+        "color_scheme": {
+          "primary": "#FF6B35",
+          "secondary": "#004E89", 
+          "accent": "#FFE66D",
+          "background": "#F7F9FC"
+        },
+        "scenes": [
+          {
+            "name": "hook_intro",
+            "duration": 5,
+            "description": "Dynamic intro with AI graphics and creator struggling vs thriving",
+            "elements": ["AI brain animation", "Before/after split screen", "Energy graphics"],
+            "transition": "whoosh"
+          },
+          {
+            "name": "preview_montage",
+            "duration": 10,
+            "description": "Quick preview montage of all 5 tools being demonstrated",
+            "elements": ["Tool logos", "Quick demo clips", "Number countdown"],
+            "transition": "fast_cut"
+          },
+          {
+            "name": "tool_demo_1",
+            "duration": 135,
+            "description": "Detailed Runway ML demonstration with screen recording",
+            "elements": ["Screen capture", "Callout arrows", "Result showcase"],
+            "transition": "slide"
+          },
+          {
+            "name": "tool_demo_2", 
+            "duration": 135,
+            "description": "ChatGPT script writing demonstration",
+            "elements": ["ChatGPT interface", "Typing animation", "Script examples"],
+            "transition": "fade"
+          },
+          {
+            "name": "tool_demo_3",
+            "duration": 105,
+            "description": "ElevenLabs voice cloning showcase",
+            "elements": ["Voice waveforms", "Before/after audio", "Cloning process"],
+            "transition": "audio_sync"
+          },
+          {
+            "name": "tool_demo_4",
+            "duration": 90,
+            "description": "Canva AI thumbnail creation",
+            "elements": ["Design interface", "AI suggestions", "Final thumbnails"],
+            "transition": "design_reveal"
+          },
+          {
+            "name": "tool_demo_5",
+            "duration": 75,
+            "description": "Buffer AI social media optimization",
+            "elements": ["Scheduling interface", "Analytics dashboard", "Post performance"],
+            "transition": "data_animation"
+          },
+          {
+            "name": "cta_outro",
+            "duration": 15,
+            "description": "Strong call-to-action with subscribe animation",
+            "elements": ["Subscribe button", "Notification bell", "End screen"],
+            "transition": "zoom_in"
+          }
+        ],
+        "text_overlays": [
+          {
+            "text": "5 AI TOOLS THAT CHANGE EVERYTHING",
+            "timestamp": "0:00-0:05",
+            "style": "bold_title",
+            "position": "center",
+            "animation": "typewriter"
+          },
+          {
+            "text": "SAVE 50% OF YOUR TIME",
+            "timestamp": "0:05-0:10", 
+            "style": "highlight",
+            "position": "top_right",
+            "animation": "pop_in"
+          },
+          {
+            "text": "#1 RUNWAY ML",
+            "timestamp": "0:15-2:30",
+            "style": "tool_badge",
+            "position": "top_left",
+            "animation": "slide_in"
+          },
+          {
+            "text": "#2 CHATGPT",
+            "timestamp": "2:30-4:45",
+            "style": "tool_badge", 
+            "position": "top_left",
+            "animation": "slide_in"
+          },
+          {
+            "text": "#3 ELEVENLABS",
+            "timestamp": "4:45-6:30",
+            "style": "tool_badge",
+            "position": "top_left", 
+            "animation": "slide_in"
+          },
+          {
+            "text": "#4 CANVA AI",
+            "timestamp": "6:30-8:00",
+            "style": "tool_badge",
+            "position": "top_left",
+            "animation": "slide_in"
+          },
+          {
+            "text": "#5 BUFFER AI",
+            "timestamp": "8:00-9:15",
+            "style": "tool_badge",
+            "position": "top_left",
+            "animation": "slide_in"
+          },
+          {
+            "text": "SUBSCRIBE FOR MORE AI TIPS!",
+            "timestamp": "9:15-9:30",
+            "style": "cta_text",
+            "position": "center",
+            "animation": "pulse"
+          }
+        ]
+      },
+      "audio_plan": {
+        "voice_style": "energetic_professional",
+        "voice_settings": {
+          "pace": "medium_fast",
+          "tone": "enthusiastic", 
+          "clarity": "high",
+          "energy_level": 8
+        },
+        "background_music": {
+          "type": "upbeat_inspiring",
+          "track": "Tech_Innovation_Loop.mp3",
+          "volume": 0.25,
+          "fade_in": 2,
+          "fade_out": 3,
+          "sync_points": [
+            {"timestamp": "0:00", "action": "fade_in"},
+            {"timestamp": "0:15", "action": "reduce_for_demo"},
+            {"timestamp": "9:15", "action": "increase_for_outro"},
+            {"timestamp": "9:27", "action": "fade_out"}
+          ]
+        },
+        "sound_effects": [
+          {
+            "name": "whoosh_transition",
+            "timestamps": ["0:05", "2:30", "4:45", "6:30", "8:00"],
+            "volume": 0.6
+          },
+          {
+            "name": "notification_ding",
+            "timestamps": ["0:10", "9:20"],
+            "volume": 0.4
+          },
+          {
+            "name": "typing_sounds",
+            "timestamps": ["2:30-3:00", "3:30-4:00"],
+            "volume": 0.3
+          },
+          {
+            "name": "success_chime",
+            "timestamps": ["2:25", "4:40", "6:25", "7:55", "9:10"],
+            "volume": 0.5
+          },
+          {
+            "name": "click_sound",
+            "timestamps": ["1:30", "3:15", "5:20", "7:10", "8:45"],
+            "volume": 0.3
+          },
+          {
+            "name": "subscribe_bell",
+            "timestamps": ["9:25"],
+            "volume": 0.7
+          }
+        ],
+        "narration_notes": [
+          "Emphasize excitement in hook - high energy",
+          "Slow down slightly during technical demonstrations", 
+          "Build anticipation before each tool reveal",
+          "Match enthusiasm to visual energy",
+          "Strong, confident delivery for CTA"
+        ]
+      },
+      "platform_optimization": {
+        "youtube": {
+          "title": "5 AI Tools That Will Transform Your Content Creation Forever (Save 10+ Hours/Week)",
+          "description": "🚀 Discover the game-changing AI tools that top content creators use to produce viral content 3x faster! From automated video editing to intelligent script generation, learn how to revolutionize your workflow today!\n\n🎯 What You'll Learn:\n✅ Top 5 AI content creation tools (with demos)\n✅ How to automate 80% of your workflow\n✅ Real examples and case studies\n✅ Step-by-step implementation guide\n✅ Pro tips from successful creators\n\n⏰ Timestamps:\n00:00 - Why AI will change everything\n00:15 - Tool #1: Runway ML (Video Generation)\n02:30 - Tool #2: ChatGPT (Script Writing)\n04:45 - Tool #3: ElevenLabs (AI Voice)\n06:30 - Tool #4: Canva AI (Thumbnails)\n08:00 - Tool #5: Buffer AI (Social Media)\n09:15 - Your Action Plan\n\n🔗 Tools Mentioned (affiliate links):\n• Runway ML: https://runwayml.com\n• ChatGPT Plus: https://chat.openai.com\n• ElevenLabs: https://elevenlabs.io\n• Canva Pro: https://canva.com\n• Buffer: https://buffer.com\n\n📚 Free Resources:\n• AI Content Creator Checklist: [link]\n• Workflow Templates: [link]\n• Community Discord: [link]\n\n💡 More AI Productivity Content:\n🎥 AI Tools for Thumbnails: [link]\n🎥 ChatGPT for Creators: [link]\n🎥 Automate Your Entire Workflow: [link]\n\n👍 Like this video if it helped optimize your content creation!\n🔔 Subscribe for weekly AI productivity tips!\n💬 Comment below: Which tool will you try first?\n\n#AIContentCreation #ContentCreator #ProductivityHacks #AITools #VideoEditing #Automation #WorkflowOptimization #CreatorTips",
+          "hashtags": [
+            "#AIContentCreation",
+            "#ContentCreator", 
+            "#ProductivityHacks",
+            "#AITools",
+            "#VideoEditing",
+            "#Automation",
+            "#WorkflowOptimization",
+            "#CreatorTips",
+            "#TechReview",
+            "#AIProductivity"
+          ],
+          "thumbnail_concept": "Split screen: Overwhelmed creator (left) vs calm creator using AI (right). Bold text 'AI REVOLUTION' in center. Bright colors with AI brain graphic. Face shows amazement/excitement.",
+          "category": "Science & Technology",
+          "tags": ["AI tools", "content creation", "automation", "productivity", "video editing", "artificial intelligence", "creator tools", "workflow", "efficiency", "technology"],
+          "end_screen": {
+            "subscribe_element": true,
+            "suggested_videos": [
+              "AI Thumbnail Generator Review",
+              "ChatGPT Prompts for Creators"
+            ],
+            "playlist": "AI Productivity Series"
+          }
+        },
+        "tiktok": {
+          "title": "5 AI tools that will change your life 🤯",
+          "description": "These AI tools will save you HOURS every day! 🚀 Which one shocked you most? 👇\n\n#AITools #ContentCreator #ProductivityHacks #TechTok #AIRevolution #CreatorTips #Automation #VideoTips #TechReview #AIContentCreation",
+          "hashtags": [
+            "#AITools",
+            "#ContentCreator",
+            "#ProductivityHacks", 
+            "#TechTok",
+            "#AIRevolution",
+            "#CreatorTips",
+            "#Automation",
+            "#VideoTips",
+            "#TechReview",
+            "#AIContentCreation",
+            "#ViralTech",
+            "#CreatorHacks",
+            "#AITrends",
+            "#TechLife"
+          ],
+          "cover_image": "Bold text '5 AI TOOLS' with shocked face expression and AI graphics",
+          "duet_enabled": true,
+          "comments_enabled": true,
+          "optimization_notes": "Fast-paced, vertical format, focus on visual demos, trending audio overlay"
+        },
+        "instagram": {
+          "title": "5 AI Tools Every Creator Needs",
+          "description": "Game-changing AI tools that will transform your content creation workflow! 🚀✨\n\nWhich tool are you most excited to try? Let me know in the comments! 👇\n\n#AITools #ContentCreator #ProductivityHacks #CreatorTips #AIRevolution #TechReview #ContentCreation #Automation #CreatorLife #AIProductivity #DigitalCreator #CreatorCommunity #TechTips #WorkflowHacks #CreatorStruggles",
+          "hashtags": [
+            "#AITools",
+            "#ContentCreator",
+            "#ProductivityHacks",
+            "#CreatorTips", 
+            "#AIRevolution",
+            "#TechReview",
+            "#ContentCreation",
+            "#Automation",
+            "#CreatorLife",
+            "#AIProductivity",
+            "#DigitalCreator",
+            "#CreatorCommunity",
+            "#TechTips",
+            "#WorkflowHacks"
+          ],
+          "cover_image": "Clean, bright thumbnail with AI brain graphic and '5 TOOLS' text",
+          "story_highlights": "AI Tools",
+          "reel_optimization": {
+            "duration": "60 seconds max",
+            "aspect_ratio": "9:16",
+            "captions": "auto-generated with styling",
+            "trending_audio": "upbeat tech music"
+          }
+        },
+        "facebook": {
+          "title": "5 AI Tools That Will Transform Your Content Creation Forever",
+          "description": "Discover the game-changing AI tools that successful content creators are using to produce amazing content in half the time! From automated video editing to AI-powered script writing, these tools will revolutionize your workflow.\n\n🎯 Perfect for:\n• Content creators looking to scale\n• Small business owners creating content\n• Anyone wanting to work smarter, not harder\n\n💡 Get the free AI Content Creator Toolkit: [link]\n\n#AITools #ContentCreation #SmallBusiness #Productivity #MarketingTips",
+          "hashtags": [
+            "#AITools",
+            "#ContentCreation", 
+            "#SmallBusiness",
+            "#Productivity",
+            "#MarketingTips"
+          ],
+          "audience_targeting": "Content creators, small business owners, marketing professionals",
+          "call_to_action": "Learn More",
+          "thumbnail": "Professional, clean design suitable for business audience"
+        }
+      },
+      "production_estimate": {
+        "time_minutes": 180,
+        "cost_breakdown": {
+          "script_writing": 5.00,
+          "image_generation": 8.50,
+          "voice_narration": 12.00,
+          "video_editing": 15.00,
+          "thumbnail_creation": 3.00,
+          "platform_optimization": 2.50,
+          "total": 46.00
+        },
+        "complexity": "high",
+        "skill_level_required": "intermediate",
+        "estimated_views": {
+          "youtube": 75000,
+          "tiktok": 150000,
+          "instagram": 45000,
+          "facebook": 20000
+        },
+        "projected_roi": 4.8
+      },
+      "creation_metadata": {
+        "created_at": "2025-09-14T11:15:00Z",
+        "created_by": "ai_director_v2",
+        "version": "1.0",
+        "status": "ready_for_production",
+        "quality_score": 8.7,
+        "estimated_performance": "high"
+      }
+    },
+    {
+      "id": "content_002",
+      "opportunity_id": "opportunity_002", 
+      "trend_id": "trend_002",
+      "content_type": "tutorial",
+      "title": "Machine Learning Explained Simply - Build Your First Model in 10 Minutes",
+      "script": {
+        "hook": "Think machine learning is too complicated? I'll teach you the basics and help you build your first model in just 10 minutes!",
+        "main_content": "Let's break down machine learning into simple concepts anyone can understand. Think of ML as teaching a computer to recognize patterns, just like how you learned to recognize faces or read handwriting. We'll cover three main types: supervised learning where we learn with examples like a teacher showing flashcards, unsupervised learning where we find hidden patterns like organizing a messy room, and reinforcement learning where we learn through trial and error like learning to ride a bike. Then I'll walk you through building a simple prediction model using Python that can actually make predictions on real data.",
+        "cta": "If this demystified machine learning for you, give it a thumbs up! And if you want to dive deeper into Python and data science, check out my complete beginner course linked below.",
+        "full_script_with_timing": [
+          {
+            "timestamp": "0:00-0:08",
+            "content": "Think machine learning is too complicated? I'll teach you the basics and help you build your first model in just 10 minutes!",
+            "scene": "hook_intro",
+            "visual_cue": "Confused face transforms to confident smile"
+          },
+          {
+            "timestamp": "0:08-1:30",
+            "content": "Machine learning is just teaching computers to recognize patterns...",
+            "scene": "concept_explanation",
+            "visual_cue": "Simple animations showing pattern recognition"
+          },
+          {
+            "timestamp": "1:30-3:00",
+            "content": "The first type is supervised learning...",
+            "scene": "supervised_learning",
+            "visual_cue": "Teacher-student analogy with flashcards"
+          },
+          {
+            "timestamp": "3:00-4:30",
+            "content": "The second type is unsupervised learning...",
+            "scene": "unsupervised_learning", 
+            "visual_cue": "Organizing messy room analogy"
+          },
+          {
+            "timestamp": "4:30-6:00",
+            "content": "The third type is reinforcement learning...",
+            "scene": "reinforcement_learning",
+            "visual_cue": "Learning to ride bike analogy"
+          },
+          {
+            "timestamp": "6:00-9:00",
+            "content": "Now let's build your first model together...",
+            "scene": "hands_on_tutorial",
+            "visual_cue": "Screen recording of Python code"
+          },
+          {
+            "timestamp": "9:00-9:30",
+            "content": "If this demystified machine learning for you...",
+            "scene": "cta_outro",
+            "visual_cue": "Subscribe and course promotion"
+          }
+        ]
+      },
+      "visual_plan": {
+        "style": "educational_clean",
+        "color_scheme": {
+          "primary": "#2E86AB",
+          "secondary": "#A23B72",
+          "accent": "#F18F01", 
+          "background": "#FFFFFF"
+        },
+        "scenes": [
+          {
+            "name": "hook_intro",
+            "duration": 8,
+            "description": "Clean intro with presenter and simple graphics",
+            "elements": ["Presenter on camera", "ML complexity visualization", "Transformation graphic"]
+          },
+          {
+            "name": "concept_explanation", 
+            "duration": 82,
+            "description": "Animated explanations of ML basics",
+            "elements": ["Pattern recognition animations", "Brain-computer comparisons", "Simple diagrams"]
+          },
+          {
+            "name": "supervised_learning",
+            "duration": 90,
+            "description": "Teacher-student analogy visualization",
+            "elements": ["Flashcard animations", "Input-output examples", "Classification demos"]
+          },
+          {
+            "name": "unsupervised_learning",
+            "duration": 90,
+            "description": "Clustering and pattern finding visualization", 
+            "elements": ["Data clustering animations", "Hidden pattern reveals", "Grouping demonstrations"]
+          },
+          {
+            "name": "reinforcement_learning",
+            "duration": 90,
+            "description": "Trial and error learning visualization",
+            "elements": ["Reward system graphics", "Learning curve animations", "Game-like examples"]
+          },
+          {
+            "name": "hands_on_tutorial",
+            "duration": 180,
+            "description": "Screen recording of building first ML model",
+            "elements": ["Python code walkthrough", "Data visualization", "Model results"]
+          },
+          {
+            "name": "cta_outro",
+            "duration": 30,
+            "description": "Clear call-to-action with course promotion",
+            "elements": ["Subscribe animation", "Course preview", "Contact information"]
+          }
+        ],
+        "text_overlays": [
+          {
+            "text": "ML IN 10 MINUTES",
+            "timestamp": "0:00-0:08",
+            "style": "main_title"
+          },
+          {
+            "text": "SUPERVISED LEARNING",
+            "timestamp": "1:30-3:00", 
+            "style": "section_header"
+          },
+          {
+            "text": "UNSUPERVISED LEARNING",
+            "timestamp": "3:00-4:30",
+            "style": "section_header"
+          },
+          {
+            "text": "REINFORCEMENT LEARNING", 
+            "timestamp": "4:30-6:00",
+            "style": "section_header"
+          },
+          {
+            "text": "BUILD YOUR FIRST MODEL",
+            "timestamp": "6:00-9:00",
+            "style": "action_header"
+          }
+        ]
+      },
+      "audio_plan": {
+        "voice_style": "calm_educational",
+        "voice_settings": {
+          "pace": "moderate",
+          "tone": "friendly_teacher",
+          "clarity": "very_high",
+          "energy_level": 6
+        },
+        "background_music": {
+          "type": "subtle_focus",
+          "track": "Learning_Background.mp3",
+          "volume": 0.15
+        },
+        "sound_effects": [
+          {
+            "name": "gentle_transition",
+            "timestamps": ["1:30", "3:00", "4:30", "6:00"]
+          },
+          {
+            "name": "typing_sounds", 
+            "timestamps": ["6:00-9:00"]
+          },
+          {
+            "name": "success_ding",
+            "timestamps": ["8:45"]
+          }
+        ]
+      },
+      "platform_optimization": {
+        "youtube": {
+          "title": "Machine Learning Explained Simply - Build Your First Model in 10 Minutes (Complete Beginner Guide)",
+          "description": "🤖 Complete beginner? No problem! Learn machine learning basics and build your first working model step-by-step. No math degree required!\n\n📚 What's Covered:\n• What is Machine Learning really?\n• 3 types of ML explained with simple analogies\n• Building your first prediction model\n• Next steps in your ML journey\n• Resources for continued learning\n\n⚡ Perfect for:\n✅ Complete beginners\n✅ Career changers interested in tech\n✅ Students starting their data science journey\n✅ Anyone curious about AI and ML\n\n⏰ Timestamps:\n00:00 - Why ML isn't as scary as you think\n00:08 - What is Machine Learning?\n01:30 - Supervised Learning (with examples)\n03:00 - Unsupervised Learning (pattern finding)\n04:30 - Reinforcement Learning (trial & error)\n06:00 - Build Your First Model (hands-on)\n09:00 - Your Next Steps\n\n🛠️ Free Resources:\n• Python installation guide: [link]\n• Practice datasets: [link] \n• ML cheat sheet: [link]\n• Join our community: [link]\n\n📖 Recommended Learning Path:\n🎥 Python Basics for Beginners: [link]\n🎥 Data Analysis with Pandas: [link] \n🎥 Advanced ML Algorithms: [link]\n\n💬 Questions? Drop them in the comments!\n👍 Like if this made ML less intimidating!\n🔔 Subscribe for more beginner-friendly tech tutorials!\n\n#MachineLearning #Python #DataScience #BeginnerTutorial #AI #Programming #TechEducation #CareerChange",
+          "category": "Education"
+        },
+        "tiktok": {
+          "title": "I explained machine learning in 60 seconds 🤯",
+          "description": "ML isn't scary when you break it down! Which type surprised you most? 🧠\n\n#MachineLearning #TechTok #AI #LearnOnTikTok #Python #DataScience #TechExplained #Programming #EdTech #STEMTok",
+          "optimization_notes": "Focus on visual analogies, keep explanations very simple, use trending educational audio"
+        }
+      },
+      "production_estimate": {
+        "time_minutes": 120,
+        "cost_breakdown": {
+          "script_writing": 4.00,
+          "animation_creation": 15.00,
+          "screen_recording": 8.00,
+          "voice_narration": 10.00,
+          "video_editing": 12.00,
+          "total": 49.00
+        },
+        "complexity": "medium",
+        "projected_roi": 3.2
+      },
+      "creation_metadata": {
+        "created_at": "2025-09-14T12:30:00Z", 
+        "created_by": "ai_director_v2",
+        "version": "1.0",
+        "status": "ready_for_production",
+        "quality_score": 8.1
+      }
+    },
+    {
+      "id": "content_003",
+      "opportunity_id": "opportunity_003",
+      "trend_id": "trend_003", 
+      "content_type": "lifestyle",
+      "title": "My Remote Work Setup That Tripled My Productivity",
+      "script": {
+        "hook": "I was struggling to focus working from home until I discovered this simple setup that tripled my productivity.",
+        "main_content": "Let me show you the exact remote work setup and system that transformed my productivity. First, the physical setup: I'll walk you through my home office arrangement, lighting, and equipment that creates the perfect work environment. Then the digital setup: the apps, tools, and systems I use to stay organized and focused. Finally, the daily routine and habits that tie it all together. This isn't just about having cool gear - it's about creating a system that actually works.",
+        "cta": "If you're ready to level up your remote work game, hit that follow button and save this for later!"
+      },
+      "visual_plan": {
+        "style": "lifestyle_authentic",
+        "scenes": ["setup_reveal", "workspace_tour", "productivity_demo", "before_after_comparison"],
+        "text_overlays": ["PRODUCTIVITY TRIPLED", "GAME CHANGING SETUP", "FOLLOW FOR MORE TIPS"]
+      },
+      "audio_plan": {
+        "voice_style": "conversational_relatable",
+        "background_music": "modern_lifestyle",
+        "sound_effects": ["ambient_office_sounds"]
+      },
+      "platform_optimization": {
+        "youtube": {
+          "title": "My Remote Work Setup That Tripled Productivity (Complete Home Office Tour + Systems)",
+          "category": "Howto & Style"
+        },
+        "instagram": {
+          "title": "Remote work setup that changed my life ✨",
+          "description": "Swipe to see the transformation! What's your biggest WFH struggle? 👇\n\n#RemoteWork #ProductivityTips #HomeOffice #WorkFromHome #ProductivityHacks"
+        }
+      },
+      "production_estimate": {
+        "time_minutes": 90,
+        "cost_breakdown": {
+          "total": 35.00
+        },
+        "complexity": "low",
+        "projected_roi": 2.8
+      }
+    }
+  ],
+  "generated_assets": {
+    "content_001": {
+      "images": [
+        {
+          "filename": "content_001_intro.jpg",
+          "path": "/assets/images/content_001_intro.jpg",
+          "description": "Split screen showing overwhelmed vs calm creator",
+          "dimensions": "1920x1080",
+          "usage": "intro_scene"
+        },
+        {
+          "filename": "content_001_tools_montage.jpg", 
+          "path": "/assets/images/content_001_tools_montage.jpg",
+          "description": "Collage of all 5 AI tool interfaces",
+          "dimensions": "1920x1080",
+          "usage": "preview_montage"
+        },
+        {
+          "filename": "content_001_runway_demo.jpg",
+          "path": "/assets/images/content_001_runway_demo.jpg", 
+          "description": "Runway ML interface screenshot",
+          "dimensions": "1920x1080",
+          "usage": "tool_demo_1"
+        }
+      ],
+      "audio": {
+        "narration": {
+          "filename": "content_001_narration.mp3",
+          "path": "/assets/audio/content_001_narration.mp3",
+          "duration": 570,
+          "voice_model": "energetic_professional"
+        },
+        "background_music": {
+          "filename": "tech_innovation_loop.mp3",
+          "path": "/assets/audio/tech_innovation_loop.mp3",
+          "duration": 570,
+          "license": "royalty_free"
+        },
+        "sound_effects": [
+          {
+            "filename": "whoosh_transition.wav",
+            "path": "/assets/audio/sfx/whoosh_transition.wav"
+          },
+          {
+            "filename": "notification_ding.wav", 
+            "path": "/assets/audio/sfx/notification_ding.wav"
+          },
+          {
+            "filename": "success_chime.wav",
+            "path": "/assets/audio/sfx/success_chime.wav"
+          }
+        ]
+      },
+      "video": {
+        "final_video": {
+          "filename": "content_001_final.mp4",
+          "path": "/assets/video/content_001_final.mp4",
+          "duration": 570,
+          "resolution": "1920x1080",
+          "format": "mp4",
+          "file_size": "245.6 MB"
+        },
+        "platform_versions": {
+          "youtube": {
+            "filename": "content_001_youtube.mp4", 
+            "path": "/assets/video/platform/content_001_youtube.mp4",
+            "resolution": "1920x1080",
+            "aspect_ratio": "16:9"
+          },
+          "tiktok": {
+            "filename": "content_001_tiktok.mp4",
+            "path": "/assets/video/platform/content_001_tiktok.mp4", 
+            "resolution": "1080x1920",
+            "aspect_ratio": "9:16",
+            "duration": 60
+          },
+          "instagram": {
+            "filename": "content_001_instagram.mp4",
+            "path": "/assets/video/platform/content_001_instagram.mp4",
+            "resolution": "1080x1920", 
+            "aspect_ratio": "9:16",
+            "duration": 60
+          }
+        }
+      },
+      "thumbnails": {
+        "youtube": {
+          "filename": "content_001_youtube_thumb.jpg",
+          "path": "/assets/thumbnails/content_001_youtube_thumb.jpg",
+          "dimensions": "1280x720",
+          "description": "Split screen with AI revolution text overlay"
+        },
+        "tiktok": {
+          "filename": "content_001_tiktok_cover.jpg",
+          "path": "/assets/thumbnails/content_001_tiktok_cover.jpg", 
+          "dimensions": "1080x1920",
+          "description": "Vertical cover with shocked face and AI graphics"
+        }
+      }
+    },
+    "content_002": {
+      "images": [
+        {
+          "filename": "content_002_concept_intro.jpg",
+          "path": "/assets/images/content_002_concept_intro.jpg",
+          "description": "Clean educational graphics explaining ML basics",
+          "dimensions": "1920x1080"
+        },
+        {
+          "filename": "content_002_supervised_learning.jpg", 
+          "path": "/assets/images/content_002_supervised_learning.jpg",
+          "description": "Teacher-student analogy visualization",
+          "dimensions": "1920x1080"
+        },
+        {
+          "filename": "content_002_code_demo.jpg",
+          "path": "/assets/images/content_002_code_demo.jpg",
+          "description": "Python code interface for ML model",
+          "dimensions": "1920x1080"
+        }
+      ],
+      "audio": {
+        "narration": {
+          "filename": "content_002_narration.mp3",
+          "path": "/assets/audio/content_002_narration.mp3",
+          "duration": 570,
+          "voice_model": "calm_educational"
+        }
+      },
+      "video": {
+        "final_video": {
+          "filename": "content_002_final.mp4", 
+          "path": "/assets/video/content_002_final.mp4",
+          "duration": 570,
+          "resolution": "1920x1080"
+        }
+      }
+    }
+  },
+  "performance_predictions": {
+    "content_001": {
+      "youtube": {
+        "estimated_views": {
+          "first_week": 15000,
+          "first_month": 75000,
+          "three_months": 150000
+        },
+        "engagement_metrics": {
+          "estimated_ctr": 0.08,
+          "estimated_retention": 0.65,
+          "estimated_like_ratio": 0.045
+        },
+        "monetization": {
+          "estimated_ad_revenue": 150.00,
+          "potential_affiliate_commission": 320.00,
+          "course_sales_potential": 890.00
+        }
+      },
+      "tiktok": {
+        "estimated_views": {
+          "first_week": 45000,
+          "first_month": 150000
+        },
+        "viral_potential": "high",
+        "best_posting_time": "7:00 PM EST"
+      },
+      "instagram": {
+        "estimated_views": {
+          "first_week": 12000,
+          "first_month": 45000
+        },
+        "story_reshare_potential": "medium",
+        "save_rate_prediction": 0.12
+      }
+    },
+    "content_002": {
+      "youtube": {
+        "estimated_views": {
+          "first_week": 8000,
+          "first_month": 35000,
+          "three_months": 85000
+        },
+        "target_audience": "beginner_programmers",
+        "search_ranking_potential": "high for 'machine learning basics'"
+      }
+    }
+  },
+  "content_series": [
+    {
+      "series_name": "AI Productivity Mastery",
+      "content_ids": ["content_001", "content_004", "content_007"],
+      "description": "Complete series on using AI tools for maximum productivity",
+      "total_estimated_views": 280000,
+      "cross_promotion_strategy": "End screen links and playlist optimization"
+    },
+    {
+      "series_name": "Tech Explained Simply", 
+      "content_ids": ["content_002", "content_005", "content_008"],
+      "description": "Breaking down complex tech concepts for beginners",
+      "total_estimated_views": 165000,
+      "educational_focus": true
+    }
+  ],
+  "content_calendar": {
+    "september_2025": [
+      {
+        "date": "2025-09-15",
+        "content_id": "content_001",
+        "platforms": ["youtube", "tiktok", "instagram"],
+        "posting_times": {
+          "youtube": "2:00 PM EST",
+          "tiktok": "7:00 PM EST", 
+          "instagram": "6:00 PM EST"
+        }
+      },
+      {
+        "date": "2025-09-18",
+        "content_id": "content_002",
+        "platforms": ["youtube"],
+        "posting_times": {
+          "youtube": "1:00 PM EST"
+        }
+      },
+      {
+        "date": "2025-09-20",
+        "content_id": "content_003",
+        "platforms": ["instagram", "tiktok"],
+        "posting_times": {
+          "instagram": "5:00 PM EST",
+          "tiktok": "8:00 PM EST"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "generation_timestamp": "2025-09-14T11:15:00Z",
+    "total_content_plans": 3,
+    "average_production_time": 130,
+    "total_estimated_cost": 130.00,
+    "target_platforms": ["youtube", "tiktok", "instagram", "facebook"],
+    "content_types_distribution": {
+      "educational": 2,
+      "tutorial": 1,
+      "lifestyle": 1
+    },
+    "complexity_distribution": {
+      "low": 1,
+      "medium": 1, 
+      "high": 1
+    },
+    "estimated_total_views": {
+      "youtube": 195000,
+      "tiktok": 195000,
+      "instagram": 102000,
+      "total": 492000
+    },
+    "projected_total_roi": 3.63,
+    "quality_metrics": {
+      "average_script_length": 450,
+      "average_scene_count": 5.7,
+      "platform_optimization_completeness": 0.95,
+      "seo_optimization_score": 8.2
+    }
+  }
+}{
+  "content_plans": [
+    {
+      "id": "content_001",
+      "opportunity_id": "opportunity_001",
+      "trend_id": "trend_001",
+      "content_type": "educational",
+      "title": "5 AI Tools That Will Transform Your Content Creation Forever",
+      "script": {
+        "hook": "Want to create amazing content in half the time? Here's how AI is changing everything for creators

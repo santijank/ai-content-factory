@@ -1,0 +1,462 @@
+# Quality Tiers Configuration
+# Define quality tiers for content production with associated costs and features
+
+# Quality Tier Definitions
+tiers:
+  # Budget Tier - Free/Low cost for basic content
+  budget:
+    name: "Budget"
+    description: "Basic quality content using free/low-cost AI services"
+    target_audience: "Beginners, testing, high-volume content"
+    estimated_cost_per_content: 0.10  # USD
+    production_time_minutes: 15
+    
+    # Service selections
+    services:
+      text_ai: "groq"  # Free tier
+      image_ai: "stable_diffusion_local"  # Self-hosted
+      audio_ai: "gtts"  # Free Google TTS
+      video_editing: "ffmpeg_local"  # Self-hosted
+      
+    # Quality parameters
+    quality_settings:
+      text_generation:
+        max_tokens: 2048
+        temperature: 0.7
+        top_p: 0.9
+        model_size: "small"
+        
+      image_generation:
+        resolution: "512x512"
+        steps: 20
+        guidance_scale: 7.5
+        batch_size: 1
+        
+      audio_generation:
+        sample_rate: 22050
+        bit_rate: "128k"
+        voice_quality: "standard"
+        
+      video_processing:
+        resolution: "720p"
+        frame_rate: 30
+        bitrate: "2M"
+        codec: "h264"
+        
+    # Content specifications
+    content_specs:
+      script_length_words: [100, 300]
+      image_count: [1, 3]
+      video_duration_seconds: [30, 120]
+      thumbnail_variants: 1
+      
+    # Platform optimization
+    platforms:
+      youtube:
+        title_optimization: "basic"
+        description_length: "short"
+        tags_count: 10
+        thumbnail_quality: "standard"
+        
+      tiktok:
+        caption_optimization: "basic"
+        hashtag_research: "automatic"
+        music_suggestions: false
+        
+      instagram:
+        caption_optimization: "basic"
+        hashtag_count: 10
+        story_templates: "basic"
+        
+      facebook:
+        post_optimization: "basic"
+        engagement_hooks: "simple"
+        
+    # Features included
+    features:
+      trend_analysis: "basic"
+      seo_optimization: "minimal"
+      a_b_testing: false
+      performance_tracking: "basic"
+      automated_posting: true
+      content_calendar: false
+      brand_consistency: "minimal"
+      custom_templates: false
+      
+  # Balanced Tier - Good quality at reasonable cost
+  balanced:
+    name: "Balanced"
+    description: "High-quality content with good cost-effectiveness"
+    target_audience: "Content creators, small businesses, regular publishing"
+    estimated_cost_per_content: 2.50  # USD
+    production_time_minutes: 30
+    
+    # Service selections
+    services:
+      text_ai: "openai_gpt35"  # GPT-3.5 Turbo
+      image_ai: "leonardo_ai"  # Leonardo AI
+      audio_ai: "azure_tts"  # Azure Text-to-Speech
+      video_editing: "cloudinary"  # Cloud-based editing
+      
+    # Quality parameters
+    quality_settings:
+      text_generation:
+        max_tokens: 4096
+        temperature: 0.7
+        top_p: 0.9
+        model_size: "medium"
+        
+      image_generation:
+        resolution: "1024x1024"
+        steps: 30
+        guidance_scale: 7
+        batch_size: 2
+        style_consistency: true
+        
+      audio_generation:
+        sample_rate: 44100
+        bit_rate: "256k"
+        voice_quality: "premium"
+        emotion_control: true
+        
+      video_processing:
+        resolution: "1080p"
+        frame_rate: 60
+        bitrate: "5M"
+        codec: "h264"
+        color_correction: "auto"
+        
+    # Content specifications
+    content_specs:
+      script_length_words: [200, 800]
+      image_count: [2, 8]
+      video_duration_seconds: [60, 600]
+      thumbnail_variants: 3
+      
+    # Platform optimization
+    platforms:
+      youtube:
+        title_optimization: "advanced"
+        description_length: "medium"
+        tags_count: 20
+        thumbnail_quality: "high"
+        chapter_timestamps: true
+        
+      tiktok:
+        caption_optimization: "advanced"
+        hashtag_research: "trending"
+        music_suggestions: true
+        effect_recommendations: true
+        
+      instagram:
+        caption_optimization: "advanced"
+        hashtag_count: 25
+        story_templates: "premium"
+        reel_optimization: true
+        
+      facebook:
+        post_optimization: "advanced"
+        engagement_hooks: "sophisticated"
+        audience_targeting: "basic"
+        
+    # Features included
+    features:
+      trend_analysis: "advanced"
+      seo_optimization: "comprehensive"
+      a_b_testing: "basic"
+      performance_tracking: "detailed"
+      automated_posting: true
+      content_calendar: true
+      brand_consistency: "good"
+      custom_templates: true
+      competitor_analysis: "basic"
+      
+  # Premium Tier - Highest quality for professional content
+  premium:
+    name: "Premium"
+    description: "Professional-grade content with maximum quality and features"
+    target_audience: "Agencies, enterprises, viral content creators"
+    estimated_cost_per_content: 8.00  # USD
+    production_time_minutes: 60
+    
+    # Service selections
+    services:
+      text_ai: "claude_sonnet"  # Claude 3 Sonnet
+      image_ai: "midjourney"  # Midjourney
+      audio_ai: "elevenlabs"  # ElevenLabs
+      video_editing: "adobe_premiere_api"  # Adobe Premiere
+      
+    # Quality parameters
+    quality_settings:
+      text_generation:
+        max_tokens: 8192
+        temperature: 0.7
+        top_p: 0.9
+        model_size: "large"
+        fine_tuning: true
+        
+      image_generation:
+        resolution: "2048x2048"
+        steps: 50
+        guidance_scale: 8
+        batch_size: 4
+        style_consistency: true
+        brand_alignment: true
+        
+      audio_generation:
+        sample_rate: 48000
+        bit_rate: "320k"
+        voice_quality: "ultra"
+        emotion_control: true
+        voice_cloning: true
+        
+      video_processing:
+        resolution: "4K"
+        frame_rate: 60
+        bitrate: "20M"
+        codec: "h265"
+        color_correction: "professional"
+        motion_graphics: true
+        
+    # Content specifications
+    content_specs:
+      script_length_words: [500, 2000]
+      image_count: [5, 20]
+      video_duration_seconds: [120, 1800]
+      thumbnail_variants: 10
+      
+    # Platform optimization
+    platforms:
+      youtube:
+        title_optimization: "expert"
+        description_length: "comprehensive"
+        tags_count: 40
+        thumbnail_quality: "premium"
+        chapter_timestamps: true
+        end_screen_optimization: true
+        
+      tiktok:
+        caption_optimization: "expert"
+        hashtag_research: "comprehensive"
+        music_suggestions: true
+        effect_recommendations: true
+        trend_prediction: true
+        
+      instagram:
+        caption_optimization: "expert"
+        hashtag_count: 30
+        story_templates: "custom"
+        reel_optimization: true
+        carousel_optimization: true
+        
+      facebook:
+        post_optimization: "expert"
+        engagement_hooks: "expert"
+        audience_targeting: "advanced"
+        event_optimization: true
+        
+    # Features included
+    features:
+      trend_analysis: "expert"
+      seo_optimization: "advanced"
+      a_b_testing: "comprehensive"
+      performance_tracking: "analytics_suite"
+      automated_posting: true
+      content_calendar: true
+      brand_consistency: "strict"
+      custom_templates: true
+      competitor_analysis: "comprehensive"
+      roi_optimization: true
+      audience_segmentation: true
+      personalization: true
+
+# Tier Comparison Matrix
+comparison:
+  features:
+    - name: "AI Text Quality"
+      budget: "Basic (GPT-3 level)"
+      balanced: "High (GPT-3.5 level)"
+      premium: "Expert (GPT-4/Claude level)"
+      
+    - name: "Image Resolution"
+      budget: "512x512px"
+      balanced: "1024x1024px"
+      premium: "2048x2048px"
+      
+    - name: "Audio Quality"
+      budget: "Standard TTS"
+      balanced: "Premium Neural Voices"
+      premium: "AI Voice Cloning"
+      
+    - name: "Video Resolution"
+      budget: "720p"
+      balanced: "1080p"
+      premium: "4K"
+      
+    - name: "Production Time"
+      budget: "15 minutes"
+      balanced: "30 minutes"
+      premium: "60 minutes"
+      
+    - name: "Cost per Content"
+      budget: "$0.10"
+      balanced: "$2.50"
+      premium: "$8.00"
+      
+    - name: "Platform Optimization"
+      budget: "Basic"
+      balanced: "Advanced"
+      premium: "Expert"
+      
+    - name: "A/B Testing"
+      budget: "❌"
+      balanced: "✅ Basic"
+      premium: "✅ Advanced"
+      
+    - name: "Analytics"
+      budget: "Basic"
+      balanced: "Detailed"
+      premium: "Comprehensive"
+      
+    - name: "Custom Branding"
+      budget: "❌"
+      balanced: "✅"
+      premium: "✅ Advanced"
+
+# Tier Selection Rules
+selection_rules:
+  # Automatic tier selection based on requirements
+  auto_selection:
+    enabled: true
+    
+    # Rules for automatic tier selection
+    rules:
+      - condition: "budget_limit <= 1.00"
+        tier: "budget"
+        
+      - condition: "urgent_delivery == true"
+        tier: "budget"
+        
+      - condition: "expected_views < 1000"
+        tier: "budget"
+        
+      - condition: "expected_views >= 1000 AND expected_views < 10000"
+        tier: "balanced"
+        
+      - condition: "expected_views >= 10000"
+        tier: "premium"
+        
+      - condition: "monetization_enabled == true"
+        tier: "balanced"  # Minimum for monetized content
+        
+      - condition: "brand_account == true"
+        tier: "premium"
+        
+  # Manual override options
+  manual_override:
+    enabled: true
+    require_justification: true
+    approval_required: false
+
+# Quality Assurance
+quality_assurance:
+  # Quality checks per tier
+  budget:
+    grammar_check: true
+    spam_detection: true
+    basic_fact_check: false
+    plagiarism_check: false
+    brand_guideline_check: false
+    
+  balanced:
+    grammar_check: true
+    spam_detection: true
+    basic_fact_check: true
+    plagiarism_check: true
+    brand_guideline_check: true
+    sentiment_analysis: true
+    
+  premium:
+    grammar_check: true
+    spam_detection: true
+    basic_fact_check: true
+    plagiarism_check: true
+    brand_guideline_check: true
+    sentiment_analysis: true
+    advanced_fact_check: true
+    legal_compliance_check: true
+    cultural_sensitivity_check: true
+
+# Pricing and Billing
+pricing:
+  # Billing models
+  billing_models:
+    - name: "pay_per_content"
+      description: "Pay for each piece of content created"
+      
+    - name: "subscription"
+      description: "Monthly subscription with usage limits"
+      
+    - name: "credits"
+      description: "Pre-purchase credits for flexible usage"
+      
+  # Subscription plans
+  subscription_plans:
+    starter:
+      monthly_cost: 29.99
+      included_credits: 50
+      max_tier: "budget"
+      
+    professional:
+      monthly_cost: 99.99
+      included_credits: 200
+      max_tier: "balanced"
+      
+    enterprise:
+      monthly_cost: 299.99
+      included_credits: 1000
+      max_tier: "premium"
+      custom_features: true
+
+# Performance Metrics
+performance_metrics:
+  # Expected performance by tier
+  budget:
+    content_creation_success_rate: 0.85
+    user_satisfaction_score: 3.5
+    avg_engagement_rate: 0.02
+    
+  balanced:
+    content_creation_success_rate: 0.92
+    user_satisfaction_score: 4.2
+    avg_engagement_rate: 0.05
+    
+  premium:
+    content_creation_success_rate: 0.98
+    user_satisfaction_score: 4.8
+    avg_engagement_rate: 0.08
+
+# Environment-specific overrides
+environments:
+  development:
+    tiers:
+      budget:
+        estimated_cost_per_content: 0.01
+      balanced:
+        estimated_cost_per_content: 0.10
+      premium:
+        estimated_cost_per_content: 0.50
+        
+  staging:
+    selection_rules:
+      auto_selection:
+        enabled: false  # Manual selection only in staging
+        
+  production:
+    quality_assurance:
+      budget:
+        plagiarism_check: true  # Enable even for budget tier
+      balanced:
+        advanced_fact_check: true
+      premium:
+        legal_compliance_check: true

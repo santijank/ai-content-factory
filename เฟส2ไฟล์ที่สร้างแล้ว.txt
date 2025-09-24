@@ -1,0 +1,37 @@
+Services/service_registry.py
+Services/ai_director.py
+image_ai/ base_image_ai.py
+image_ai/ stable_diffusion.py
+image_ai/leonardo_ai.py
+image_ai/midjourney_api.py
+image_ai/base_image_ai.py
+text_ai/groq_service.py
+text_ai/openai_service.py
+text_ai/claude_service.py
+shared/models/content_plan.py
+content-engine/services/trend_analyzer.py
+content-engine/services /opportunity_engine.py
+content-engine/services /content_pipeline.py
+content-engine/services /content_generator.py
+content-engine/ai_services/audio_ai/base_audio_ai.py
+content-engine/ai_services/audio_ai/__init__.py
+content-engine/ai_services/audio_ai/gtts_service.py
+content-engine/ai_services/audio_ai/azure_tts.py
+content-engine/ai_services/audio_ai/elevenlabs_service.py
+content-engine/models/quality_tier.py
+content-engine/models/__init__.py
+content-engine/models/content_opportunity.py
+platform-manager/services/uploaders/youtube_uploader.py
+platform-manager/services/uploaders/tiktok_uploader.py
+content-engine/utils/__init__.py
+content-engine/utils/config_manager.py
+content-engine/utils/video_assembler.py
+content-engine/app.py
+config/app_config.yaml
+content-engine/templates/dashboard.html
+platform-manager/app.py
+ platform-manager/services/platform_manager.py
+ platform-manager/models/platform_type.py
+platform-manager/models/upload_metadata.py
+platform-manager/utils/content_optimizer.py
+platform-manager/utils/config_manager.py

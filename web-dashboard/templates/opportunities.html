@@ -1,0 +1,807 @@
+{% extends "base.html" %}
+
+{% block title %}Opportunities - AI Content Factory{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="text-white mb-2">
+                        <i class="fas fa-lightbulb me-3"></i>
+                        Content Opportunities
+                    </h1>
+                    <p class="text-white-50 mb-0">AI-generated content ideas with potential analysis</p>
+                </div>
+                <div>
+                    <button class="btn btn-light me-2" onclick="refreshOpportunities()">
+                        <i class="fas fa-sync-alt me-2"></i>
+                        Refresh
+                    </button>
+                    <button class="btn btn-success" onclick="selectBestOpportunities()">
+                        <i class="fas fa-star me-2"></i>
+                        Select Best
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Controls -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-lg-2 col-md-4 mb-2">
+                            <select class="form-select" id="statusFilter" onchange="filterOpportunities()">
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="selected">Selected</option>
+                                <option value="in-progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-md-4 mb-2">
+                            <select class="form-select" id="competitionFilter" onchange="filterOpportunities()">
+                                <option value="">All Competition</option>
+                                <option value="low">Low Competition</option>
+                                <option value="medium">Medium Competition</option>
+                                <option value="high">High Competition</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-md-4 mb-2">
+                            <select class="form-select" id="roiFilter" onchange="filterOpportunities()">
+                                <option value="">All ROI</option>
+                                <option value="high">High ROI (>5x)</option>
+                                <option value="medium">Medium ROI (2-5x)</option>
+                                <option value="low">Low ROI (<2x)</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-md-4 mb-2">
+                            <select class="form-select" id="sortFilter" onchange="filterOpportunities()">
+                                <option value="priority_score">Priority Score</option>
+                                <option value="estimated_roi">ROI</option>
+                                <option value="estimated_views">Est. Views</option>
+                                <option value="production_cost">Cost</option>
+                                <option value="created_at">Latest</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-4 col-md-8 mb-2">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search opportunities..." onkeyup="searchOpportunities()">
+                                <button class="btn btn-outline-secondary" onclick="clearSearch()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-lightbulb fa-2x mb-2"></i>
+                    <h4 id="totalOpportunities">-</h4>
+                    <p class="mb-0">Total Opportunities</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-star fa-2x mb-2"></i>
+                    <h4 id="highROI">-</h4>
+                    <p class="mb-0">High ROI (>5x)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                    <h4 id="lowCompetition">-</h4>
+                    <p class="mb-0">Low Competition</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <h4 id="selectedOpportunities">-</h4>
+                    <p class="mb-0">Selected</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Opportunities Grid -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-transparent border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Content Opportunities
+                        </h5>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-3" id="opportunitiesCount">0 opportunities</span>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-secondary active" onclick="setViewMode('grid')">
+                                    <i class="fas fa-th"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setViewMode('list')">
+                                    <i class="fas fa-list"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="opportunitiesContainer">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-3 text-muted">Loading opportunities...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Opportunity Details Modal -->
+<div class="modal fade" id="opportunityModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Opportunity Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalContent">
+                <!-- Content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="selectOpportunityBtn">
+                    <i class="fas fa-check me-2"></i>
+                    Select for Content Creation
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let allOpportunities = [];
+    let filteredOpportunities = [];
+    let viewMode = 'grid';
+    let selectedOpportunity = null;
+
+    // Load opportunities data
+    async function loadOpportunities() {
+        try {
+            const params = new URLSearchParams({
+                status: document.getElementById('statusFilter').value,
+                sort_by: document.getElementById('sortFilter').value,
+                order: 'desc'
+            });
+
+            const response = await fetch(`/api/opportunities?${params}`);
+            const data = await response.json();
+            
+            allOpportunities = data.opportunities;
+            filteredOpportunities = [...allOpportunities];
+            
+            updateStats();
+            displayOpportunities();
+            
+        } catch (error) {
+            console.error('Error loading opportunities:', error);
+            showNotification('Error loading opportunities', 'danger');
+        }
+    }
+
+    function updateStats() {
+        const total = allOpportunities.length;
+        const highROI = allOpportunities.filter(o => o.estimated_roi >= 5.0).length;
+        const lowCompetition = allOpportunities.filter(o => o.competition_level === 'low').length;
+        const selected = allOpportunities.filter(o => o.status === 'selected').length;
+        
+        document.getElementById('totalOpportunities').textContent = total;
+        document.getElementById('highROI').textContent = highROI;
+        document.getElementById('lowCompetition').textContent = lowCompetition;
+        document.getElementById('selectedOpportunities').textContent = selected;
+    }
+
+    function displayOpportunities() {
+        const container = document.getElementById('opportunitiesContainer');
+        
+        document.getElementById('opportunitiesCount').textContent = `${filteredOpportunities.length} opportunities`;
+
+        if (filteredOpportunities.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-lightbulb fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No opportunities found</h5>
+                    <p class="text-muted">Analyze some trends first to generate content opportunities</p>
+                    <a href="/trends" class="btn btn-primary">
+                        <i class="fas fa-trending-up me-2"></i>
+                        Go to Trends
+                    </a>
+                </div>
+            `;
+            return;
+        }
+
+        const opportunitiesHtml = viewMode === 'grid' 
+            ? createGridView(filteredOpportunities)
+            : createListView(filteredOpportunities);
+            
+        container.innerHTML = opportunitiesHtml;
+    }
+
+    function createGridView(opportunities) {
+        const rows = [];
+        for (let i = 0; i < opportunities.length; i += 3) {
+            const rowOpportunities = opportunities.slice(i, i + 3);
+            const row = `
+                <div class="row mb-4">
+                    ${rowOpportunities.map(opp => createOpportunityCard(opp)).join('')}
+                </div>
+            `;
+            rows.push(row);
+        }
+        return rows.join('');
+    }
+
+    function createListView(opportunities) {
+        return `
+            <div class="list-view">
+                ${opportunities.map(opp => createOpportunityListItem(opp)).join('')}
+            </div>
+        `;
+    }
+
+    function createOpportunityCard(opportunity) {
+        const roiColor = getRoiColor(opportunity.estimated_roi);
+        const competitionColor = getCompetitionColor(opportunity.competition_level);
+        const statusBadge = getStatusBadge(opportunity.status);
+        
+        return `
+            <div class="col-lg-4 col-md-6">
+                <div class="opportunity-card h-100" data-opportunity-id="${opportunity.id}">
+                    <div class="card-header d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="badge bg-light text-primary small">${opportunity.topic}</span>
+                            <span class="badge bg-outline-secondary small">${opportunity.category}</span>
+                        </div>
+                        ${statusBadge}
+                    </div>
+                    
+                    <div class="card-body">
+                        <h6 class="card-title mb-3">${opportunity.suggested_angle}</h6>
+                        
+                        <div class="metrics mb-3">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="metric">
+                                        <i class="fas fa-eye text-primary me-1"></i>
+                                        <span class="small text-muted">Views:</span>
+                                        <strong>${formatNumber(opportunity.estimated_views)}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="metric">
+                                        <i class="fas fa-chart-line ${roiColor} me-1"></i>
+                                        <span class="small text-muted">ROI:</span>
+                                        <strong class="${roiColor}">${opportunity.estimated_roi.toFixed(1)}x</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <div class="metric">
+                                        <i class="fas fa-dollar-sign text-warning me-1"></i>
+                                        <span class="small text-muted">Cost:</span>
+                                        <strong>${formatCurrency(opportunity.production_cost)}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="metric">
+                                        <i class="fas fa-shield-alt ${competitionColor} me-1"></i>
+                                        <span class="small text-muted">Competition:</span>
+                                        <strong class="${competitionColor}">${opportunity.competition_level}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="priority-score mb-3">
+                            <span class="small text-muted">Priority Score:</span>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-gradient-primary" 
+                                     style="width: ${opportunity.priority_score * 10}%"></div>
+                            </div>
+                            <div class="text-end mt-1">
+                                <strong class="text-primary">${opportunity.priority_score.toFixed(1)}/10</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-info btn-sm" onclick="viewOpportunityDetails('${opportunity.id}')">
+                                <i class="fas fa-eye me-1"></i>
+                                View Details
+                            </button>
+                            ${opportunity.status === 'pending' ? `
+                                <button class="btn btn-primary btn-sm" onclick="selectOpportunity('${opportunity.id}')">
+                                    <i class="fas fa-check me-1"></i>
+                                    Select for Creation
+                                </button>
+                            ` : `
+                                <button class="btn btn-success btn-sm" disabled>
+                                    <i class="fas fa-check me-1"></i>
+                                    ${opportunity.status.charAt(0).toUpperCase() + opportunity.status.slice(1)}
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function createOpportunityListItem(opportunity) {
+        const roiColor = getRoiColor(opportunity.estimated_roi);
+        const competitionColor = getCompetitionColor(opportunity.competition_level);
+        const statusBadge = getStatusBadge(opportunity.status);
+        
+        return `
+            <div class="opportunity-list-item mb-3" data-opportunity-id="${opportunity.id}">
+                <div class="row align-items-center">
+                    <div class="col-lg-5">
+                        <div class="d-flex align-items-start">
+                            <div class="opportunity-icon me-3">
+                                <i class="fas fa-lightbulb fa-2x text-warning"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">${opportunity.suggested_angle}</h6>
+                                <div class="d-flex align-items-center mb-1">
+                                    <span class="badge bg-light text-primary me-2">${opportunity.topic}</span>
+                                    <span class="badge bg-outline-secondary me-2">${opportunity.category}</span>
+                                    ${statusBadge}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <div class="row small">
+                            <div class="col-6">
+                                <div class="metric mb-1">
+                                    <i class="fas fa-eye text-primary me-1"></i>
+                                    <strong>${formatNumber(opportunity.estimated_views)}</strong>
+                                </div>
+                                <div class="metric">
+                                    <i class="fas fa-dollar-sign text-warning me-1"></i>
+                                    <strong>${formatCurrency(opportunity.production_cost)}</strong>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="metric mb-1">
+                                    <i class="fas fa-chart-line ${roiColor} me-1"></i>
+                                    <strong class="${roiColor}">${opportunity.estimated_roi.toFixed(1)}x</strong>
+                                </div>
+                                <div class="metric">
+                                    <i class="fas fa-shield-alt ${competitionColor} me-1"></i>
+                                    <strong class="${competitionColor}">${opportunity.competition_level}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-2 text-center">
+                        <div class="priority-score">
+                            <div class="circular-progress">
+                                <strong class="text-primary">${opportunity.priority_score.toFixed(1)}</strong>
+                            </div>
+                            <small class="text-muted">Priority</small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-1 text-end">
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="viewOpportunityDetails('${opportunity.id}')">
+                                    <i class="fas fa-eye me-2"></i>View Details
+                                </a></li>
+                                ${opportunity.status === 'pending' ? `
+                                    <li><a class="dropdown-item" href="#" onclick="selectOpportunity('${opportunity.id}')">
+                                        <i class="fas fa-check me-2"></i>Select
+                                    </a></li>
+                                ` : ''}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" onclick="deleteOpportunity('${opportunity.id}')">
+                                    <i class="fas fa-trash me-2"></i>Delete
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function getRoiColor(roi) {
+        if (roi >= 5.0) return 'text-success';
+        if (roi >= 2.0) return 'text-warning';
+        return 'text-danger';
+    }
+
+    function getCompetitionColor(level) {
+        switch (level) {
+            case 'low': return 'text-success';
+            case 'medium': return 'text-warning';
+            case 'high': return 'text-danger';
+            default: return 'text-muted';
+        }
+    }
+
+    function getStatusBadge(status) {
+        const badges = {
+            'pending': '<span class="badge status-pending">Pending</span>',
+            'selected': '<span class="badge status-selected">Selected</span>',
+            'in-progress': '<span class="badge status-in-progress">In Progress</span>',
+            'completed': '<span class="badge status-completed">Completed</span>'
+        };
+        return badges[status] || '<span class="badge bg-secondary">Unknown</span>';
+    }
+
+    function setViewMode(mode) {
+        viewMode = mode;
+        
+        // Update active button
+        document.querySelectorAll('.btn-group .btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.closest('.btn').classList.add('active');
+        
+        displayOpportunities();
+    }
+
+    // Filter functions
+    function filterOpportunities() {
+        const status = document.getElementById('statusFilter').value;
+        const competition = document.getElementById('competitionFilter').value;
+        const roiFilter = document.getElementById('roiFilter').value;
+        const sortBy = document.getElementById('sortFilter').value;
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        
+        filteredOpportunities = allOpportunities.filter(opp => {
+            const matchesStatus = !status || opp.status === status;
+            const matchesCompetition = !competition || opp.competition_level === competition;
+            
+            let matchesROI = true;
+            if (roiFilter === 'high') matchesROI = opp.estimated_roi >= 5.0;
+            else if (roiFilter === 'medium') matchesROI = opp.estimated_roi >= 2.0 && opp.estimated_roi < 5.0;
+            else if (roiFilter === 'low') matchesROI = opp.estimated_roi < 2.0;
+            
+            const matchesSearch = !searchTerm || 
+                opp.suggested_angle.toLowerCase().includes(searchTerm) ||
+                opp.topic.toLowerCase().includes(searchTerm) ||
+                opp.category.toLowerCase().includes(searchTerm);
+            
+            return matchesStatus && matchesCompetition && matchesROI && matchesSearch;
+        });
+        
+        // Sort opportunities
+        filteredOpportunities.sort((a, b) => {
+            switch (sortBy) {
+                case 'estimated_roi':
+                    return b.estimated_roi - a.estimated_roi;
+                case 'estimated_views':
+                    return b.estimated_views - a.estimated_views;
+                case 'production_cost':
+                    return a.production_cost - b.production_cost;
+                case 'created_at':
+                    return new Date(b.created_at) - new Date(a.created_at);
+                case 'priority_score':
+                default:
+                    return b.priority_score - a.priority_score;
+            }
+        });
+        
+        displayOpportunities();
+    }
+
+    function searchOpportunities() {
+        filterOpportunities();
+    }
+
+    function clearSearch() {
+        document.getElementById('searchInput').value = '';
+        filterOpportunities();
+    }
+
+    async function viewOpportunityDetails(opportunityId) {
+        const opportunity = allOpportunities.find(o => o.id === opportunityId);
+        if (!opportunity) return;
+        
+        selectedOpportunity = opportunity;
+        
+        const modalContent = document.getElementById('modalContent');
+        modalContent.innerHTML = `
+            <div class="row">
+                <div class="col-md-8">
+                    <h6>Content Angle:</h6>
+                    <p class="mb-3">${opportunity.suggested_angle}</p>
+                    
+                    <h6>Related Trend:</h6>
+                    <div class="alert alert-info">
+                        <strong>${opportunity.topic}</strong> 
+                        <span class="badge bg-primary ms-2">${opportunity.category}</span>
+                    </div>
+                    
+                    <h6>AI Analysis:</h6>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-eye fa-2x text-primary mb-2"></i>
+                                    <h5>${formatNumber(opportunity.estimated_views)}</h5>
+                                    <small>Estimated Views</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chart-line fa-2x text-success mb-2"></i>
+                                    <h5>${opportunity.estimated_roi.toFixed(1)}x</h5>
+                                    <small>ROI Potential</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <h6>Metrics:</h6>
+                    <div class="metrics-detailed">
+                        <div class="metric-item mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Priority Score:</span>
+                                <strong class="text-primary">${opportunity.priority_score.toFixed(1)}/10</strong>
+                            </div>
+                            <div class="progress mt-1" style="height: 6px;">
+                                <div class="progress-bar bg-primary" style="width: ${opportunity.priority_score * 10}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-item mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Production Cost:</span>
+                                <strong class="text-warning">${formatCurrency(opportunity.production_cost)}</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-item mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Competition:</span>
+                                <strong class="${getCompetitionColor(opportunity.competition_level)}">${opportunity.competition_level}</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-item mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Status:</span>
+                                ${getStatusBadge(opportunity.status)}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h6 class="mt-4">Content Suggestions:</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-video text-primary me-2"></i>Short-form video (60s)</li>
+                        <li class="mb-2"><i class="fas fa-images text-success me-2"></i>Carousel post</li>
+                        <li class="mb-2"><i class="fas fa-microphone text-warning me-2"></i>Podcast episode</li>
+                        <li class="mb-2"><i class="fas fa-file-alt text-info me-2"></i>Blog post</li>
+                    </ul>
+                </div>
+            </div>
+        `;
+        
+        // Update select button
+        const selectBtn = document.getElementById('selectOpportunityBtn');
+        if (opportunity.status === 'pending') {
+            selectBtn.style.display = 'block';
+            selectBtn.onclick = () => selectOpportunityFromModal(opportunityId);
+        } else {
+            selectBtn.style.display = 'none';
+        }
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('opportunityModal'));
+        modal.show();
+    }
+
+    async function selectOpportunityFromModal(opportunityId) {
+        await selectOpportunity(opportunityId);
+        
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('opportunityModal'));
+        modal.hide();
+    }
+
+    async function selectBestOpportunities() {
+        const bestOpportunities = filteredOpportunities
+            .filter(o => o.status === 'pending')
+            .sort((a, b) => b.priority_score - a.priority_score)
+            .slice(0, 5);
+            
+        if (bestOpportunities.length === 0) {
+            showNotification('No pending opportunities to select', 'warning');
+            return;
+        }
+        
+        showLoading();
+        
+        try {
+            let selected = 0;
+            for (const opportunity of bestOpportunities) {
+                await selectOpportunity(opportunity.id);
+                selected++;
+                
+                showNotification(`Selecting opportunities... ${selected}/${bestOpportunities.length}`, 'info');
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            showNotification(`Successfully selected ${selected} best opportunities!`, 'success');
+            
+        } catch (error) {
+            showNotification('Error selecting opportunities', 'danger');
+            console.error('Error:', error);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function deleteOpportunity(opportunityId) {
+        if (!confirm('Are you sure you want to delete this opportunity?')) {
+            return;
+        }
+        
+        try {
+            // In real implementation, this would call DELETE API
+            showNotification('Opportunity deleted', 'success');
+            loadOpportunities(); // Refresh list
+        } catch (error) {
+            showNotification('Error deleting opportunity', 'danger');
+            console.error('Error:', error);
+        }
+    }
+
+    // Refresh function for real-time updates
+    function refreshOpportunities() {
+        loadOpportunities();
+    }
+
+    function refreshData() {
+        loadOpportunities();
+    }
+
+    // Load opportunities when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        loadOpportunities();
+    });
+</script>
+
+<style>
+    .opportunity-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        border: 1px solid rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .opportunity-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    }
+
+    .opportunity-card .card-header {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+        padding: 15px;
+    }
+
+    .opportunity-card .card-body {
+        padding: 20px;
+    }
+
+    .opportunity-card .card-footer {
+        background: rgba(248, 249, 250, 0.8);
+        border-top: 1px solid rgba(0,0,0,0.1);
+        padding: 15px;
+    }
+
+    .opportunity-list-item {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        padding: 20px;
+        border-left: 4px solid var(--primary-color);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .opportunity-list-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        border-left-color: var(--success-color);
+    }
+
+    .metric {
+        display: flex;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+
+    .metric i {
+        width: 16px;
+    }
+
+    .priority-score .progress {
+        background-color: rgba(99, 102, 241, 0.1);
+    }
+
+    .circular-progress {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: conic-gradient(var(--primary-color) 70%, #e9ecef 70%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+
+    .metrics-detailed .metric-item {
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .metrics-detailed .metric-item:last-child {
+        border-bottom: none;
+    }
+
+    .list-view {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .badge.bg-outline-secondary {
+        border: 1px solid #6c757d;
+        color: #6c757d;
+        background: transparent;
+    }
+</style>
+{% endblock %}

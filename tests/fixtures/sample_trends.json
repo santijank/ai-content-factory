@@ -1,0 +1,380 @@
+{
+  "trending_topics": [
+    {
+      "id": "trend_001",
+      "topic": "AI Content Creation Tools 2025",
+      "source": "youtube",
+      "popularity_score": 89.5,
+      "growth_rate": 18.3,
+      "category": "Technology",
+      "region": "Global",
+      "keywords": [
+        "AI content creation",
+        "automation tools",
+        "video generation",
+        "content marketing",
+        "artificial intelligence",
+        "productivity",
+        "creator tools"
+      ],
+      "collected_at": "2025-09-14T10:30:00Z",
+      "raw_data": {
+        "search_volume": 125000,
+        "competition": "medium",
+        "related_topics": [
+          "AI video editing",
+          "automated content",
+          "content strategy",
+          "social media automation"
+        ],
+        "trending_videos": [
+          {
+            "title": "Top 10 AI Tools for Content Creators in 2025",
+            "views": 450000,
+            "likes": 23000,
+            "comments": 1200,
+            "engagement_rate": 5.1,
+            "channel": "Tech Creator Pro"
+          },
+          {
+            "title": "I Tested Every AI Content Tool So You Don't Have To",
+            "views": 320000,
+            "likes": 18500,
+            "comments": 890,
+            "engagement_rate": 6.2,
+            "channel": "AI Productivity"
+          }
+        ],
+        "growth_data": [
+          {"date": "2025-09-01", "score": 72.3},
+          {"date": "2025-09-07", "score": 81.7},
+          {"date": "2025-09-14", "score": 89.5}
+        ]
+      }
+    },
+    {
+      "id": "trend_002",
+      "topic": "Machine Learning for Beginners",
+      "source": "google_trends",
+      "popularity_score": 76.2,
+      "growth_rate": 12.7,
+      "category": "Education",
+      "region": "Global",
+      "keywords": [
+        "machine learning",
+        "ML basics",
+        "python tutorial",
+        "data science",
+        "beginner guide",
+        "algorithms",
+        "programming"
+      ],
+      "collected_at": "2025-09-14T10:25:00Z",
+      "raw_data": {
+        "search_volume": 89000,
+        "competition": "high",
+        "related_queries": [
+          "machine learning python",
+          "ML algorithms explained",
+          "data science course",
+          "supervised learning",
+          "neural networks basics"
+        ],
+        "interest_over_time": [
+          {"date": "2025-08-01", "value": 58},
+          {"date": "2025-08-15", "value": 63},
+          {"date": "2025-09-01", "value": 65},
+          {"date": "2025-09-08", "value": 71},
+          {"date": "2025-09-14", "value": 76}
+        ],
+        "regional_interest": [
+          {"region": "United States", "value": 100},
+          {"region": "India", "value": 87},
+          {"region": "United Kingdom", "value": 76},
+          {"region": "Canada", "value": 72},
+          {"region": "Australia", "value": 68}
+        ]
+      }
+    },
+    {
+      "id": "trend_003",
+      "topic": "Remote Work Productivity Hacks",
+      "source": "reddit",
+      "popularity_score": 68.9,
+      "growth_rate": 8.4,
+      "category": "Lifestyle",
+      "region": "North America",
+      "keywords": [
+        "remote work",
+        "productivity",
+        "work from home",
+        "time management",
+        "focus tips",
+        "home office",
+        "digital nomad"
+      ],
+      "collected_at": "2025-09-14T10:20:00Z",
+      "raw_data": {
+        "upvotes": 15600,
+        "comments": 1240,
+        "engagement_score": 7.8,
+        "subreddits": [
+          "r/productivity",
+          "r/remotework",
+          "r/getmotivated",
+          "r/WorkFromHome",
+          "r/digitalnomad"
+        ],
+        "top_posts": [
+          {
+            "title": "My 5 game-changing remote work tips that doubled my productivity",
+            "upvotes": 8900,
+            "comments": 456,
+            "awards": 23,
+            "subreddit": "r/productivity"
+          },
+          {
+            "title": "The remote work setup that changed my life [with photos]",
+            "upvotes": 7200,
+            "comments": 312,
+            "awards": 18,
+            "subreddit": "r/WorkFromHome"
+          }
+        ],
+        "trending_keywords": [
+          "pomodoro technique",
+          "standing desk",
+          "noise cancelling",
+          "time blocking",
+          "work life balance"
+        ]
+      }
+    },
+    {
+      "id": "trend_004",
+      "topic": "Cryptocurrency Investment Strategies",
+      "source": "twitter",
+      "popularity_score": 82.1,
+      "growth_rate": 15.6,
+      "category": "Finance",
+      "region": "Global",
+      "keywords": [
+        "cryptocurrency",
+        "bitcoin",
+        "investment",
+        "crypto trading",
+        "blockchain",
+        "DeFi",
+        "portfolio management"
+      ],
+      "collected_at": "2025-09-14T10:15:00Z",
+      "raw_data": {
+        "tweet_count": 45600,
+        "retweet_ratio": 2.3,
+        "engagement_rate": 4.7,
+        "sentiment_score": 0.65,
+        "top_hashtags": [
+          "#Bitcoin",
+          "#CryptoTrading", 
+          "#Investment",
+          "#Blockchain",
+          "#DeFi",
+          "#CryptoNews"
+        ],
+        "influential_tweets": [
+          {
+            "text": "🚀 My crypto investment strategy for 2025: DCA + patience = profits",
+            "retweets": 2340,
+            "likes": 8900,
+            "replies": 456,
+            "author": "@CryptoGuru2025"
+          },
+          {
+            "text": "Bitcoin just hit a new resistance level. Here's what to watch next 📈",
+            "retweets": 1890,
+            "likes": 6700,
+            "replies": 289,
+            "author": "@TradingPro"
+          }
+        ],
+        "trending_mentions": [
+          "Bitcoin ETF",
+          "Ethereum staking",
+          "Altcoin season",
+          "Market analysis"
+        ]
+      }
+    },
+    {
+      "id": "trend_005",
+      "topic": "Sustainable Living Tips",
+      "source": "youtube",
+      "popularity_score": 71.3,
+      "growth_rate": 9.8,
+      "category": "Lifestyle",
+      "region": "Europe",
+      "keywords": [
+        "sustainable living",
+        "eco friendly",
+        "zero waste",
+        "green lifestyle",
+        "environmental",
+        "minimalism",
+        "planet friendly"
+      ],
+      "collected_at": "2025-09-14T10:10:00Z",
+      "raw_data": {
+        "search_volume": 67000,
+        "competition": "low",
+        "related_topics": [
+          "plastic free living",
+          "renewable energy",
+          "organic gardening",
+          "sustainable fashion"
+        ],
+        "trending_videos": [
+          {
+            "title": "30 Days Zero Waste Challenge - My Complete Journey",
+            "views": 280000,
+            "likes": 15600,
+            "comments": 890,
+            "engagement_rate": 5.8,
+            "channel": "EcoLiving Today"
+          },
+          {
+            "title": "Sustainable Living on a Budget - 15 Easy Changes",
+            "views": 195000,
+            "likes": 12400,
+            "comments": 567,
+            "engagement_rate": 6.7,
+            "channel": "Green Life Hacks"
+          }
+        ],
+        "seasonal_data": [
+          {"month": "July", "interest": 68},
+          {"month": "August", "interest": 70},
+          {"month": "September", "interest": 71}
+        ]
+      }
+    },
+    {
+      "id": "trend_006",
+      "topic": "Home Fitness Workouts",
+      "source": "google_trends",
+      "popularity_score": 74.8,
+      "growth_rate": 11.2,
+      "category": "Health",
+      "region": "Global",
+      "keywords": [
+        "home workout",
+        "fitness",
+        "exercise",
+        "bodyweight training",
+        "HIIT",
+        "yoga",
+        "no equipment workout"
+      ],
+      "collected_at": "2025-09-14T10:05:00Z",
+      "raw_data": {
+        "search_volume": 92000,
+        "competition": "medium",
+        "related_queries": [
+          "30 minute home workout",
+          "beginner fitness routine",
+          "home gym setup",
+          "workout videos free"
+        ],
+        "interest_over_time": [
+          {"date": "2025-08-01", "value": 66},
+          {"date": "2025-08-15", "value": 69},
+          {"date": "2025-09-01", "value": 72},
+          {"date": "2025-09-14", "value": 75}
+        ],
+        "breakout_queries": [
+          "quick morning workout",
+          "apartment friendly exercise",
+          "silent home workout"
+        ]
+      }
+    }
+  ],
+  "collection_metadata": {
+    "collection_timestamp": "2025-09-14T10:30:00Z",
+    "total_trends_collected": 6,
+    "sources_active": ["youtube", "google_trends", "reddit", "twitter"],
+    "collection_duration_seconds": 127.4,
+    "average_popularity_score": 77.1,
+    "trends_by_category": {
+      "Technology": 1,
+      "Education": 1,
+      "Lifestyle": 2,
+      "Finance": 1,
+      "Health": 1
+    },
+    "trends_by_region": {
+      "Global": 4,
+      "North America": 1,
+      "Europe": 1
+    },
+    "quality_metrics": {
+      "high_engagement_trends": 4,
+      "trending_upward": 6,
+      "verified_sources": 6,
+      "data_completeness": 0.95
+    }
+  },
+  "analysis_insights": {
+    "top_categories": [
+      {
+        "category": "Technology",
+        "trend_count": 1,
+        "avg_popularity": 89.5,
+        "growth_potential": "high"
+      },
+      {
+        "category": "Lifestyle", 
+        "trend_count": 2,
+        "avg_popularity": 70.1,
+        "growth_potential": "medium"
+      }
+    ],
+    "content_opportunities": [
+      {
+        "trend_id": "trend_001",
+        "opportunity_score": 9.2,
+        "suggested_angles": [
+          "AI Tools Review and Comparison",
+          "Beginner's Guide to AI Content Creation",
+          "AI vs Manual Content Creation Speed Test"
+        ],
+        "estimated_competition": "medium",
+        "monetization_potential": "high"
+      },
+      {
+        "trend_id": "trend_002",
+        "opportunity_score": 8.5,
+        "suggested_angles": [
+          "Machine Learning Explained Simply",
+          "Build Your First ML Model",
+          "ML Career Path Guide"
+        ],
+        "estimated_competition": "high",
+        "monetization_potential": "medium"
+      }
+    ],
+    "market_insights": {
+      "fastest_growing": "AI Content Creation Tools 2025",
+      "most_stable": "Home Fitness Workouts",
+      "emerging_themes": [
+        "AI automation",
+        "Remote work optimization",
+        "Sustainable technology"
+      ],
+      "content_gaps": [
+        "AI tools for small creators",
+        "Budget-friendly ML learning",
+        "Remote work mental health"
+      ]
+    }
+  }
+}

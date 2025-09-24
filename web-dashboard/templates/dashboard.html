@@ -1,0 +1,468 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AI Content Factory{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="text-white mb-2">
+                        <i class="fas fa-chart-line me-3"></i>
+                        Dashboard
+                    </h1>
+                    <p class="text-white-50 mb-0">Overview of your AI content factory performance</p>
+                </div>
+                <div>
+                    <span class="badge bg-success fs-6 px-3 py-2">
+                        <i class="fas fa-circle me-2"></i>
+                        System Active
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h3 class="mb-1" id="trendsToday">-</h3>
+                        <p class="mb-0 opacity-75">Trends Today</p>
+                    </div>
+                    <i class="fas fa-trending-up fa-2x opacity-50"></i>
+                </div>
+                <div class="progress mt-3" style="height: 4px;">
+                    <div class="progress-bar bg-white" style="width: 75%"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card" style="background: linear-gradient(135deg, #10b981, #059669);">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h3 class="mb-1" id="opportunitiesToday">-</h3>
+                        <p class="mb-0 opacity-75">Opportunities</p>
+                    </div>
+                    <i class="fas fa-lightbulb fa-2x opacity-50"></i>
+                </div>
+                <div class="progress mt-3" style="height: 4px;">
+                    <div class="progress-bar bg-white" style="width: 60%"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h3 class="mb-1" id="contentToday">-</h3>
+                        <p class="mb-0 opacity-75">Content Created</p>
+                    </div>
+                    <i class="fas fa-video fa-2x opacity-50"></i>
+                </div>
+                <div class="progress mt-3" style="height: 4px;">
+                    <div class="progress-bar bg-white" style="width: 45%"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h3 class="mb-1" id="estimatedRevenue">₿0</h3>
+                        <p class="mb-0 opacity-75">Est. Revenue</p>
+                    </div>
+                    <i class="fas fa-dollar-sign fa-2x opacity-50"></i>
+                </div>
+                <div class="progress mt-3" style="height: 4px;">
+                    <div class="progress-bar bg-white" style="width: 80%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Trends -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-fire text-danger me-2"></i>
+                            Hot Trends
+                        </h5>
+                        <a href="/trends" class="btn btn-sm btn-outline-primary">
+                            View All <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="recentTrends">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Loading trends...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Best Opportunities -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-star text-warning me-2"></i>
+                            Top Opportunities
+                        </h5>
+                        <a href="/opportunities" class="btn btn-sm btn-outline-primary">
+                            View All <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="bestOpportunities">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Loading opportunities...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row">
+        <!-- Trend Analytics -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-area text-info me-2"></i>
+                        Trend Performance
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="trendChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROI Distribution -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie text-success me-2"></i>
+                        ROI Distribution
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="roiChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt text-warning me-2"></i>
+                        Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <button class="btn btn-primary w-100 py-3" onclick="collectTrends()">
+                                <i class="fas fa-sync-alt fa-2x d-block mb-2"></i>
+                                Collect New Trends
+                            </button>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <button class="btn btn-success w-100 py-3" onclick="analyzeAllTrends()">
+                                <i class="fas fa-brain fa-2x d-block mb-2"></i>
+                                Analyze All Trends
+                            </button>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <button class="btn btn-warning w-100 py-3" onclick="generateContent()">
+                                <i class="fas fa-magic fa-2x d-block mb-2"></i>
+                                Generate Content
+                            </button>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <button class="btn btn-info w-100 py-3" onclick="viewAnalytics()">
+                                <i class="fas fa-chart-bar fa-2x d-block mb-2"></i>
+                                View Analytics
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let dashboardData = {};
+    let trendChart, roiChart;
+
+    // Load dashboard data
+    async function loadDashboardData() {
+        try {
+            const response = await fetch('/api/dashboard-stats');
+            dashboardData = await response.json();
+            updateDashboard();
+        } catch (error) {
+            console.error('Error loading dashboard data:', error);
+            showNotification('Error loading dashboard data', 'danger');
+        }
+    }
+
+    function updateDashboard() {
+        // Update stats
+        document.getElementById('trendsToday').textContent = dashboardData.today_stats.trends_collected;
+        document.getElementById('opportunitiesToday').textContent = dashboardData.today_stats.opportunities_generated;
+        document.getElementById('contentToday').textContent = dashboardData.today_stats.content_created;
+        document.getElementById('estimatedRevenue').textContent = formatCurrency(dashboardData.today_stats.estimated_revenue);
+
+        // Update recent trends
+        updateRecentTrends();
+        
+        // Update best opportunities
+        updateBestOpportunities();
+        
+        // Update charts
+        updateCharts();
+    }
+
+    function updateRecentTrends() {
+        const container = document.getElementById('recentTrends');
+        
+        if (!dashboardData.recent_trends || dashboardData.recent_trends.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No trends collected yet</p>
+                    <button class="btn btn-primary btn-sm" onclick="collectTrends()">
+                        Collect Trends Now
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        const trendsHtml = dashboardData.recent_trends.map(trend => `
+            <div class="trend-item" onclick="analyzeTrend('${trend.id}')">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">${trend.topic}</h6>
+                        <small class="text-muted">
+                            <i class="fas fa-tag me-1"></i>${trend.category}
+                            <i class="fas fa-source ms-2 me-1"></i>${trend.source}
+                        </small>
+                    </div>
+                    <div class="text-end">
+                        <div class="badge bg-primary mb-1">
+                            ${trend.popularity_score.toFixed(1)}/10
+                        </div>
+                        <div class="small text-success">
+                            <i class="fas fa-arrow-up me-1"></i>
+                            ${trend.growth_rate.toFixed(1)}%
+                        </div>
+                    </div>
+                </div>
+                <div class="progress mt-2" style="height: 3px;">
+                    <div class="progress-bar" style="width: ${trend.popularity_score * 10}%"></div>
+                </div>
+            </div>
+        `).join('');
+
+        container.innerHTML = trendsHtml;
+    }
+
+    function updateBestOpportunities() {
+        const container = document.getElementById('bestOpportunities');
+        
+        if (!dashboardData.best_opportunities || dashboardData.best_opportunities.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-lightbulb fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No opportunities generated yet</p>
+                    <button class="btn btn-success btn-sm" onclick="analyzeAllTrends()">
+                        Analyze Trends
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        const opportunitiesHtml = dashboardData.best_opportunities.map(opp => `
+            <div class="opportunity-card" onclick="selectOpportunity('${opp.id}')">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="mb-0">${opp.suggested_angle}</h6>
+                    <span class="badge bg-success">${opp.priority_score.toFixed(1)}</span>
+                </div>
+                <p class="small text-muted mb-2">
+                    <i class="fas fa-hashtag me-1"></i>${opp.topic}
+                </p>
+                <div class="row small">
+                    <div class="col-6">
+                        <span class="text-muted">Est. Views:</span>
+                        <strong class="text-primary">${formatNumber(opp.estimated_views)}</strong>
+                    </div>
+                    <div class="col-6">
+                        <span class="text-muted">ROI:</span>
+                        <strong class="text-success">${opp.estimated_roi.toFixed(1)}x</strong>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        container.innerHTML = opportunitiesHtml;
+    }
+
+    function updateCharts() {
+        // Trend Chart
+        const trendCtx = document.getElementById('trendChart').getContext('2d');
+        
+        if (trendChart) {
+            trendChart.destroy();
+        }
+
+        trendChart = new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Trends Collected',
+                    data: [12, 19, 3, 5, 2, 3, 9],
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'Opportunities Generated',
+                    data: [5, 12, 8, 15, 7, 10, 18],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // ROI Chart
+        const roiCtx = document.getElementById('roiChart').getContext('2d');
+        
+        if (roiChart) {
+            roiChart.destroy();
+        }
+
+        roiChart = new Chart(roiCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['High ROI (>5x)', 'Medium ROI (2-5x)', 'Low ROI (<2x)'],
+                datasets: [{
+                    data: [30, 50, 20],
+                    backgroundColor: [
+                        '#10b981',
+                        '#f59e0b',
+                        '#ef4444'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+    }
+
+    // Quick action functions
+    async function analyzeAllTrends() {
+        if (!dashboardData.recent_trends || dashboardData.recent_trends.length === 0) {
+            showNotification('No trends to analyze. Collect trends first.', 'warning');
+            return;
+        }
+
+        showLoading();
+        
+        try {
+            for (const trend of dashboardData.recent_trends) {
+                await analyzeTrend(trend.id);
+                // Small delay to prevent overwhelming the API
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            showNotification('All trends analyzed successfully!', 'success');
+            loadDashboardData(); // Refresh data
+        } catch (error) {
+            showNotification('Error analyzing trends', 'danger');
+            console.error('Error:', error);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function generateContent() {
+        window.location.href = '/content';
+    }
+
+    function viewAnalytics() {
+        window.location.href = '/analytics';
+    }
+
+    // Refresh function for real-time updates
+    function refreshData() {
+        loadDashboardData();
+    }
+
+    // Load data when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDashboardData();
+        
+        // Refresh data every 30 seconds
+        setInterval(loadDashboardData, 30000);
+    });
+</script>
+{% endblock %}

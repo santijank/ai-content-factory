@@ -1,0 +1,341 @@
+# AI Content Factory - Docker Compose Configuration
+# ตำแหน่งไฟล์: docker-compose.yml
+# 
+# สำหรับ Development Environment
+# รัน: docker-compose up -d
+
+version: '3.8'
+
+services:
+  # === Main Application ===
+  web:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai_content_factory_web
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - DB_TYPE=postgresql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=content_factory
+      - DB_USER=admin
+      - DB_PASSWORD=admin123
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=dev-secret-key-change-in-production
+    volumes:
+      - .:/app
+      - ./data:/app/data
+      - /app/node_modules  # Prevent overwriting node_modules
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    networks:
+      - ai_content_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # === Database ===
+  postgres:
+    image: postgres:15-alpine
+    container_name: ai_content_factory_db
+    environment:
+      - POSTGRES_DB=content_factory
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin123
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - ai_content_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d content_factory"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # === Redis (Caching & Task Queue) ===
+  redis:
+    image: redis:7-alpine
+    container_name: ai_content_factory_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - ai_content_network
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # === Background Task Worker ===
+  worker:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai_content_factory_worker
+    command: python -m celery -A app.celery worker --loglevel=info
+    environment:
+      - FLASK_ENV=development
+      - DB_TYPE=postgresql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=content_factory
+      - DB_USER=admin
+      - DB_PASSWORD=admin123
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    volumes:
+      - .:/app
+      - ./data:/app/data
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    networks:
+      - ai_content_network
+
+  # === Task Scheduler ===
+  scheduler:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai_content_factory_scheduler
+    command: python -m celery -A app.celery beat --loglevel=info
+    environment:
+      - FLASK_ENV=development
+      - DB_TYPE=postgresql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=content_factory
+      - DB_USER=admin
+      - DB_PASSWORD=admin123
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    networks:
+      - ai_content_network
+
+  # === Monitoring ===
+  # Grafana Dashboard
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: ai_content_factory_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    restart: unless-stopped
+    networks:
+      - ai_content_network
+
+  # Prometheus Metrics
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: ai_content_factory_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - ai_content_network
+
+  # === Development Tools ===
+  # pgAdmin (Database Management)
+  pgadmin:
+    image: dpage/pgadmin4:7.5
+    container_name: ai_content_factory_pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@ai-content-factory.com
+      - PGADMIN_DEFAULT_PASSWORD=admin123
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - ai_content_network
+
+  # Redis Commander (Redis Management)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: ai_content_factory_redis_commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - ai_content_network
+
+  # === File Storage (Optional) ===
+  # MinIO for S3-compatible object storage
+  minio:
+    image: minio/minio:RELEASE.2023-09-23T03-47-50Z
+    container_name: ai_content_factory_minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin123
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    networks:
+      - ai_content_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # === Optional Services ===
+  # Nginx (Reverse Proxy)
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: ai_content_factory_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./data/ssl:/etc/nginx/ssl
+    depends_on:
+      - web
+    restart: unless-stopped
+    networks:
+      - ai_content_network
+    profiles:
+      - production
+
+  # Elasticsearch (Advanced Search & Logging)
+  elasticsearch:
+    image: elasticsearch:8.9.0
+    container_name: ai_content_factory_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    restart: unless-stopped
+    networks:
+      - ai_content_network
+    profiles:
+      - advanced
+
+  # Kibana (Log Visualization)
+  kibana:
+    image: kibana:8.9.0
+    container_name: ai_content_factory_kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+    networks:
+      - ai_content_network
+    profiles:
+      - advanced
+
+# === Networks ===
+networks:
+  ai_content_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# === Volumes ===
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  grafana_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+  minio_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+
+# === Development Commands ===
+# Start all services:         docker-compose up -d
+# Start with monitoring:       docker-compose --profile advanced up -d
+# Start production mode:       docker-compose --profile production up -d
+# 
+# View logs:                   docker-compose logs -f web
+# Enter web container:         docker-compose exec web bash
+# Run database migrations:     docker-compose exec web python scripts/migrate_data.py
+# 
+# Stop all services:          docker-compose down
+# Remove all data:            docker-compose down -v
+# Rebuild services:           docker-compose build --no-cache
+# 
+# Scale workers:              docker-compose up -d --scale worker=3
+# 
+# === Service URLs ===
+# Main Application:           http://localhost:5000
+# Database Admin:             http://localhost:8080 (admin@ai-content-factory.com / admin123)
+# Redis Admin:                http://localhost:8081
+# Grafana Dashboard:          http://localhost:3000 (admin / admin123)
+# Prometheus Metrics:         http://localhost:9090
+# MinIO Console:              http://localhost:9001 (minioadmin / minioadmin123)
+# Kibana (Advanced):          http://localhost:5601
+# 
+# === Environment Variables ===
+# Create .env file with:
+# - API keys (OPENAI_API_KEY, GROQ_API_KEY, etc.)
+# - Social media credentials
+# - Email/SMS service keys
+# - Cloud storage credentials

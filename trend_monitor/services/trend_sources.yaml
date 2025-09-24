@@ -1,0 +1,240 @@
+# Trend Monitor Configuration File
+# Configure data sources and collection settings
+
+sources:
+  # YouTube Trends Configuration
+  youtube:
+    enabled: true
+    max_trends: 50
+    regions: ['US', 'TH', 'GB', 'JP']  # Country codes
+    categories: ['all']  # 'all' or specific category IDs
+    api_key: null  # Set via environment variable YOUTUBE_API_KEY
+    timeout_seconds: 30
+    retry_attempts: 3
+    
+  # Google Trends Configuration  
+  google:
+    enabled: true
+    max_trends: 25
+    regions: ['US', 'TH', 'GB']
+    timeframe: 'now 1-d'  # Time range for trends
+    categories: ['all']
+    timeout_seconds: 15
+    retry_attempts: 2
+    rate_limit_delay: 2.0  # Seconds between requests
+    
+  # Twitter/X Trends Configuration
+  twitter:
+    enabled: false  # Requires API credentials
+    max_trends: 30
+    locations: [1, 23424977, 23424848]  # Worldwide, USA, Thailand
+    api_key: null  # Set via environment variable TWITTER_API_KEY
+    api_secret: null  # Set via environment variable TWITTER_API_SECRET
+    bearer_token: null  # Set via environment variable TWITTER_BEARER_TOKEN
+    timeout_seconds: 15
+    retry_attempts: 2
+    
+  # Reddit Trends Configuration
+  reddit:
+    enabled: true
+    max_trends: 25
+    subreddits: ['all', 'popular', 'technology', 'gaming', 'movies', 'music']
+    time_periods: ['hour', 'day']
+    sort_types: ['hot', 'top', 'rising']
+    timeout_seconds: 15
+    retry_attempts: 2
+    rate_limit_requests_per_minute: 60
+
+# Collection Settings
+collection:
+  # Post-processing options
+  merge_similar: true
+  similarity_threshold: 0.7  # 0.0-1.0, higher = more strict
+  min_popularity_score: 10.0  # Filter out low-scoring trends
+  max_total_trends: 200  # Maximum trends to keep after processing
+  
+  # Timing settings
+  auto_collect_interval_minutes: 30  # How often to collect automatically
+  batch_size: 50  # Number of trends to process at once
+  timeout_seconds: 60  # Overall collection timeout
+  
+  # Quality filters
+  quality_filters:
+    min_keyword_length: 3
+    max_keywords_per_trend: 10
+    exclude_patterns: ['spam', 'bot', 'fake']  # Filter out trends matching these
+    require_growth_rate: false  # Whether growth rate is required
+    
+  # Regional settings
+  default_region: 'global'
+  timezone: 'UTC'
+  
+# Storage Settings
+storage:
+  # Database settings
+  save_raw_data: true  # Whether to save original API responses
+  compress_raw_data: true  # Compress raw data to save space
+  retention_days: 30  # How long to keep trend data
+  
+  # Caching
+  enable_cache: true
+  cache_duration_minutes: 15  # How long to cache API responses
+  cache_size_mb: 100  # Maximum cache size
+  
+# Monitoring & Alerting
+monitoring:
+  # Health checks
+  health_check_interval_minutes: 5
+  alert_on_failures: true
+  max_consecutive_failures: 3
+  
+  # Performance monitoring
+  track_collection_times: true
+  track_api_response_times: true
+  log_slow_requests: true
+  slow_request_threshold_seconds: 10
+  
+  # Alerts
+  alerts:
+    email_notifications: false
+    webhook_url: null  # Webhook for alerts
+    slack_webhook: null  # Slack notifications
+    
+# API Rate Limiting
+rate_limiting:
+  # Global rate limiting
+  global_requests_per_minute: 120
+  burst_allowance: 10  # Extra requests allowed in burst
+  
+  # Per-source rate limiting (overrides global)
+  per_source_limits:
+    youtube: 60  # requests per hour (API quota)
+    google: 30   # requests per minute
+    twitter: 15  # requests per 15-minute window
+    reddit: 60   # requests per minute
+    
+  # Rate limit strategies
+  backoff_strategy: 'exponential'  # 'linear' or 'exponential'
+  max_backoff_seconds: 300  # Maximum wait time
+  
+# Category Mapping
+category_mapping:
+  # Keywords to category mapping for auto-categorization
+  technology: ['tech', 'ai', 'software', 'app', 'computer', 'digital', 'internet']
+  entertainment: ['movie', 'tv', 'show', 'actor', 'celebrity', 'netflix', 'film']
+  music: ['song', 'music', 'artist', 'album', 'concert', 'spotify', 'band']
+  gaming: ['game', 'gaming', 'player', 'xbox', 'playstation', 'steam', 'esports']
+  sports: ['sport', 'team', 'player', 'match', 'win', 'olympics', 'football']
+  news: ['news', 'breaking', 'politics', 'election', 'government', 'report']
+  health: ['health', 'medical', 'doctor', 'hospital', 'covid', 'vaccine']
+  business: ['business', 'stock', 'market', 'economy', 'finance', 'company']
+  education: ['education', 'school', 'university', 'student', 'learn', 'study']
+  lifestyle: ['lifestyle', 'food', 'travel', 'fashion', 'beauty', 'fitness']
+
+# Content Opportunity Scoring
+opportunity_scoring:
+  # Factors for calculating content potential
+  weights:
+    popularity_score: 0.4      # 40% weight
+    growth_rate: 0.3          # 30% weight  
+    category_multiplier: 0.2   # 20% weight
+    freshness: 0.1            # 10% weight
+    
+  # Category multipliers for content potential
+  category_multipliers:
+    entertainment: 1.3  # High viral potential
+    gaming: 1.3
+    music: 1.2
+    technology: 1.1
+    lifestyle: 1.1
+    sports: 1.1
+    education: 1.0
+    news: 0.9          # Competitive but less evergreen
+    business: 0.8      # Lower viral potential
+    health: 0.9
+    other: 1.0
+    
+  # Freshness scoring (hours)
+  freshness_scoring:
+    0-1: 1.0    # Full points for very fresh trends
+    1-6: 0.8    # Good score for recent trends
+    6-24: 0.6   # Moderate score for day-old trends
+    24-72: 0.4  # Lower score for older trends
+    72+: 0.2    # Minimal score for old trends
+
+# Advanced Features
+advanced:
+  # Machine learning features (future)
+  enable_ml_scoring: false
+  ml_model_path: null
+  
+  # Trend prediction
+  enable_trend_prediction: false
+  prediction_horizon_hours: 24
+  
+  # Competitor analysis
+  track_competitors: false
+  competitor_keywords: []
+  
+  # Custom filters
+  custom_filters:
+    enabled: false
+    filter_scripts: []  # Custom Python scripts for filtering
+    
+# Logging Configuration  
+logging:
+  level: 'INFO'  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  file_logging: true
+  log_file: 'logs/trend_monitor.log'
+  max_log_size_mb: 50
+  backup_count: 5
+  
+  # Component-specific logging
+  component_levels:
+    trend_collector: 'INFO'
+    youtube_trends: 'INFO'
+    google_trends: 'INFO'
+    twitter_trends: 'INFO'
+    reddit_trends: 'INFO'
+    
+# Development Settings
+development:
+  # Debug options
+  debug_mode: false
+  mock_api_responses: false  # Use mock data instead of real APIs
+  save_debug_data: false     # Save debug information
+  
+  # Testing
+  test_mode: false
+  test_data_path: 'test_data/'
+  
+  # Performance
+  enable_profiling: false
+  profile_output_path: 'profiles/'
+
+# Environment-specific overrides
+environments:
+  development:
+    collection:
+      auto_collect_interval_minutes: 5  # More frequent in dev
+    logging:
+      level: 'DEBUG'
+    development:
+      debug_mode: true
+      
+  staging:
+    collection:
+      max_total_trends: 100  # Fewer trends in staging
+    monitoring:
+      health_check_interval_minutes: 2
+      
+  production:
+    collection:
+      auto_collect_interval_minutes: 30
+    storage:
+      retention_days: 90  # Keep data longer in production
+    monitoring:
+      alert_on_failures: true
+    logging:
+      level: 'INFO'
