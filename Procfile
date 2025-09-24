@@ -1,1 +1,1 @@
-web: gunicorn app:app --host=0.0.0.0 --port=$PORT
+web: python3 -c "import sys; sys.path.append('/opt/render/project/src'); exec(open('app_production.py').read())" 
